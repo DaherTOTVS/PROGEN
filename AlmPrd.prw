@@ -24,6 +24,7 @@ User function AlmPrd(cProducto)
 		else
 			cBodega := B1_XALM // Usar el valor del campo B1_XALM  o Almacen de Produccion
         End If
-    End If    
-			RETURN cBodega
+    End If
+	("SB1")->(DBCloseArea())    
+RETURN cBodega
 
