@@ -1,0 +1,73 @@
+DECLARE @TBL INT
+DECLARE @I INT = 1
+DECLARE @TableName NVARCHAR(255);
+DECLARE @ColumnName NVARCHAR(255);
+DECLARE @Sql NVARCHAR(MAX);
+DECLARE @DefaultValue INT = 0;
+DECLARE @Count INT = 0;
+
+CREATE TABLE TMP_TBL(
+TBL_NAME VARCHAR(30),
+CLM_NAME VARCHAR(30)
+)
+
+SET @TBL = (SELECT COUNT(*) FROM(
+SELECT 
+	TABLE_NAME TBL,
+	X3_ARQUIVO,
+    COLUMN_NAME,
+    DATA_TYPE,
+    CHARACTER_MAXIMUM_LENGTH,
+	X3_TAMANHO
+FROM 
+    INFORMATION_SCHEMA.COLUMNS
+	INNER JOIN SX3010
+	ON X3_CAMPO=COLUMN_NAME
+	AND X3_GRPSXG='024'
+	AND D_E_L_E_T_<>'*'
+	AND TABLE_NAME NOT LIKE '%990%'
+	AND TABLE_NAME NOT LIKE '%020'
+    )MANT)
+
+WHILE @I <= @TBL
+BEGIN
+
+	 SET @TableName=''
+	 SET @ColumnName=''
+	 SET @Count=0
+
+
+     SELECT 
+    		TOP 1 @TableName=TABLE_NAME,@ColumnName=COLUMN_NAME
+    	FROM 
+    		INFORMATION_SCHEMA.COLUMNS
+    		INNER JOIN SX3010
+    		ON X3_CAMPO=COLUMN_NAME
+    		AND X3_GRPSXG='024'
+    		AND D_E_L_E_T_<>'*'
+    		AND TABLE_NAME NOT LIKE '%990%'
+    		AND TABLE_NAME NOT LIKE '%020'
+    		AND NOT EXISTS (SELECT 1 FROM TMP_TBL WHERE TBL_NAME=TABLE_NAME AND CLM_NAME=COLUMN_NAME)
+    
+	 
+	IF LEN(TRIM(@ColumnName))>0 AND LEN(TRIM(@TableName))>0
+	BEGIN
+	   SET @Sql =N'SELECT @Count =COUNT(*) FROM '+@TableName+' WHERE D_E_L_E_T_ <>''*'' AND LEN('+@ColumnName+')<3 AND LEN('+TRIM(@ColumnName)+')>0 '
+	   EXEC sp_executesql @Sql, N'@Count NVARCHAR(10) OUTPUT', @Count OUTPUT; 
+	   SET @Count = ISNULL(@Count, @DefaultValue);
+
+       IF @Count>0  
+		BEGIN
+			SET @Sql =N'UPDATE '+@TableName+' SET '+@ColumnName+'=concat(''0'','+trim(@ColumnName)+') 
+			WHERE LEN('+@ColumnName+')<3 AND LEN('+TRIM(@ColumnName)+')>0 AND D_E_L_E_T_ <>''*'' '
+			EXEC sp_executesql @Sql;
+		END
+	END
+
+	INSERT INTO TMP_TBL VALUES (@TableName,@ColumnName)
+    SET @I = @I + 1;
+END
+
+
+UPDATE SG1010 SET G1_XBODEGA=concat('0',G1_XBODEGA) WHERE D_E_L_E_T_ <>'*' AND LEN(TRIM(G1_XBODEGA)) <=2 AND LEN(TRIM(G1_XBODEGA)) >0
+UPDATE SB1010 SET B1_XALM=concat('0',B1_XALM) WHERE D_E_L_E_T_ <>'*' AND LEN(TRIM(B1_XALM)) <=2 AND LEN(TRIM(B1_XALM)) >0
