@@ -24,7 +24,8 @@ User Function MTA416PV()
     M->C5_XNOME		:= Posicione("SA1",1,xFilial("SA1")+M->C5_CLIENTE+M->C5_LOJACLI,"A1_NOME")
 	M->C5_XNCLIEN	:= Posicione("SA1",1,xFilial("SA1")+M->C5_CLIENT+M->C5_LOJAENT,"A1_NOME")   
 	M->C5_XEMAIL	:= Posicione("SA1",1,xFilial("SA1")+M->C5_CLIENTE+M->C5_LOJACLI,"A1_EMAIL")
-	// CAMPO DEFAULT DESDE PV
-	M->C5_XENDENT	:= Posicione("SA1",1,xFilial("SA1")+M->C5_CLIENTE+M->C5_LOJACLI,"A1_ENDENT")
-	
+	//Felipe Gonzalez 20/09/2023 Adicion para agregar modalidad
+	M->C5_NATUREZ	:= CJ_XNATURE
+	("SFP")->(DBCloseArea())	
+
 Return Nil

@@ -119,6 +119,23 @@ Static Function ReportDef()
 	//³        Default : False                                                 ³
 	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 
+	//Felipe Gonzalez 07/06/2023
+	//Preguntas por defecto, orden de produccion en la que esta parado
+
+	mv_par01 := SC2->C2_NUM	+ SC2->C2_ITEM + SC2->C2_SEQUEN	
+	mv_par02 := SC2->C2_NUM	+ SC2->C2_ITEM + SC2->C2_SEQUEN	
+	mv_par03 := "01/01/2022"
+	mv_par04 := "31/12/2200"
+	mv_par05 := 1
+	mv_par06 := 2
+	mv_par07 := 2
+	mv_par08 := 1
+	mv_par09 := 1
+	mv_par10 := 3
+	mv_par11 := 1
+	mv_par12 := 1
+	mv_par13 := 1
+
 	IF mv_par07 == 1
 		nlargDesc := 150
 	ELSE
@@ -154,6 +171,7 @@ Static Function ReportDef()
 	TRCell():New(oSection1,'RealFim'	,'SC2',STR0045   ,/*Picture*/                 ,8						,/*lPixel*/,{|| "__/__/__" })
 	TRCell():New(oSection1,'C2_OBS'		,'SC2',/*Titulo*/,/*Picture*/					,/*Tamanho*/			,/*lPixel*/,{|| (cAliasTop)->C2_OBS1 })
 	TRCell():New(oSection1,'C2_OBS'		,'SC2','         ',/*Picture*/					,/*Tamanho*/			,/*lPixel*/,{|| (cAliasTop)->C2_OBS2 })
+	TRCell():New(oSection1,'C2_OBS'		,'SC2','         ',/*Picture*/					,/*Tamanho*/			,/*lPixel*/,{|| (cAliasTop)->C2_OBS3 })
 
 	oSection1:Cell('B1_DESC'  ):SetCellBreak()
 	oSection1:Cell('C2_EMISSAO'):SetCellBreak()
@@ -168,6 +186,7 @@ Static Function ReportDef()
 	oSection1:Cell('C2_DATAJF'):SetCellBreak()
 	oSection1:Cell('RealFim'  ):SetCellBreak()
 	oSection1:Cell('C2_OBS'  ):SetCellBreak()
+
 
 	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 	//³ Sessao 2 (oSection2)                                         ³
@@ -357,8 +376,9 @@ Static Function ReportPrint(oReport, cAliasTop)
 			SC2.C2_DATAJF,
 			SC2.C2_STATUS,
 			SC2.C2_OBS,
-			SUBSTRING(SC2.C2_OBS,1,125) C2_OBS1,
-			'.           '+SUBSTRING(SC2.C2_OBS,126,300) C2_OBS2,
+			SUBSTRING(SC2.C2_OBS,1,112) C2_OBS1,
+			'.           '+SUBSTRING(SC2.C2_OBS,113,226) C2_OBS2,
+			'.           '+SUBSTRING(SC2.C2_OBS,227,350) C2_OBS3,
 			SC2.C2_TPOP,
 			SC2.R_E_C_N_O_ SC2RECNO,
 			SC2.C2_EMISSAO
@@ -1783,7 +1803,6 @@ Static Function _xRecu1(rXProdu,rXComp,rXFilial,rXreteiro)
 		_cAQuery +="INNER JOIN "+RetSQLName('SC2')+" SC2 "
 		_cAQuery +="ON SG2.G2_CODIGO=SC2.C2_ROTEIRO "
 		_cAQuery +="AND SG2.G2_PRODUTO = SC2.C2_PRODUTO "
-		_cAQuery +="AND SC2.C2_NUM ="+(cAliasTop)->C2_NUM +" "
 		_cAQuery +="AND SG2.D_E_L_E_T_ <> '*'  "
 		_cAQuery +="LEFT JOIN "+RetSQLName('SGF')+" SGF "
 		_cAQuery +="ON SGF.GF_PRODUTO=SG2.G2_PRODUTO "

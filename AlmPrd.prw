@@ -13,6 +13,7 @@
 
 /*/
 User function AlmPrd(cProducto)
+	Local aArea := getArea()
 	Local cBodega
 
 	// Verificar si el campo B1_XALM esta Vacio
@@ -25,6 +26,6 @@ User function AlmPrd(cProducto)
 			cBodega := B1_XALM // Usar el valor del campo B1_XALM  o Almacen de Produccion
         End If
     End If
-	("SB1")->(DBCloseArea())    
+	("SB1")->(DBCloseArea())
+	RestArea(aArea)    
 RETURN cBodega
-
