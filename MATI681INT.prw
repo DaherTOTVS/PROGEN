@@ -1,33 +1,23 @@
 #Include "Protheus.ch"
  
-User Function MT681ALXML()
+User Function MATI681INT()
     Local aArea := getArea()
     Local aAreaB1 := SB1->(GetArea()) //Área da tabela SB1 para restaurar no fim do processamento.
     Local cProd   := "" //Variável para armazenar o código do produto.
 	Local cBodega := ""
-	// Local cAviso	:= ""
-	// Local cErro		:= ""
     Local nCont      := 0
     Local cPosition  := ""
-    Private oXMLEnv
-    Private oXmlRcv   := PARAMIXB //Referência do objeto contendo as informações que foram recebidas no XML.
-    Private aXmlWst   := {} //Array para manipular as informações de lista de refugos.
-    Private aCmpBaixa := {} //Array para manipular as informações da lista de componentes.
-
-
-	// oXmlRcv := XmlParser(GeraXML(), "_", @cAviso,@cErro )
-
-    
-    cProd := oXmlRcv:_TotvsMessage:_BusinessMessage:_BusinessContent:_ItemCode:Text
-    //Ajusta o índice da tabela SB1
-
-    nCont := XmlChildCount( oXmlRcv:_TotvsMessage:_BusinessMessage:_BusinessContent)
-
+    local aRet := {}
+    Local _oXml := PARAMIXB //Referência do objeto contendo as informações que foram recebidas no XML.
+    conout("Time-I",time())
+    cProd := _oXml:_TotvsMessage:_BusinessMessage:_BusinessContent:_ItemCode:Text
+    nCont := XmlChildCount( _oXml:_TotvsMessage:_BusinessMessage:_BusinessContent)
     If !nCont < 39
-        cPosition := XmlGetChild( oXmlRcv:_TotvsMessage:_BusinessMessage:_BusinessContent, 39 )
-
+        cPosition := XmlGetChild( _oXml:_TotvsMessage:_BusinessMessage:_BusinessContent, 39 )
         If UPPER(cPosition:REALNAME) == "WAREHOUSECODE"
-            IF type(oXmlRcv:_TotvsMessage:_BusinessMessage:_BusinessContent:_WarehouseCode:Text) = "U"
+            If Type("_oXml:_TotvsMessage:_BusinessMessage:_BusinessContent:_WarehouseCode:Text") != "U" .And. ;
+                !Empty(_oXml:_TotvsMessage:_BusinessMessage:_BusinessContent:_WarehouseCode:Text)
+
                 SB1->(dbSetOrder(1))
                 If SB1->(dbSeek(xFilial("SB1")+cProd))
                     IF Empty(SB1->(B1_XALM))
@@ -36,21 +26,22 @@ User Function MT681ALXML()
                         cBodega := SB1->B1_XALM // Usar el valor del campo B1_XALM  o Almacen de Produccion
                     End If
                 EndIf
+                conout("cBodega",cbodega)
 
-                oXmlRcv:_TotvsMessage:_BusinessMessage:_BusinessContent:_WarehouseCode:Text:=cBodega
-
+                _oXml:_TotvsMessage:_BusinessMessage:_BusinessContent:_WarehouseCode:Text:=cBodega
             EndIf
-
         EndIf
-
     EndIf
+    conout("Time-F",time())
+    aAdd(aRet, .T.) // Não Irá executar a rotina padrão
+    aAdd(aRet, .T.) // XML importado com sucesso
+    aAdd(aRet, " ") // Como não houve erro, o terceiro parâmetro deve estar em branco.
 
     //Restaura o posicionamento da tabela SB1.
     SB1->(RestArea(aAreaB1))
     RestArea(aArea)  
 
-  
-Return Nil
+Return aRet
 
 
 // Static Function GeraXML()

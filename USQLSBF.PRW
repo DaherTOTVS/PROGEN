@@ -9,7 +9,7 @@ User Function USQLSBF()
 	Local oButton1
 	Local oButton2
 	Local oGet1
-	Local cGet1 := "Nombre_hhhhhhhhh                              "
+	Local cGet1 := "REHACE SERIALES                              "
 	Local oGroup1
 	Local oMultiGe1
 	Local cMultiGe1 := "0                         "
@@ -327,11 +327,11 @@ Static Function fProcessa(cProd,cOrdesep,Cpedido,cNumseri, cTitAux,Actualiza)
 	// n1Statud :=TCSqlExec(Upd)
 
 
-	Upd := " UPDATE SBF010 SET BF_EMPENHO='1' WHERE D_E_L_E_T_ <>'*'  AND BF_NUMSERI IN (SELECT CB9_NUMSER FROM CB9010 WHERE D_E_L_E_T_ <>'*' AND CB9_PROD=BF_PRODUTO AND CB9_LOCAL=BF_LOCAL  AND CB9_ORDSEP IN (SELECT CB7_ORDSEP FROM CB7010 WHERE D_E_L_E_T_ <>'*' )) AND BF_EMPENHO='0' "
-	n1Statud :=TCSqlExec(Upd)
+	// Upd := " UPDATE SBF010 SET BF_EMPENHO='1' WHERE D_E_L_E_T_ <>'*'  AND BF_NUMSERI IN (SELECT CB9_NUMSER FROM CB9010 WHERE D_E_L_E_T_ <>'*' AND CB9_PROD=BF_PRODUTO AND CB9_LOCAL=BF_LOCAL  AND CB9_ORDSEP IN (SELECT CB7_ORDSEP FROM CB7010 WHERE D_E_L_E_T_ <>'*' )) AND BF_EMPENHO='0' "
+	// n1Statud :=TCSqlExec(Upd)
 
-	Upd := " UPDATE SBF020 SET BF_EMPENHO='1' WHERE D_E_L_E_T_ <>'*'  AND BF_NUMSERI IN (SELECT CB9_NUMSER FROM CB9020 WHERE D_E_L_E_T_ <>'*' AND CB9_PROD=BF_PRODUTO AND CB9_LOCAL=BF_LOCAL  AND CB9_ORDSEP IN (SELECT CB7_ORDSEP FROM CB7020 WHERE D_E_L_E_T_ <>'*' )) AND BF_EMPENHO='0' "
-	n1Statud :=TCSqlExec(Upd)
+	// Upd := " UPDATE SBF020 SET BF_EMPENHO='1' WHERE D_E_L_E_T_ <>'*'  AND BF_NUMSERI IN (SELECT CB9_NUMSER FROM CB9020 WHERE D_E_L_E_T_ <>'*' AND CB9_PROD=BF_PRODUTO AND CB9_LOCAL=BF_LOCAL  AND CB9_ORDSEP IN (SELECT CB7_ORDSEP FROM CB7020 WHERE D_E_L_E_T_ <>'*' )) AND BF_EMPENHO='0' "
+	// n1Statud :=TCSqlExec(Upd)
 
 
 
@@ -360,33 +360,35 @@ Static Function fProcessa(cProd,cOrdesep,Cpedido,cNumseri, cTitAux,Actualiza)
  Upd := " UPDATE SDC010 SET D_E_L_E_T_ = '*' WHERE R_E_C_N_O_ IN (SELECT R_E_C_N_O_ FROM SDC010 WHERE D_E_L_E_T_ <>'*' AND DC_SEQ NOT IN ( "
  Upd +=" SELECT C9_SEQUEN FROM SC9010 WHERE D_E_L_E_T_ <>'*' AND C9_PEDIDO=DC_PEDIDO "
  Upd +=" AND DC_PRODUTO=C9_PRODUTO "
+ Upd +=" AND DC_LOCAL=C9_LOCAL "
  Upd +=" AND C9_ITEM =DC_ITEM "
- Upd +=" AND C9_NFISCAL='' "
  Upd +=" )ORDER BY DC_PEDIDO DESC) AND D_E_L_E_T_ <>'*' "
  n1Statud :=TCSqlExec(Upd)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	
-
 	if (UPPER(Actualiza)=='S')
+
+		// 	// ELIMINA SERIALES DE LA TABLA SDC CUANDO NO EXISTA HISOTRICO REAL DEL SERIAL (NO CONCUERDA CON EL PEDIDO, NI EXISTE EN LA SBF)
+		Upd := "UPDATE "+RetSqlName("SDC")+" SET D_E_L_E_T_='*' WHERE D_E_L_E_T_ <> '*' "
+		Upd += " AND EXISTS (SELECT 1  FROM "+RetSqlName("SC9")+" "
+		Upd += " WHERE D_E_L_E_T_ <> '*' AND DC_PEDIDO = C9_PEDIDO AND DC_ITEM = C9_ITEM AND DC_LOCAL=C9_LOCAL  AND "
+		Upd += " DC_PRODUTO=C9_PRODUTO AND "
+		Upd += " LEN(TRIM(C9_REMITO))>0 AND  "
+		Upd += " LEN(TRIM(C9_ORDSEP))>0) "
+		n1Statud :=TCSqlExec(Upd)
+
+
+		// 	// ELIMINA SERIALES DE LA TABLA SDC CUANDO NO EXISTA HISOTRICO REAL DEL SERIAL (NO CONCUERDA CON EL PEDIDO, NI EXISTE EN LA SBF)
+		Upd := "UPDATE "+RetSqlName("SDC")+" SET D_E_L_E_T_='*' WHERE D_E_L_E_T_ <> '*' "
+		Upd += " AND EXISTS (SELECT 1  FROM "+RetSqlName("SC9")+" "
+		Upd += " WHERE D_E_L_E_T_ <> '*' AND DC_PEDIDO = C9_PEDIDO AND DC_ITEM = C9_ITEM AND DC_LOCAL=C9_LOCAL  AND "
+		Upd += " DC_PRODUTO=C9_PRODUTO AND DC_SEQ=C9_SEQUEN AND "
+		Upd += " LEN(TRIM(C9_REMITO))>0 AND  "
+		Upd += " LEN(TRIM(C9_ORDSEP))>0) "
+		n1Statud :=TCSqlExec(Upd)
+
+
 		// PONE RESERVADOS TODOS LOS SERIALES QUE ESTAN EN UNA ORDEN DE SEPARACIÓN PERO APARECEN DISPONIBLES
 		Upd := " UPDATE "+RetSqlName("SBF")+" SET BF_EMPENHO=1 WHERE D_E_L_E_T_ <> '*' "
 		Upd += " AND EXISTS (SELECT 1 FROM "+RetSqlName("CB8")+" WHERE  D_E_L_E_T_ <> '*' AND CB8_NUMSER=BF_NUMSERI AND BF_LOCAL=CB8_LOCAL AND CB8_PROD=BF_PRODUTO ) "
@@ -531,26 +533,26 @@ Static Function fProcessa(cProd,cOrdesep,Cpedido,cNumseri, cTitAux,Actualiza)
 		n1Statud :=TCSqlExec(Upd)
 
 
-		Upds := "UPDATE "+RetSqlName("SBF")+" SET D_E_L_E_T_='*' WHERE D_E_L_E_T_ <> '*' "
-		Upds += " AND ((SELECT  TOP 1 DB_ORIGEM FROM "+RetSqlName("SDB")+" WHERE D_E_L_E_T_ <>'*' AND BF_PRODUTO=DB_PRODUTO AND DB_LOCAL=BF_LOCAL AND BF_NUMSERI=DB_NUMSERI ORDER BY DB_DATA DESC)='SC6' "
-		Upds += " AND (SELECT  TOP 1 DB_SERIE FROM "+RetSqlName("SDB")+" WHERE D_E_L_E_T_ <>'*' AND BF_PRODUTO=DB_PRODUTO AND DB_LOCAL=BF_LOCAL AND BF_NUMSERI=DB_NUMSERI ORDER BY DB_DATA DESC)='R' "
+		// Upds := "UPDATE "+RetSqlName("SBF")+" SET D_E_L_E_T_='*' WHERE D_E_L_E_T_ <> '*' "
+		// Upds += " AND ((SELECT  TOP 1 DB_ORIGEM FROM "+RetSqlName("SDB")+" WHERE D_E_L_E_T_ <>'*' AND BF_PRODUTO=DB_PRODUTO AND DB_LOCAL=BF_LOCAL AND BF_NUMSERI=DB_NUMSERI ORDER BY DB_DATA DESC)='SC6' "
+		// Upds += " AND (SELECT  TOP 1 DB_SERIE FROM "+RetSqlName("SDB")+" WHERE D_E_L_E_T_ <>'*' AND BF_PRODUTO=DB_PRODUTO AND DB_LOCAL=BF_LOCAL AND BF_NUMSERI=DB_NUMSERI ORDER BY DB_DATA DESC)='R' "
 
-		Upds += " )"
-		if (Len(AllTrim(cProd))>0)
-			Upds += " AND BF_PRODUTO='" + AllTrim(cProd)+"'"
-		endif
-		if (Len(AllTrim(cOrdesep))>0)
-			Upds += " AND (  EXISTS ( SELECT 1 FROM "+RetSqlName("CB8")+" WHERE D_E_L_E_T_ <> '*'  AND CB8_PROD=BF_PRODUTO  AND CB8_NUMSER=BF_NUMSERI AND BF_LOCAL=CB8_LOCAL AND CB8_ORDSEP='" + AllTrim(cOrdesep) +"')"
-			Upds += " OR  EXISTS ( SELECT 1 FROM "+RetSqlName("CB9")+" WHERE D_E_L_E_T_ <> '*'  AND CB9_PROD=BF_PRODUTO AND CB9_NUMSER=BF_NUMSERI AND BF_LOCAL=CB9_LOCAL AND CB9_ORDSEP='" + AllTrim(cOrdesep) +"') )"
-		endif
-		if (Len(AllTrim(Cpedido))>0)
-			Upds += " AND ( EXISTS ( SELECT 1 FROM "+RetSqlName("CB8")+" WHERE D_E_L_E_T_ <> '*'  AND CB8_PROD=BF_PRODUTO  AND CB8_NUMSER=BF_NUMSERI AND BF_LOCAL=CB8_LOCAL AND CB8_PEDIDO='" + AllTrim(Cpedido) +"')"
-			Upds += " OR EXISTS ( SELECT 1 FROM "+RetSqlName("CB9")+" WHERE D_E_L_E_T_ <> '*' AND CB9_PROD=BF_PRODUTO  AND CB9_NUMSER=BF_NUMSERI AND BF_LOCAL=CB9_LOCAL AND CB9_PEDIDO='" + AllTrim(Cpedido) +"') )"
-		endif
-		if (Len(AllTrim(cNumseri))>0)
-			Upds += " AND BF_NUMSERI='" + AllTrim(cNumseri) +"'"
-		endif
-		n1Statud :=TCSqlExec(Upds)
+		// Upds += " )"
+		// if (Len(AllTrim(cProd))>0)
+		// 	Upds += " AND BF_PRODUTO='" + AllTrim(cProd)+"'"
+		// endif
+		// if (Len(AllTrim(cOrdesep))>0)
+		// 	Upds += " AND (  EXISTS ( SELECT 1 FROM "+RetSqlName("CB8")+" WHERE D_E_L_E_T_ <> '*'  AND CB8_PROD=BF_PRODUTO  AND CB8_NUMSER=BF_NUMSERI AND BF_LOCAL=CB8_LOCAL AND CB8_ORDSEP='" + AllTrim(cOrdesep) +"')"
+		// 	Upds += " OR  EXISTS ( SELECT 1 FROM "+RetSqlName("CB9")+" WHERE D_E_L_E_T_ <> '*'  AND CB9_PROD=BF_PRODUTO AND CB9_NUMSER=BF_NUMSERI AND BF_LOCAL=CB9_LOCAL AND CB9_ORDSEP='" + AllTrim(cOrdesep) +"') )"
+		// endif
+		// if (Len(AllTrim(Cpedido))>0)
+		// 	Upds += " AND ( EXISTS ( SELECT 1 FROM "+RetSqlName("CB8")+" WHERE D_E_L_E_T_ <> '*'  AND CB8_PROD=BF_PRODUTO  AND CB8_NUMSER=BF_NUMSERI AND BF_LOCAL=CB8_LOCAL AND CB8_PEDIDO='" + AllTrim(Cpedido) +"')"
+		// 	Upds += " OR EXISTS ( SELECT 1 FROM "+RetSqlName("CB9")+" WHERE D_E_L_E_T_ <> '*' AND CB9_PROD=BF_PRODUTO  AND CB9_NUMSER=BF_NUMSERI AND BF_LOCAL=CB9_LOCAL AND CB9_PEDIDO='" + AllTrim(Cpedido) +"') )"
+		// endif
+		// if (Len(AllTrim(cNumseri))>0)
+		// 	Upds += " AND BF_NUMSERI='" + AllTrim(cNumseri) +"'"
+		// endif
+		// n1Statud :=TCSqlExec(Upds)
 
 
 		Upd := "UPDATE "+RetSqlName("SDC")+" SET D_E_L_E_T_='*' WHERE D_E_L_E_T_ <> '*' "
@@ -764,6 +766,3 @@ Static Function fProcessa(cProd,cOrdesep,Cpedido,cNumseri, cTitAux,Actualiza)
 	RestArea(aAreaX3)
 	RestArea(aArea)
 Return
-
-
-

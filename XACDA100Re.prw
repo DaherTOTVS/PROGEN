@@ -13,16 +13,22 @@ Return NIL
 
 Static Function ReportDef()
 	Local oReport
-	Local oSection1, oSection2, oSection3
+	Local oSection1, oSection3, oSection4
 	Local cAliasQry 	:= GetNextAlias()
 
-	oReport := TReport():New("ACDA100RE","Orden de Separación","ACD100", {|oReport| ReportPrint(oReport,cAliasQry)},"Generación de informe de Ordenes de Separación")
+	oReport := TReport():New("ACDA100RE_"+Time(),"Orden de Separación","ACD100", {|oReport| ReportPrint(oReport,cAliasQry)},"Generación de informe de Ordenes de Separación")
 
 	// oReport:SetPortrait()     // Define a orientacao de pagina do relatorio como retrato.
 	oReport:SetLandscape()
 	oReport:HideParamPage()   // Desabilita a impressao da pagina de parametros.
 	// oReport:nMarginBottom(40)
 	oReport:nFontBody	:= 10  // Define o tamanho da fonte.
+	// oReport:oPage:SetPaperSize(9) //Folha A4
+	oReport:oPage:SetPaperSize(1) //Carta
+	oReport:NDEVICE := 6 // PDF
+	oReport:NENVIRONMENT := 2
+	oReport:cPathPDF := "C:\tmp\" // Caso seja utilizada impressão em IMP_PDF
+	oReport:lParamPage := .F. //Desabilita a Pagina Inicial de Parametros
 
 	Pergunte(oReport:uParam,.F.)
 
@@ -36,37 +42,43 @@ Static Function ReportDef()
 	TRCell():New(oSection1,"NUMERO"	  	,/*Tabela*/	,'Orden de Separacion',,30,/*lPixel*/,/*{|| (cAliasQry)->NIT }*/)
 	TRCell():New(oSection1,"PV"	  	,/*Tabela*/	,'Pedido de Venta',,30,/*lPixel*/,/*{|| (cAliasQry)->NIT }*/)
 	TRCell():New(oSection1,"OC"	  	,/*Tabela*/	,'Orden de Compra',,30,/*lPixel*/,/*{|| (cAliasQry)->NIT }*/)
-	TRCell():New(oSection1,"ESTADO"	  	,/*Tabela*/	,'Estatus',,25,/*lPixel*/,/*{|| (cAliasQry)->NIT }*/)
-	TRCell():New(oSection1,"CLIENTE"	  	,/*Tabela*/	,'Cliente',,200,/*lPixel*/,/*{|| (cAliasQry)->NIT }*/)
+	TRCell():New(oSection1,"ESTADO"	  	,/*Tabela*/	,'Estatus',,200,/*lPixel*/,/*{|| (cAliasQry)->NIT }*/)
+	TRCell():New(oSection1,"CLIENTE"	  	,/*Tabela*/	,'Direccion Entrega',,200,/*lPixel*/,/*{|| (cAliasQry)->NIT }*/)
 	// TRCell():New(oSection1,"DIR_ENT"	  	,/*Tabela*/	,'Direccion Entreg',,60,/*lPixel*/,/*{|| (cAliasQry)->NIT }*/)
 
 	oSection1:Cell('ESTADO'):SetCellBreak()
 
-	oSection2 := TRSection():New(oReport,'Report OS',{"CB7","CB8","SC9"},/*{Array com as ordens do relatório}*/,/*Campos do SX3*/,/*Campos do SIX*/)
-	oSection2:SetHeaderBreak()
+	oSection2 := TRSection():New(oReport,,,/*{Array com as ordens do relatório}*/,/*Campos do SX3*/,/*Campos do SIX*/)
+	oSection2:SetLineStyle() //Define a impressao da secao em linha
 	oSection2:SetReadOnly()
+	TRCell():New(oSection2,"MENSAJE"	,,'',,200,/*lPixel*/,/*{|| "OBS:" }*/,/*cAlign*/,.F./*lLineBreak*/ ,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,.F./*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
+
+
+	oSection3 := TRSection():New(oReport,'Report OS',{"CB7","CB8","SC9"},/*{Array com as ordens do relatório}*/,/*Campos do SX3*/,/*Campos do SIX*/)
+	oSection3:SetHeaderBreak()
+	oSection3:SetReadOnly()
 
 	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 	//³Define celulas da secao                                                 ³
 	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-	TRCell():New(oSection2,"Producto"	,'CB8','Producto',PesqPict('CB8','CB8_PROD')    ,35/*nSize*/,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,.F./*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
-	TRCell():New(oSection2,"Descripcion"  ,'CB7','Descripcion',PesqPict('SB1','B1_DESC')   ,100 ,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
-	TRCell():New(oSection2,"Almacen"  ,'CB7','Almacen',PesqPict('CB8','CB8_LOCAL')   ,8 ,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
-	TRCell():New(oSection2,"UM"     ,'SB1','UM',PesqPict('CB8','B1_UM')   ,5 ,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
-	TRCell():New(oSection2,"Ctd_Original"	,'SC9','Ctd_Original',"@E 9,999,999",10 ,/*lPixel*/,/*{|| code-block de impressao }*/,"CENTER",.T./*lLineBreak*/,,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
-	TRCell():New(oSection2,"Ctd_Separar"	,'SC9','Ctd_Separar',"@E 9,999,999",10 ,/*lPixel*/,/*{|| code-block de impressao }*/,"CENTER",.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
-	TRCell():New(oSection2,"Ubic_1"	,'SB1','Ubic_1',PesqPict('SB1','B1_XUBICA1')   ,30 ,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
-	TRCell():New(oSection2,"Ubic_2"	,'SB1','Ubic_2',PesqPict('SB1','B1_XUBICA2')   ,30 ,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
+	TRCell():New(oSection3,"Producto"	,'CB8','Product',PesqPict('CB8','CB8_PROD')    ,35/*nSize*/,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,.F./*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
+	TRCell():New(oSection3,"Descripcion"  ,'CB7','Descripcion',PesqPict('SB1','B1_DESC')   ,100 ,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
+	TRCell():New(oSection3,"Almacen"  ,'CB7','Almacen',PesqPict('CB8','CB8_LOCAL')   ,8 ,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
+	TRCell():New(oSection3,"UM"     ,'SB1','UM',PesqPict('CB8','B1_UM')   ,5 ,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
+	TRCell():New(oSection3,"Ctd_Original"	,'SC9','Ctd_Original',"@E 9,999,999",10 ,/*lPixel*/,/*{|| code-block de impressao }*/,"CENTER",.T./*lLineBreak*/,,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
+	TRCell():New(oSection3,"Ctd_Separar"	,'SC9','Ctd_Separar',"@E 9,999,999",10 ,/*lPixel*/,/*{|| code-block de impressao }*/,"CENTER",.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
+	TRCell():New(oSection3,"Ubic_1"	,'SB1','Ubic_1',PesqPict('SB1','B1_XUBICA1')   ,30 ,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
+	TRCell():New(oSection3,"Ubic_2"	,'SB1','Ubic_2',PesqPict('SB1','B1_XUBICA2')   ,30 ,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
 
-	oSection3 := TRSection():New(oReport,,,/*{Array com as ordens do relatório}*/,/*Campos do SX3*/,/*Campos do SIX*/)
-	 oSection3:SetLineStyle() //Define a impressao da secao em linha
-	 oSection3:SetReadOnly()
-	TRCell():New(oSection3,"OBS"	,,'',,200,/*lPixel*/,/*{|| "OBS:" }*/,/*cAlign*/,.F./*lLineBreak*/ ,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,.F./*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
+	oSection4 := TRSection():New(oReport,,,/*{Array com as ordens do relatório}*/,/*Campos do SX3*/,/*Campos do SIX*/)
+	oSection4:SetLineStyle() //Define a impressao da secao em linha
+	oSection4:SetReadOnly()
+	TRCell():New(oSection4,"OBS"	,,'',,200,/*lPixel*/,/*{|| "OBS:" }*/,/*cAlign*/,.F./*lLineBreak*/ ,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,.F./*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
 
-	oSection2:SetPageBreak(.T.)
 	oSection3:SetPageBreak(.T.)
+	oSection4:SetPageBreak(.T.)
 	oSection1:SetNoFilter({"CB7"})	
-	oSection2:SetNoFilter({"CB7","CB8","SC9"})
+	oSection3:SetNoFilter({"CB7","CB8","SC9"})
 Return(oReport)
 
 
@@ -79,6 +91,7 @@ Static Function ReportPrint(oReport,cAliasQry)
 	Local oSection1	:= oReport:Section(1)
 	Local oSection2	:= oReport:Section(2)
 	Local oSection3	:= oReport:Section(3)
+	Local oSection4	:= oReport:Section(4)
 	Local cQueryOS := ""
 	Local cOrdSep 	 := ""
 	Local cPedido 	 := ""
@@ -89,15 +102,18 @@ Static Function ReportPrint(oReport,cAliasQry)
 	Local cOP     	 := ""
 	Local cStatus 	 := ""
 	Local lCon       := .T.
+	Local cMensaje	 := "" 
+	Local cMennint	 := "" 
+	Local i 		:= 0
 
-	oSection2:Cell("Producto"):SetSize(40)
-	oSection2:Cell("Descripcion"):SetSize(75)
-	oSection2:Cell("Almacen"):SetSize(13)
-	oSection2:Cell("UM"):SetSize(04)
-	oSection2:Cell("Ctd_Original"):SetSize(18)
-	oSection2:Cell("Ctd_Separar"):SetSize(18)
-	oSection2:Cell("Ubic_1"):SetSize(25)
-	oSection2:Cell("Ubic_2"):SetSize(15)
+	oSection3:Cell("Producto"):SetSize(40)
+	oSection3:Cell("Descripcion"):SetSize(75)
+	oSection3:Cell("Almacen"):SetSize(13)
+	oSection3:Cell("UM"):SetSize(04)
+	oSection3:Cell("Ctd_Original"):SetSize(18)
+	oSection3:Cell("Ctd_Separar"):SetSize(18)
+	oSection3:Cell("Ubic_1"):SetSize(25)
+	oSection3:Cell("Ubic_2"):SetSize(15)
 
 	
 	oReport:nLineHeight	:= 40 // Define a altura da linha.
@@ -170,6 +186,7 @@ Static Function ReportPrint(oReport,cAliasQry)
 		oSection1:Init()
 		oSection2:Init()
 		oSection3:Init()
+		oSection4:Init()
 
 		cOrdSep 	 := Alltrim((cAliasQry)->CB7_ORDSEP)
 		cPedido 	 := Alltrim((cAliasQry)->CB7_PEDIDO)
@@ -196,20 +213,45 @@ Static Function ReportPrint(oReport,cAliasQry)
 		cClidrec := Alltrim(Posicione("SC5",1,xFilial("SC5")+cPedido,"C5_XENDENT"))
 		cCliDepa := Alltrim(Posicione("SC5",1,xFilial("SC5")+cPedido,"C5_XESTNOM"))
 		cCliMunc := Alltrim(Posicione("SC5",1,xFilial("SC5")+cPedido,"C5_XMUN"))
-		cOrdenC := Alltrim(Posicione("SC5",1,xFilial("SC5")+cPedido,"C5_XORCOMP"))
+		cOrdenC  := Alltrim(Posicione("SC5",1,xFilial("SC5")+cPedido,"C5_XORCOMP"))
+		cMensaje := Alltrim(Posicione("SC5",1,xFilial("SC5")+cPedido,"C5_XMENINT"))
+		cMennint := ""
+
+		cMennint = zMemoToA(cMensaje,70)
 		
 
 
 		oSection1:Cell("NUMERO"):SetValue("   "+cOrdSep)
-		oSection1:Cell("ESTADO"):SetValue(RetStatus(cStatus))
-		oSection1:Cell("CLIENTE"):SetValue(Alltrim(cCliEntr)+" - "+"Tienda: "+Alltrim(cCliLoj)+" - "+cCliName+"   Direccion Entrega: "+Alltrim(cClidrec)+" "+Alltrim(cCliDepa)+" "+Alltrim(cCliMunc))
+		oSection1:Cell("ESTADO"):SetValue(RetStatus(cStatus)+"                     Cliente: "+Alltrim(cCliEntr)+" - "+"Tienda: "+Alltrim(cCliLoj)+" - "+cCliName)
+		oSection1:Cell("CLIENTE"):SetValue("   "+Alltrim(cClidrec)+" "+Alltrim(cCliDepa)+" "+Alltrim(cCliMunc))
 		oSection1:Cell("PV"):SetValue("   "+cPedido)
 		oSection1:Cell("OC"):SetValue("   "+cOrdenC)
+
+
 		// oSection1:Cell("DIR_ENT"):SetValue("   "+Alltrim(cClidrec)+" "+Alltrim(cCliDepa)+" "+Alltrim(cCliMunc))
 
 		oReport:oPage:SetPageNumber(1)
 		oReport:SetTitle('Orden de separacion Nro '+cOrdSep)
 		oSection1:PrintLine()
+
+		
+
+		if (LEN(cMennint)<>0)
+
+			oReport:nLineHeight	:= 23 // Define a altura da linha. 
+			// oSection2:Cell("MENSAJE"):SetValue(AllTrim(cMensaje))
+			// 		// oReport:SkipLine()	
+			// oSection2:PrintLine()
+			for i := 1 to Len(cMennint)
+				if(Len(AllTrim(cMennint[i])))>0
+					oSection2:Cell("MENSAJE"):SetValue(AllTrim(cMennint[i]))
+					// oReport:SkipLine()	
+					oSection2:PrintLine()
+				EndIf
+			next
+
+		EndIf
+
 		oReport:IncMeter()
 
 		oReport:nLineHeight	:= 50 // Define a altura da linha. 
@@ -229,24 +271,24 @@ Static Function ReportPrint(oReport,cAliasQry)
 		While ! (_cAliOS)->(EOF())
 
 
-			oSection2:Cell("Producto"    ):SetValue((_cAliOS)->CB8_PROD)
-			oSection2:Cell("Descripcion"   ):SetValue((_cAliOS)->B1_DESC)
-			oSection2:Cell("Almacen"    ):SetValue((_cAliOS)->CB8_LOCAL)
-			oSection2:Cell("UM"    ):SetValue((_cAliOS)->B1_UM)
-			oSection2:Cell("Ctd_Original"    ):SetValue((_cAliOS)->CB8_QTDORI)
-			oSection2:Cell("Ctd_Separar"    ):SetValue((_cAliOS)->CB8_SALDOS)
-			oSection2:Cell("Ubic_1"    ):SetValue((_cAliOS)->B1_XUBICA1)
-			oSection2:Cell("Ubic_2"    ):SetValue((_cAliOS)->B1_XUBICA2)
+			oSection3:Cell("Producto"    ):SetValue((_cAliOS)->CB8_PROD)
+			oSection3:Cell("Descripcion"   ):SetValue((_cAliOS)->B1_DESC)
+			oSection3:Cell("Almacen"    ):SetValue((_cAliOS)->CB8_LOCAL)
+			oSection3:Cell("UM"    ):SetValue((_cAliOS)->B1_UM)
+			oSection3:Cell("Ctd_Original"    ):SetValue((_cAliOS)->CB8_QTDORI)
+			oSection3:Cell("Ctd_Separar"    ):SetValue((_cAliOS)->CB8_SALDOS)
+			oSection3:Cell("Ubic_1"    ):SetValue((_cAliOS)->B1_XUBICA1)
+			oSection3:Cell("Ubic_2"    ):SetValue((_cAliOS)->B1_XUBICA2)
 
-			oSection2:PrintLine()
+			oSection3:PrintLine()
 			If lCon 
-				oSection3:Cell("OBS"):SetValue("OBS:_____________________________________________________________________________________________________________________________________________")
+				oSection4:Cell("OBS"):SetValue("OBS:_____________________________________________________________________________________________________________________________________________")
 				lCon := .F.
 			else
 				 oReport:SkipLine()
-				oSection3:Cell("OBS"):SetValue("OBS:_____________________________________________________________________________________________________________________________________________")
+				oSection4:Cell("OBS"):SetValue("OBS:_____________________________________________________________________________________________________________________________________________")
 			EndIf
-			oSection3:PrintLine()
+			oSection4:PrintLine()
 			(_cAliOS)->(DbSkip())
 		EndDo
 
@@ -256,8 +298,8 @@ Static Function ReportPrint(oReport,cAliasQry)
 		(_cAliOS)->(dbCloseArea())
 		(cAliasQry)->(dbSkip())
 
+		oSection4:Finish()
 		oSection3:Finish()
-		oSection2:Finish()
 		oSection1:Finish()
 	
 	EndDo
@@ -297,3 +339,66 @@ Static Function RetStatus(cStatus)
 	EndIf
 
 Return(cDescri)
+
+
+Static Function zMemoToA(cTexto, nMaxCol, cQuebra, lTiraBra)
+	Local aTexto    := {}
+	Local aAux      := {}
+	Local nAtu      := 0
+	Default cTexto  := ''
+	Default nMaxCol := 60
+	Default cQuebra := ';'
+	Default lTiraBra:= .T.
+
+	//Quebrando o Array, conforme -Enter-
+	aAux:= StrTokArr(cTexto,Chr(13))
+
+	//Correndo o Array e retirando o tabulamento
+	For nAtu:=1 TO Len(aAux)
+		aAux[nAtu]:=StrTran(aAux[nAtu],Chr(10),'')
+	Next
+
+	//Correndo as linhas quebradas
+	For nAtu:=1 To Len(aAux)
+
+		//Se o tamanho de Texto, for maior que o número de colunas
+		If (Len(aAux[nAtu]) > nMaxCol)
+
+			//Enquanto o Tamanho for Maior
+			While (Len(aAux[nAtu]) > nMaxCol)
+				//Pegando a quebra conforme texto por parâmetro
+				nUltPos:=RAt(cQuebra,SubStr(aAux[nAtu],1,nMaxCol))
+
+				//Caso não tenha, a última posição será o último espaço em branco encontrado
+				If nUltPos == 0
+					nUltPos:=Rat(' ',SubStr(aAux[nAtu],1,nMaxCol))
+				EndIf
+
+				//Se não encontrar espaço em branco, a última posição será a coluna máxima
+				If(nUltPos==0)
+					nUltPos:=nMaxCol
+				EndIf
+
+				//Adicionando Parte da Sring (de 1 até a Úlima posição válida)
+				aAdd(aTexto,SubStr(aAux[nAtu],1,nUltPos))
+
+				//Quebrando o resto da String
+				aAux[nAtu] := SubStr(aAux[nAtu], nUltPos+1, Len(aAux[nAtu]))
+			EndDo
+
+			//Adicionando o que sobrou
+			aAdd(aTexto,aAux[nAtu])
+		Else
+			//Se for menor que o Máximo de colunas, adiciona o texto
+			aAdd(aTexto,aAux[nAtu])
+		EndIf
+	Next
+
+	//Se for para tirar os brancos
+	If lTiraBra
+		//Percorrendo as linhas do texto e aplica o AllTrim
+		For nAtu:=1 To Len(aTexto)
+			aTexto[nAtu] := Alltrim(aTexto[nAtu])
+		Next
+	EndIf
+Return aTexto

@@ -113,7 +113,8 @@ USer Function ImpoSql()
             (aItens[i][1]),;            // TIPO
             (RetSqlname(aItens[i][2])),;            // TABLA 
             (aItens[i][3]),;            // CAMPOS
-            (aItens[i][4])+"'",;            // CONDICION
+            (aItens[i][4]),;            // CONDICION
+            " AND D_E_L_E_T_ <>'*' ",;            // DELETE
             })
     Next
     oApunte:SetArray(aApunte)

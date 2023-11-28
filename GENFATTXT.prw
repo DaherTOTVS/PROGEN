@@ -22,7 +22,7 @@ If lSigue
         cFechaGen:=DTOS(dDatabase)
         //Controla nombre del archivo, agregando datos de la empresa
         cFile := '860016310'+'_'+'FAC'+'_'+DTOS(dDataBase)+Substr(GetRmtTime(),1,2)+Substr(GetRmtTime(),4,2)+Substr(GetRmtTime(),7,2)+'.carga'+'.txt'
-      
+    
         //Controla ruta del archivo
         cPath:="C:\TOTVS\"
         cPath := cGetFile( '*.txt|*.txt' , 'Ruta', 1, 'C:\', .F., nOR( GETF_LOCALHARD, GETF_LOCALFLOPPY, GETF_RETDIRECTORY ),.T., .T. )
@@ -58,7 +58,7 @@ IF lSigue
 	cQuery += " FROM " +cSF2
     cQuery += " WHERE "
     cQuery += " D2_DTDIGIT BETWEEN '"+Dtos(dDatabase-180)+"' AND '"+dTos(dDatabase) + "' AND "
-    cQuery += " D2_ESPECIE IN ('NCP') AND " 
+    cQuery += " D2_ESPECIE IN ('NCP')  AND " 
     cQuery += " D_E_L_E_T_ <> '*' "
     cQuery := ChangeQuery( cQuery )
     dbUseArea( .T., "TOPCONN", TCGenQry(,,cQuery), 'TRB', .F., .T.)
@@ -265,7 +265,7 @@ If Alltrim(cEspecie)=='NF'
     cDescMoe:= If(cMoneda=1,"COP","USD")
 Elseif Alltrim(cEspecie)=='NCP'
     // F2_FILIAL+F2_CLIENTE+F2_LOJA+F2_DOC+F2_SERIE+F2_TIPO+F2_ESPECIE                                                                                                 
-    cMoneda:=  Posicione("SF2",1,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_MOEDA")
+    cMoneda:=  Posicione("SF2",2,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_MOEDA")
     cDescMoe:= If(cMoneda=1,"COP","USD")
 ElseIf Alltrim(cEspecie)=='NDP'
     cMoneda:= Posicione("SF1",1,xFilial("SF1")+TRB->COMPROBANTE+TRB->SERIE+TRB->PROVEEDOR+TRB->LOJA,"F1_MOEDA")
@@ -289,7 +289,7 @@ Local cSubtot
 if Alltrim(cEspecie)$'NF|NDP'
     cSubtot:= Posicione("SF1",1,xFilial("SF1")+TRB->COMPROBANTE+TRB->SERIE+TRB->PROVEEDOR+TRB->LOJA,"F1_VALMERC")
 Elseif Alltrim(cEspecie)=='NCP'
-    cSubtot:= Posicione("SF2",1,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_VALMERC")
+    cSubtot:= Posicione("SF2",2,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_VALMERC")
 EndIf
 
 Return Alltrim(transform(cSubtot,"@r 9999999999999.99")) 
@@ -309,7 +309,7 @@ Local cRetFuent
 if Alltrim(cEspecie)$'NF|NDP'
     cRetFuent:= Posicione("SF1",1,xFilial("SF1")+TRB->COMPROBANTE+TRB->SERIE+TRB->PROVEEDOR+TRB->LOJA,"F1_VALIMP4")
 Elseif Alltrim(cEspecie)=='NCP'
-    cRetFuent:= Posicione("SF2",1,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_VALIMP4")
+    cRetFuent:= Posicione("SF2",2,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_VALIMP4")
 EndIf
 
 Return Alltrim(transform(cRetFuent,"@r 9999999999999.99"))  
@@ -329,7 +329,7 @@ Local cRetIca
 if Alltrim(cEspecie)$'NF|NDP'
     cRetIca:= Posicione("SF1",1,xFilial("SF1")+TRB->COMPROBANTE+TRB->SERIE+TRB->PROVEEDOR+TRB->LOJA,"F1_VALIMP7")
 Elseif Alltrim(cEspecie)=='NCP'
-    cRetIca:= Posicione("SF2",1,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_VALIMP7")
+    cRetIca:= Posicione("SF2",2,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_VALIMP7")
 EndIf
 
 Return Alltrim(transform(cRetIca,"@r 9999999999999.99"))  
@@ -349,7 +349,7 @@ Local cVlIva
 if Alltrim(cEspecie)$'NF|NDP'
     cVlIva:= Posicione("SF1",1,xFilial("SF1")+TRB->COMPROBANTE+TRB->SERIE+TRB->PROVEEDOR+TRB->LOJA,"F1_VALIMP7")
 Elseif Alltrim(cEspecie)=='NCP'
-    cVlIva:= Posicione("SF2",1,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_VALIMP7")
+    cVlIva:= Posicione("SF2",2,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_VALIMP7")
 EndIf
 
 Return Alltrim(transform(cVlIva,"@r 9999999999999.99"))  
@@ -369,7 +369,7 @@ Local cTotFat
 if Alltrim(cEspecie)$'NF|NDP'
     cTotFat:= Posicione("SF1",1,xFilial("SF1")+TRB->COMPROBANTE+TRB->SERIE+TRB->PROVEEDOR+TRB->LOJA,"F1_VALBRUT")
 Elseif Alltrim(cEspecie)=='NCP'
-    cTotFat:= Posicione("SF2",1,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_VALBRUT")
+    cTotFat:= Posicione("SF2",2,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_VALBRUT")
 EndIf
 
 Return Alltrim(transform(cTotFat,"@r 9999999999999.99"))        
@@ -389,7 +389,7 @@ Local cCodigo
 if Alltrim(cEspecie)$'NF|NDP'
     cCodigo:= Posicione("SF1",1,xFilial("SF1")+TRB->COMPROBANTE+TRB->SERIE+TRB->PROVEEDOR+TRB->LOJA,"F1_COND")
 Elseif Alltrim(cEspecie)=='NCP'
-    cCodigo:= Posicione("SF2",1,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_COND")
+    cCodigo:= Posicione("SF2",2,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_COND")
 EndIf
 
 Return cCodigo
@@ -532,7 +532,7 @@ Local cHoraCon2
 if Alltrim(cEspecie)$'NF|NDP'
     cHora2:= Posicione("SF1",1,xFilial("SF1")+TRB->COMPROBANTE+TRB->SERIE+TRB->PROVEEDOR+TRB->LOJA,"F1_HORA")
 Elseif Alltrim(cEspecie)=='NCP'
-    cHora2:= Posicione("SF2",1,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_HORA")
+    cHora2:= Posicione("SF2",2,xFilial("SF2")+TRB->PROVEEDOR+TRB->LOJA+TRB->COMPROBANTE+TRB->SERIE,"F2_HORA")
 EndIf
 
     cHoraCon2:= Substr(cHora2,1,2)+Substr(cHora2,4,2)+Substr(cHora2,7,2)

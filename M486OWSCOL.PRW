@@ -343,8 +343,10 @@ User Function M486OWSCOL
 
 			oWS:oWSordenDeCompra:=Service_ArrayOfOrdenDeCompra():New()
 			oWSOrdenDeCompra:=Service_OrdenDeCompra():New()
-			oWSOrdenDeCompra:cnumeroOrden:= cNumPedidos
-			oWSOrdenDeCompra:cnumeroPedido:=cNumOrdenCom
+			//oWSOrdenDeCompra:cnumeroOrden:= cNumPedidos //
+			//oWSOrdenDeCompra:cnumeroPedido:=cNumOrdenCom
+			oWSOrdenDeCompra:cnumeroOrden:= cNumOrdenCom 
+			oWSOrdenDeCompra:cnumeroPedido:=cNumPedidos
 			oWSOrdenDeCompra:ccodigoCliente:=ALLTRIM(cCodCli)+"-"+ALLTRIM(cCodLoj)
  			aAdd(oWS:oWSordenDeCompra:oWSordenDeCompra,oWSOrdenDeCompra) 
 		
