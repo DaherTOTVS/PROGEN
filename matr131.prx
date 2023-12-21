@@ -15,7 +15,7 @@
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
-User Function xMATR131()
+Function MATR131()
 
 Local oReport
 
@@ -35,7 +35,7 @@ Return
 ±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄ´±±
 ±±³Descri‡„o ³ Informe de Pedidos de Compra/Remitos/Notas Fiscais         ³±±
 ±±ÃÄÄÄÄÄÄÄÄÄÄÅÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ´±±
-±±³Retorno   ³ oExpO1: Ob																											eto do relatorio                                ³±±
+±±³Retorno   ³ oExpO1: Objeto do relatorio                                ³±±
 ±±ÀÄÄÄÄÄÄÄÄÄÄÁÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ±±
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
@@ -81,7 +81,7 @@ EndIf
 //³ExpC5 : Descricao                                                       ³
 //³                                                                        ³
 //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-oReport:= TReport():New("XMATR131",cTitle,"MTR131", {|oReport| ReportPrint(oReport,aOrdem)},STR0001 + " " + cRetTitle + " " + STR0073 + STR0071 )//"Imprime relaci¢n de las ordenes de compra"+cRetTitle+"Remito(s) y Facturas"
+oReport:= TReport():New("MATR131",cTitle,"MTR131", {|oReport| ReportPrint(oReport,aOrdem)},STR0001 + " " + cRetTitle + " " + STR0073 + STR0071 )//"Imprime relaci¢n de las ordenes de compra"+cRetTitle+"Remito(s) y Facturas"
 oReport:SetLandscape()
 //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 //³Criacao da secao utilizada pelo relatorio                               ³
@@ -130,7 +130,6 @@ oSect2Ped:SetTotalInLine(.F.)
 oSect2Ped:SetHeaderPage()
 TRCell():New(oSect2Ped,"C7_EMISSAO","SC7",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
 TRCell():New(oSect2Ped,"C7_FORNECE","SC7",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
-TRCell():New(oSect2Ped,"A2_NOME"   ,"SA2",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
 TRCell():New(oSect2Ped,"C7_LOJA"   ,"SC7",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
 TRCell():New(oSect2Ped,"C7_PRODUTO","SC7",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
 TRCell():New(oSect2Ped,"C7_NUM"    ,"SC7",/*Titulo*/,/*Picture*/,/*Tamanho*/,/*lPixel*/,/*{|| code-block de impressao }*/)
@@ -325,7 +324,7 @@ If mv_par01 == 1
 		oSection1:Cell("A2_NOME"):Disable()
 		oSection1:Cell("C7_PRODUTO"):Disable()
 		oSection1:Cell("B1_DESC"):Disable()
-		oSection1:Cell("C7_EMISSAO"):Disable()
+		oSection2:Cell("C7_EMISSAO"):Disable()
 	ElseIf nOrdem == 2
 		oSection1:Cell("C7_EMISSAO"):Disable()
 		oSection1:Cell("C7_PRODUTO"):Disable()
@@ -641,15 +640,15 @@ While !oReport:Cancel() .And. !(cAliasQry)->(Eof())
 								lPrintline := .T.
 								oSection2:PrintLine()
 
-								// oSection2:Cell("C7_EMISSAO"):Hide()
-								// oSection2:Cell("C7_FORNECE"):Hide()
-								// oSection2:Cell("C7_LOJA"):Hide()
-								// oSection2:Cell("C7_PRODUTO"):Hide()
-								// oSection2:Cell("C7_NUM"):Hide()
-								// oSection2:Cell("C7_ITEM"):Hide()
-								// oSection2:Cell("C7_PRECO"):Hide()
-								// oSection2:Cell("C7_QUANT"):Hide()
-								// oSection2:Cell("C7_DATPRF"):Hide()
+								oSection2:Cell("C7_EMISSAO"):Hide()
+								oSection2:Cell("C7_FORNECE"):Hide()
+								oSection2:Cell("C7_LOJA"):Hide()
+								oSection2:Cell("C7_PRODUTO"):Hide()
+								oSection2:Cell("C7_NUM"):Hide()
+								oSection2:Cell("C7_ITEM"):Hide()
+								oSection2:Cell("C7_PRECO"):Hide()
+								oSection2:Cell("C7_QUANT"):Hide()
+								oSection2:Cell("C7_DATPRF"):Hide()
 								oSection2:Cell("REMDOC"):Hide()
 								oSection2:Cell("REMITEM"):Hide()
 								oSection2:Cell("REMQUANT"):Hide()
@@ -669,16 +668,15 @@ While !oReport:Cancel() .And. !(cAliasQry)->(Eof())
 
 						oSection2:PrintLine()
 
-						// oSection2:Cell("C7_EMISSAO"):Hide()
-						// oSection2:Cell("C7_FORNECE"):Hide()
-						// oSection2:Cell("A2_NOME"):Hide()
-						// oSection2:Cell("C7_LOJA"):Hide()
-						// oSection2:Cell("C7_PRODUTO"):Hide()
-						// oSection2:Cell("C7_NUM"):Hide()
-						// oSection2:Cell("C7_ITEM"):Hide()
-						// oSection2:Cell("C7_PRECO"):Hide()
-						// oSection2:Cell("C7_QUANT"):Hide()
-						// oSection2:Cell("C7_DATPRF"):Hide()
+						oSection2:Cell("C7_EMISSAO"):Hide()
+						oSection2:Cell("C7_FORNECE"):Hide()
+						oSection2:Cell("C7_LOJA"):Hide()
+						oSection2:Cell("C7_PRODUTO"):Hide()
+						oSection2:Cell("C7_NUM"):Hide()
+						oSection2:Cell("C7_ITEM"):Hide()
+						oSection2:Cell("C7_PRECO"):Hide()
+						oSection2:Cell("C7_QUANT"):Hide()
+						oSection2:Cell("C7_DATPRF"):Hide()
 					EndIf
 					(cQryNfes)->(DBCloseArea())
 				EndIf
@@ -723,7 +721,6 @@ While !oReport:Cancel() .And. !(cAliasQry)->(Eof())
                      
 						oSection2:Cell("C7_EMISSAO"):Hide()
 						oSection2:Cell("C7_FORNECE"):Hide()
-						oSection2:Cell("A2_NOME"):Hide()
 						oSection2:Cell("C7_LOJA"):Hide()
 						oSection2:Cell("C7_PRODUTO"):Hide()
 						oSection2:Cell("C7_NUM"):Hide()
@@ -738,7 +735,6 @@ While !oReport:Cancel() .And. !(cAliasQry)->(Eof())
 
 			oSection2:Cell("C7_EMISSAO"):Show()
 			oSection2:Cell("C7_FORNECE"):Show()
-			oSection2:Cell("A2_NOME"):Show()
 			oSection2:Cell("C7_LOJA"):Show()
 			oSection2:Cell("C7_PRODUTO"):Show()
 			oSection2:Cell("C7_NUM"):Show()

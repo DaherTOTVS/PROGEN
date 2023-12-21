@@ -1493,6 +1493,7 @@ Static Function LookSerLot(producto,nuop,remision)
 	Clookserie+=" FROM "+ InitSqlName("SDB") +" A " + CRLF
 	Clookserie+=" WHERE"+ CRLF
 	Clookserie+=" A.DB_PRODUTO='"+producto+"' AND A.DB_DOC='"+remision+"' AND A.D_E_L_E_T_ <> '*' "  + CRLF
+	Clookserie+=" ORDER BY DB_NUMSERI DESC"  + CRLF
 	//Clookserie+=" DC_PRODUTO='"+producto+"' AND DC_PEDIDO='"+ped+"' AND DC_NUMSERI <> '' "  + CRLF
 	
 	//
