@@ -20,7 +20,7 @@ Local cDescuento    := 0
 Local cDiaV         := ""
 Local dDtLimite     := ""
 
-If FunName()=="FINA087A"
+If FunName()$"FINA087A|FINA998"
     if SE1->E1_DESCFIN<>0 .AND. SE1->E1_DIADESC<>0
         dDtLimite := SE1->E1_VENCREA - SE1->E1_DIADESC
         if dDataBase <= dDtLimite
