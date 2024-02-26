@@ -203,7 +203,7 @@ User Function GenPago2
             Endif
         cNumeroCompr:=TRB->EK_ORDPAGO
         cRef        := MV_PAR11
-        AAdd( aDeta,{ IdLinea , Strzero(nSecuen,4) ,cNitOrde  , cRellen , cBenef , cNit ,"0"+cCodCtaB,cAo,cMes,cDia,cTipoPago,Strzero(TRB->EK_VALOR*100,15),Strzero(Val(cBcoDest),16),Strzero(Val(cNumeroCompr),12),cCcCAho,mv_par11 })
+        AAdd( aDeta,{ IdLinea , Strzero(nSecuen,4) ,cNitOrde  , cRellen , cBenef , cNit ,"0"+cCodCtaB,cAo,cMes,cDia,cTipoPago,Strzero(TRB->EK_VALOR*100,15),PADR(Alltrim(cBcoDest),16),Strzero(Val(cNumeroCompr),12),cCcCAho,mv_par11 })
 
         If Len(aDeta) > 0
             GenDeta(aDeta)
