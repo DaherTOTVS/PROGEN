@@ -204,7 +204,7 @@ Static Function ReportDef()
 	TRCell():New(oSection2,'D4_LOCAL'	,'SD4','ALM'   ,PesqPict('SD4','D4_LOCAL')  ,TamSX3('D4_LOCAL')[1]+2  ,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,/*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
 	TRCell():New(oSection2,'B1_XUBICA1','SB1','Ubica1'/*Titulo*/,PesqPict('SB1','B1_XUBICA1'),,/*lPixel*/,/*{||Posicione("NNR",1,xFilial("NNR")+SD4->D4_LOCAL,"NNR_DESCRI")}*/,/*cAlign*/,.F./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,.F./*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
 	TRCell():New(oSection2,'B1_XUBICA2','SB1','Ubica2'/*Titulo*/,PesqPict('SB1','B1_XUBICA2'),,/*lPixel*/,/*{||Posicione("NNR",1,xFilial("NNR")+SD4->D4_LOCAL,"NNR_DESCRI")}*/,/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,.F./*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
-	TRCell():New(oSection2,'G2_RECURSO' , ,'Recurso'  , ,20 ,/*lPixel*/, {||_xRecu1((cAliasTop)->C2_PRODUTO,SD4->D4_COD,(cAliasTop)->C2_FILIAL,(cAliasTop)->C2_ROTEIRO)},/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
+	TRCell():New(oSection2,'G2_RECURSO' , ,'Recurso'  , ,20 ,/*lPixel*/, {||_xRecu1((cAliasTop)->C2_PRODUTO,SD4->D4_COD,(cAliasTop)->C2_FILIAL,(cAliasTop)->C2_ROTEIRO,(cAliasTop)->C2_NUM,(cAliasTop)->C2_SEQUEN)},/*cAlign*/,.T./*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
 	TRCell():New(oSection2,'D4_TRT'  	,'SD4',STR0064   ,PesqPict('SD4','D4_TRT')    ,,/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,/*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
 	TRCell():New(oSection2,'D4_LOTECTL','SD4',/*Titulo*/,PesqPict('SD4','D4_LOTECTL'),TamSX3('D4_LOTECTL')[1],/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,/*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
 	// TRCell():New(oSection2,'D4_NUMLOTE','SD4',/*Titulo*/,PesqPict('SD4','D4_NUMLOTE'),TamSX3('D4_NUMLOTE')[1],/*lPixel*/,/*{|| code-block de impressao }*/,/*cAlign*/,/*lLineBreak*/,/*cHeaderAlign*/,/*lCellBreak*/,/*nColSpace*/,/*lAutoSize*/,/*nClrBack*/,/*nClrFore*/)
@@ -1755,7 +1755,7 @@ Static Function _xDesg1(cXProdu,cXComp)
 Return (cRetorno)
 
 
-Static Function _xRecu1(rXProdu,rXComp,rXFilial,rXreteiro)
+Static Function _xRecu1(rXProdu,rXComp,rXFilial,rXreteiro,xNum,xSeq)
 	Local _rXCprodu := rXProdu
 	Local _rXFilial := rXFilial
 	Local _cAQuery := ""
@@ -1803,6 +1803,10 @@ Static Function _xRecu1(rXProdu,rXComp,rXFilial,rXreteiro)
 		_cAQuery +="INNER JOIN "+RetSQLName('SC2')+" SC2 "
 		_cAQuery +="ON SG2.G2_CODIGO=SC2.C2_ROTEIRO "
 		_cAQuery +="AND SG2.G2_PRODUTO = SC2.C2_PRODUTO "
+
+		_cAQuery +="AND SC2.C2_NUM ='"+xNum+"' "
+		_cAQuery +="AND SC2.C2_SEQUEN ='"+xSeq+"' "
+
 		_cAQuery +="AND SG2.D_E_L_E_T_ <> '*'  "
 		_cAQuery +="LEFT JOIN "+RetSQLName('SGF')+" SGF "
 		_cAQuery +="ON SGF.GF_PRODUTO=SG2.G2_PRODUTO "
