@@ -73,6 +73,39 @@ User Function M486OWSCOL
 			oWSObgs:cobligaciones := "R-99-PN" //"R-99-PN"
 			aAdd(oWS:oWSCliente:oWSResponsabilidadesRut:oWSObligaciones,oWSObgs)
 
+			//Javier Rocha 28/02/2024 Metodo de Pago en Doc Soporte
+			aCabDatos := CabDatos()
+			
+			cFechaEmision	:= dtos(aCabDatos[1][10])
+			cVencimiento 	:= aCabDatos[1][24]
+			lContado		:= IIF(cFechaEmision==cVencimiento,.T.,.F.)
+
+			IF  lContado
+				cMetodoPago		:= .T.
+				cVencimiento 	:= aCabDatos[1][24] // La misma fecha de factura 28-abr-2023
+			Else
+				cMetodoPago		:= .F.
+				cVencimiento 	:= aCabDatos[1][24]
+			EndIf
+
+			If !EMPTY(cVencimiento)
+				oWS:oWSMediosDePago:=Service_ArrayOfMediosDePago():New()
+				oWSMediosPago:=Service_MediosDePago():New()
+				oWSMediosPago:cfechaDeVencimiento:=LEFT(cVencimiento,4)+"-"+SUBSTR(cVencimiento,5,2)+"-"+RIGHT(cVencimiento,2)
+				oWSMediosPago:cmedioPago:="ZZZ"
+				oWSMediosPago:cmetodoDePago:=IF(cMetodoPago,'1','2') // "2"=Credito
+				oWSMediosPago:cnumeroDeReferencia:='01' //alltrim(cSerieDoc)+"-"+ cValToChar(val(cNumDoc))//"01"
+				aAdd(oWS:oWSMediosDePago:oWSMediosDePago,oWSMediosPago)
+			Else
+				oWS:oWSMediosDePago:=Service_ArrayOfMediosDePago():New()
+				oWSMediosPago:=Service_MediosDePago():New()
+				//oWSMediosPago:cfechaDeVencimiento:=LEFT(cVence,4)+"-"+SUBSTR(cVence,5,2)+"-"+RIGHT(cVence,2)
+				oWSMediosPago:cmedioPago:="ZZZ"
+				oWSMediosPago:cmetodoDePago:=IF(cMetodoPago ,'1','2') // "2"=Credito
+				oWSMediosPago:cnumeroDeReferencia:='01' //alltrim(cSerieDoc)+"-"+ cValToChar(val(cNumDoc))//"01"
+				aAdd(oWS:oWSMediosDePago:oWSMediosDePago,oWSMediosPago)
+			Endif
+
 		ELSE
 
 			cExtra11I  	:= "RESPONSABLE DE I.V.A"
