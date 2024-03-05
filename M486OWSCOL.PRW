@@ -61,7 +61,7 @@ User Function M486OWSCOL
 		oWs:ccantidadDecimales = '3'  // Para trasmision a 3 digitos el campo cantidad
 		cTipDocT	:= OWS:CTIPODOCUMENTO
 
-		IF nTDTras == 6  // PARA DOC SOPORTE / REEMPLAZAR LOS VALORES DE NIT QUE TRAE DESDE LA RUTINA STANDARD DOC SOPORTE
+		IF nTDTras == 6 .OR. nTDTras == 9 // PARA DOC SOPORTE / REEMPLAZAR LOS VALORES DE NIT QUE TRAE DESDE LA RUTINA STANDARD DOC SOPORTE
 			SA2->(dbSetOrder(1))  //A2_FILIAL+A2_COD+A2_LOJA
 			SA2->(dbSeek(xFilial("SA2")+cCodCli+cCodLoj))
 			oWSCli:oWSinformacionLegalCliente:cnumeroIdentificacion 	:= ALLTRIM(SA2->A2_CGC)//+ALLTRIM(SA2->A2_XDV)
