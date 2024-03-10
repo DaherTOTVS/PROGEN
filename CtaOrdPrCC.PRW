@@ -37,9 +37,11 @@ IF Alltrim(TM)$'001/501/003/503'	// //IF Posicione("SF5",1,xFilial("SF5")+TM,"F5
     cCuenta := GETMV("MV_XVARI1")
 ElseIf Alltrim(TM)$'012/510'
 	cCuenta := GETMV("MV_XVARI2")
+Elseif Alltrim(TM)$'603/033'		// Modificado 06.03.2024 por Indicacion de Daniel , Juan Pablo A.
+	cCuenta := GETMV("MV_XVARI3") 	// Modificado 06.03.2024 por Indicacion de Daniel , Juan Pablo A.
 ElseIf Alltrim(TM)$'035/605'
 	cCuenta := GETMV("MV_XVARI4")
-ElseIF Alltrim(TM)$'601/603/031/607/609/611/037/038/039/033'  // Se agrego el 603/033 que estaba en la seccion 033
+ElseIF Alltrim(TM)$'601/031/607/609/611/037/038/039'  // Se agrego el 603/033 que estaba en la seccion 033 , Modificado 06.03.2024 Indicacion de Daniel,Juan Pablo A.
 		IF CtpGto=='51' //Costos de operaciones de administración o compras generales
 			cCuenta:= SB1->B1_XGTADM
 		ElseIf CtpGto=='52' //Costos de operaciones comerciales     
