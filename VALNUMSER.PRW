@@ -12,23 +12,33 @@
 /*/
 User function VALNUMSER()
 	Local aArea := getArea()
-	Local cBodega
-    Local cProducto
-    Local cNumser
-    Local cLocaliz
-    Local cLote
-    Local cNLote
+	Local cBodega := ""
+    Local cProducto := ""
+    Local cNumser := ""
+    Local cLocaliz := ""
+    Local cLote := ""
+    Local cNLote := ""
+	Local lRet := .T.
 
-	// Verificar si el campo B1_XALM esta Vacio
-	dbSelectArea( "SDB " )
-	SDB ->(dbSetOrder(2))
-	IF SDB->(DBSEEK(xfilial("SB1")+cProducto))
-		IF Empty(B1_XALM)
-			cBodega := B1_LOCPAD // Usar el valor del campo B1_LOCPAD  o la bodega default del Pto
-		else
-			cBodega := B1_XALM // Usar el valor del campo B1_XALM  o Almacen de Produccion
-        End If
-    End If
-	("SB1")->(DBCloseArea())
+	If(Funname()=="MATA265")
+		cBodega := M->DA_LOCAL
+		cProducto := M->DA_PRODUTO
+		cNumser := M->DB_NUMSERI
+		cLocaliz := gdFieldGet("DB_LOCALIZ")
+		cLote := M->DA_LOTECTL
+		cNLote := M->DA_NUMLOTE
+
+		// Verificar si el campo B1_XALM esta Vacio
+		dbSelectArea( "SDB " )
+		SDB ->(dbSetOrder(2))
+		IF SDB->(DBSEEK(xfilial("SDB")+cProducto+cBodega+cLote+cNLote+cNumser+cLocaliz))
+			IF SDB->(DB_TM) <='499'
+				MSGALERT( "Numero de serie "+ALLTRIM(cNumser)+" no permitido, tuvo entrada en el documento "+ALLTRIM(SDB->(DB_DOC)), "Entrada duplicada" )
+				lRet := .F.
+			EndIf
+		EndIf
+		("SDB")->(DBCloseArea())	
+
+	EndIf
 	RestArea(aArea)    
-RETURN cBodega
+RETURN lRet
