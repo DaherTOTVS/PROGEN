@@ -16,6 +16,8 @@ Static Function ReportDef()
 	Local cAliasQry 	:= GetNextAlias()
 	Local cAliasQryBF 	:= GetNextAlias()
 
+	U_ACD166DH()
+
 
 	oReport := TReport():New("XSERSTOCK","Balance Stock - Seriales ","XSERSTOCK", {|oReport| ReportPrint(oReport,cAliasQry,cAliasQryBF,xAuxTerc)},"Balance Stock - Seriales")
 	oReport:SetTotalInLine(.F.)
