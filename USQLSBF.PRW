@@ -373,7 +373,7 @@ Static Function fProcessa(cProd,cOrdesep,Cpedido,cNumseri, cTitAux,Actualiza)
 		Upd := "UPDATE "+RetSqlName("SDC")+" SET D_E_L_E_T_='*' WHERE D_E_L_E_T_ <> '*' "
 		Upd += " AND EXISTS (SELECT 1  FROM "+RetSqlName("SC9")+" "
 		Upd += " WHERE D_E_L_E_T_ <> '*' AND DC_PEDIDO = C9_PEDIDO AND DC_ITEM = C9_ITEM AND DC_LOCAL=C9_LOCAL  AND "
-		Upd += " DC_PRODUTO=C9_PRODUTO AND "
+		Upd += " DC_PRODUTO=C9_PRODUTO AND C9_SEQUEN=DC_SEQ"
 		Upd += " LEN(TRIM(C9_REMITO))>0 AND  "
 		Upd += " LEN(TRIM(C9_ORDSEP))>0) "
 		n1Statud :=TCSqlExec(Upd)

@@ -206,10 +206,10 @@ Static function Encab()
 
     oPrinter:Say(0140,0120,cvaltochar("CRA. 3 # 56-07"),oFont12,1400,CLR_BLACK)
     oPrinter:Say(0150,0120,UPPER("Soacha, Cundinamarca"),oFont10,1400,CLR_BLACK)
-    if len(alltrim(aDat[1][2]))>=35
-        oPrinter:Say(0140,0290,cvaltochar(substr(aDat[1][2],1,35)),oFont12,1400,CLR_BLACK)
-        oPrinter:Say(0150,0290,cvaltochar(substr(aDat[1][2],36,70)),oFont12,1400,CLR_BLACK)
-        oPrinter:Say(0160,0290,cvaltochar(substr(aDat[1][2],71,100)),oFont12,1400,CLR_BLACK)
+    if len(alltrim(aDat[1][2]))>=33
+        oPrinter:Say(0140,0290,cvaltochar(substr(aDat[1][2],1,33)),oFont12,1400,CLR_BLACK)
+        oPrinter:Say(0150,0290,cvaltochar(substr(aDat[1][2],34,68)),oFont12,1400,CLR_BLACK)
+        oPrinter:Say(0160,0290,cvaltochar(substr(aDat[1][2],69,100)),oFont12,1400,CLR_BLACK)
         //oPrinter:Say(0160,0190,cvaltochar(substr(aDat[1][2],24,30)),oFont12,1400,CLR_BLACK)
     else
         oPrinter:Say(0140,0290,cvaltochar(aDat[1][2]),oFont12,1400,CLR_BLACK)
@@ -440,11 +440,22 @@ Static function detalle(Ini,Long)
     nLinha := 0205
     for ix := Ini to Long
         //1 PRODUCTO, 2 CANTIDAD, 3 OP (VACIO), 4 PESO, 5 TEMP, 6 VENCIMIENTO
+        if alltrim(str(Long)) $ '100200300400500600700800900' .AND. Long > 9
 
-        if ix <=fil
-            relleno(ix,nLinha)
-            nLinha += 35
-        ENDIF
+            if ix <fil
+                relleno(ix,nLinha)
+                nLinha += 35
+            ENDIF
+
+        else
+
+            if ix <=fil
+                relleno(ix,nLinha)
+                nLinha += 35
+            ENDIF
+
+        EndIf
+
 
     next ix
 

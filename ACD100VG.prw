@@ -189,5 +189,4 @@ User Function ACD100VG()
     RestArea(aSvSC9)
     RestArea(aSvSDC)    
     RestArea(aArea)
-
 Return .T.

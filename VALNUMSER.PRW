@@ -18,23 +18,29 @@ User function VALNUMSER()
     Local cLocaliz := ""
     Local cLote := ""
     Local cNLote := ""
+	Local csaldo := ""
+	Local cQuant := ""
 	Local lRet := .T.
 
 	If(Funname()=="MATA265")
 		cBodega := M->DA_LOCAL
 		cProducto := M->DA_PRODUTO
-		cNumser := M->DB_NUMSERI
+		cNumser := M->DB_NUMSER
 		cLocaliz := gdFieldGet("DB_LOCALIZ")
 		cLote := M->DA_LOTECTL
 		cNLote := M->DA_NUMLOTE
+		csaldo := M->DA_SALDO
+		cQuant	:= M->DA_QTDORI
 
 		// Verificar si el campo B1_XALM esta Vacio
 		dbSelectArea( "SDB " )
 		SDB ->(dbSetOrder(2))
 		IF SDB->(DBSEEK(xfilial("SDB")+cProducto+cBodega+cLote+cNLote+cNumser+cLocaliz))
 			IF SDB->(DB_TM) <='499'
-				MSGALERT( "Numero de serie "+ALLTRIM(cNumser)+" no permitido, tuvo entrada en el documento "+ALLTRIM(SDB->(DB_DOC)), "Entrada duplicada" )
-				lRet := .F.
+				IF csaldo == cQuant
+					MSGALERT( "Numero de serie "+ALLTRIM(cNumser)+" no permitido, tuvo entrada en el documento "+ALLTRIM(SDB->(DB_DOC)), "Entrada duplicada" )
+					lRet := .F.
+				EndIF
 			EndIf
 		EndIf
 		("SDB")->(DBCloseArea())	

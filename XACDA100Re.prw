@@ -105,6 +105,7 @@ Static Function ReportPrint(oReport,cAliasQry)
 	Local cMensaje	 := "" 
 	Local cMennint	 := "" 
 	Local i 		:= 0
+	Local lValSer := SuperGetMV("MV_VALSER",.F.,.F.)
 
 	oSection3:Cell("Producto"):SetSize(40)
 	oSection3:Cell("Descripcion"):SetSize(75)
@@ -176,6 +177,14 @@ Static Function ReportPrint(oReport,cAliasQry)
 	
 
 	While !oReport:Cancel() .And. !(cAliasQry)->(Eof())
+
+		//validara que la cantidad de la orden sea igual a la de la liberación
+		If !validSald(lValSer,(cAliasQry)->CB7_ORDSEP)
+
+			MSGALERT("Se encontro inconsistencia en la orden de separación "+ (cAliasQry)->CB7_ORDSEP+", Informe al administrador.", "IMPRESIÓN ORDEN DE SEPARACIÓN" )
+			(cAliasQry)->(DbSkip())
+			Loop
+		EndIf
 
 		If mv_par05 == 2 .and. (cAliasQry)->CB7_STATUS $ "2|4|9" // Nao Considera as Ordens ja encerradas
 			(cAliasQry)->(DbSkip())
@@ -402,3 +411,59 @@ Static Function zMemoToA(cTexto, nMaxCol, cQuebra, lTiraBra)
 		Next
 	EndIf
 Return aTexto
+
+static function validSald(lValSer,cOrdSep)
+Local _cAliOS  := GetNextAlias()
+Local aArea    := GetArea()
+Local aSvSC9	:= SC9->(GetArea())
+Local aSvCB8	:= CB8->(GetArea())
+Local lRet := .T.
+Local cQueryOS := ""
+
+	If lValSer
+	
+		cQueryOS := " SELECT CB8_ORDSEP, CB8_PEDIDO, CB8_PROD, CB8_LOCAL, CB8_LCALIZ, CB8_SEQUEN, CB8_ITEM,"
+		cQueryOS += " SUM(CB8_QTDORI) AS CB8_QTDORI FROM "+ RetSqlName("CB8") +" CB8"
+		cQueryOS += " INNER JOIN "+ RetSqlName("SB1") + " SB1 ON CB8_PROD = B1_COD AND SB1.D_E_L_E_T_ <> '*' "
+		cQueryOS += " WHERE CB8_ORDSEP = '" + cOrdSep + "' AND CB8.D_E_L_E_T_ <>'*' "
+		cQueryOS += " GROUP BY CB8_ORDSEP, CB8_PEDIDO, CB8_PROD, CB8_LOCAL, CB8_LCALIZ, CB8_SEQUEN, CB8_ITEM"
+		cQueryOS := ChangeQuery(cQueryOS)
+		dbUseArea( .T., 'TOPCONN', TCGENQRY(,,cQueryOS), _cAliOS, .F., .T.)
+
+		While ! (_cAliOS)->(EOF())
+
+			_cAQuer := " SELECT C9_QTDLIB FROM  "+RetSQLName('SC9')+" SC9 "
+			_cAQuer += " WHERE SC9.D_E_L_E_T_ <> '*' "
+			_cAQuer += " AND SC9.C9_ORDSEP='"+(_cAliOS)->CB8_ORDSEP+"' "
+			_cAQuer += " AND SC9.C9_PEDIDO='"+(_cAliOS)->CB8_PEDIDO+"' "
+			_cAQuer += " AND SC9.C9_PRODUTO='"+(_cAliOS)->CB8_PROD+"' "
+			_cAQuer += " AND SC9.C9_LOCAL='"+(_cAliOS)->CB8_LOCAL+"' "
+			_cAQuer += " AND SC9.C9_ITEM='"+(_cAliOS)->CB8_ITEM+"' "
+			_cAQuer += " AND SC9.C9_SEQUEN='"+(_cAliOS)->CB8_SEQUEN+"' "
+			_cAQuer += " AND SC9.C9_REMITO=' ' "
+
+			TcQuery _cAQuer New Alias "_aQR"
+			dbSelectArea("_aQR")
+			While !_aQR->(EOF())
+
+			    If (_cAliOS)->CB8_QTDORI != _aQR->C9_QTDLIB
+					lRet := .F.
+				EndIf
+
+				_aQR->(dbSkip())
+			EndDo
+			_aQR->(dbCloseArea())
+
+
+			(_cAliOS)->(DbSkip())
+		EndDo
+		(_cAliOS)->(dbCloseArea())
+
+		U_ACD166DH()
+
+	EndIf
+
+RestArea(aSvSC9)
+RestArea(aSvCB8)    
+RestArea(aArea)
+return lRet

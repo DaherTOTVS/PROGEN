@@ -555,6 +555,7 @@ Static Function AcmDtaiPR()
 			Ctienda 		= (cQueryx)->D2_LOJA
 			Cclientex 		= (cQueryx)->C6_CLI
 			cRemision 		= (cQueryx)->D2_DOC
+			cNumseq 		= (cQueryx)->D2_NUMSEQ
 
 			LokforQry(condPedido,condProduto)
 			Cresultlook = lokforQ->C6_NUMOP
@@ -563,10 +564,11 @@ Static Function AcmDtaiPR()
 			//Si el resultado es vacio, es decir que no hay op, el codigo muestra los productos normales o sin estructura
 			if Empty(Cresultlook)  
 				cCanIMP	:= cValToChar((cQueryx)->D2_QUANT)  //change
+				cSeqRem	:= cValToChar((cQueryx)->D2_NUMSEQ)  //change
 				nLinea += 0.5;
 
 				nLinea ++;  oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+10	, (cQueryx)->D2_COD						,	oArial12N,,,,2)
-							oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1590	, AllTrim(cQueryx->C6_LOTECTL)			,	oArial12,,,,2)
+							oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1590	, AllTrim(cQueryx->D2_LOTECTL)			,	oArial12,,,,2)
 							oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1880	, AllTrim(cQueryx->C6_LOCAL)			,	oArial12,,,,2)
 							oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+2090	, 	cCanIMP								,	oArial12,,,,2)
 				nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+10	,"-->  "+ AllTrim((cQueryx)->C6_DESCRI)	,	oArial12,,,,2)
@@ -655,18 +657,19 @@ Static Function AcmDtaiPR()
 				EndIf
 			else   // Es un producto tipo estructura o un producto compuesto
 
-				QryStruc(condPedido,condProduto,Cremito)
+				QryStruc(condPedido,condProduto,Cremito,cNumseq)
 				
 				//MsgAlert("Existe producto compuesto. Presion finalizar para continuar la impresion", "AVISO")
 				While (!((prodstruct)->(EOF())))
 					
-					cCanProd		:= cValToChar((prodstruct)->QTD_PROD)
+					// cCanProd		:= cValToChar((prodstruct)->QTD_PROD)
+					cCanProd		:= cValToChar((cQueryx)->D2_QUANT)
 					nLinea 			+= 0.5
 					Cproducto		:= AllTrim((prodstruct)->D4_COD)
 					Ccodigoop		:= AllTrim((prodstruct)->D4_OP)
 
 					nLinea ++;  oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+10	, (prodstruct)->D4_COD					,	oArial12N,,,,2)
-								oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1590	, AllTrim(prodstruct->C6_LOTECTL)		,	oArial12,,,,2)
+								oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1590	, AllTrim(prodstruct->D2_LOTECTL)		,	oArial12,,,,2)
 								oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1880	, AllTrim(prodstruct->C6_LOCAL)			,	oArial12,,,,2)
 								oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+2090	, 	cCanProd							,	oArial12,,,,2)
 					nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+10	,"-->  "+ AllTrim((prodstruct)->B1_DESC),	oArial12,,,,2)
@@ -774,6 +777,7 @@ Static Function AcmDtaiPR()
 			Ctienda 		= (cQueryx)->D2_LOJA
 			Cclientex 		= (cQueryx)->C6_CLI
 			cRemision 		= (cQueryx)->D2_DOC
+			cNumseq 		= (cQueryx)->D2_NUMSEQ
 
 			LokforQry(condPedido,condProduto)
 			Cresultlook = lokforQ->C6_NUMOP
@@ -782,11 +786,12 @@ Static Function AcmDtaiPR()
 			//Si el resultado es vacio, es decir que no hay op, el codigo muestra los productos normales o sin estructura
 			if Empty(Cresultlook)  
 				cCanIMP	:= cValToChar((cQueryx)->D2_QUANT)
+				cSeqRem	:= cValToChar((cQueryx)->D2_NUMSEQ)  //change
 				nPrecioTotal = nPrecioTotal + (cQueryx)->D2_TOTAL
 				nLinea += 0.5;
 
 				nLinea ++;  oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+10	, (cQueryx)->D2_COD						,	oArial12N,,,,2)
-							oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1280	, AllTrim(cQueryx->C6_LOTECTL)			,	oArial12,,,,2)
+							oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1280	, AllTrim(cQueryx->D2_LOTECTL)			,	oArial12,,,,2)
 							oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1530	, AllTrim(cQueryx->C6_LOCAL)			,	oArial12,,,,2)
 							oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1740	, 	cCanIMP								,	oArial12,,,,2)
 							if cF2_MOEDA ==1
@@ -879,7 +884,7 @@ Static Function AcmDtaiPR()
 				EndIf
 			else   // Es un producto tipo estructura o un producto compuesto
 
-				QryStruc(condPedido,condProduto,Cremito)
+				QryStruc(condPedido,condProduto,Cremito,cNumseq)
 				//MsgAlert("Existe producto compuesto. Presion finalizar para continuar la impresion", "AVISO")
 				While (!((prodstruct)->(EOF())))
 					
@@ -893,7 +898,7 @@ Static Function AcmDtaiPR()
 
 
 					nLinea ++;  oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+10	, (prodstruct)->D4_COD					,	oArial12N,,,,2)
-								oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1280	, AllTrim(prodstruct->C6_LOTECTL)		,	oArial12,,,,2)
+								oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1280	, AllTrim(prodstruct->D2_LOTECTL)		,	oArial12,,,,2)
 								oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1530	, AllTrim(prodstruct->C6_LOCAL)			,	oArial12,,,,2)
 								oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1740	, 	cCanProd							,	oArial12,,,,2)
 								if cF2_MOEDA ==1
@@ -1017,10 +1022,11 @@ Static Function AcmDtaiPR()
 			//Si el resultado es vacio, es decir que no hay op, el codigo muestra los productos normales o sin estructura
 			// if Empty(Cresultlook)  
 			cCanIMP	:= cValToChar((cQueryx)->D2_QUANT)
+			cSeqRem	:= cValToChar((cQueryx)->D2_NUMSEQ)  //change
 			nLinea += 0.5;
 
 			nLinea ++;  oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+10	, (cQueryx)->D2_COD						,	oArial12N,,,,2)
-						oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1590	, AllTrim(cQueryx->C6_LOTECTL)			,	oArial12,,,,2)
+						oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1590	, AllTrim(cQueryx->D2_LOTECTL)			,	oArial12,,,,2)
 						oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1850	, AllTrim(cQueryx->C6_LOCAL)			,	oArial12,,,,2)
 						oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+2090	, 	cCanIMP								,	oArial12,,,,2)
 			nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+10	,"-->  "+ AllTrim((cQueryx)->C6_DESCRI),	oArial12,,,,2)
@@ -1121,11 +1127,12 @@ Static Function AcmDtaiPR()
 
  
 				cCanIMP	:= cValToChar((cQueryx)->D2_QUANT)
+				cSeqRem	:= cValToChar((cQueryx)->D2_NUMSEQ)  //change
 				nPrecioTotal = nPrecioTotal + (cQueryx)->D2_TOTAL
 				nLinea += 0.5;
 
 				nLinea ++;  oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+10	, (cQueryx)->D2_COD						,	oArial12N,,,,2)
-							oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1280	, AllTrim(cQueryx->C6_LOTECTL)			,	oArial12,,,,2)
+							oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1280	, AllTrim(cQueryx->D2_LOTECTL)			,	oArial12,,,,2)
 							oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1500	, AllTrim(cQueryx->C6_LOCAL)			,	oArial12,,,,2)
 							oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+1740	, 	cCanIMP								,	oArial12,,,,2)
 							if cF2_MOEDA ==1
@@ -1399,9 +1406,9 @@ Local cQrylotser := ""
 	Endif
 
 		cQrylotser:=" SELECT  " + CRLF
-		cQrylotser+=" D2_PEDIDO, D2_COD, B1_DESC, D2_QUANT, D2_SERIE, D2_LOTECTL, D2_DOC, C6_SERIE, C6_LOCAL, C6_CLI, C6_NUMSERI, C6_LOTECTL, D2_NUMLOTE, D2_NUMSERI, D2_LOJA, " + CRLF
+		cQrylotser+=" D2_PEDIDO, D2_COD, B1_DESC, D2_QUANT, D2_SERIE, D2_LOTECTL, D2_DOC, C6_SERIE, C6_LOCAL, C6_CLI, C6_NUMSERI, D2_LOTECTL, D2_NUMLOTE, D2_NUMSERI, D2_LOJA, " + CRLF
 		cQrylotser+=" ISNULL(CAST(CAST(B1_XDESCRI AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS XDESCRI, C6_CODINF, D2_TOTAL, C6_DESCRI, " + CRLF
-		cQrylotser+=" ISNULL(CAST(CAST(C6_VDOBS AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS C6VDOBS " + CRLF
+		cQrylotser+=" ISNULL(CAST(CAST(C6_VDOBS AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS C6VDOBS , D2_NUMSEQ" + CRLF
 		//cQrylotser+=" ISNULL(CAST(CAST(B.C6_INFAD AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS INFAD " + CRLF
 		cQrylotser+=" FROM "+ InitSqlName("SD2") +" SD2 " + CRLF
 		cQrylotser+=" INNER JOIN "+ InitSqlName("SB1") +" SB1 ON  " + CRLF
@@ -1419,7 +1426,7 @@ Local cQrylotser := ""
 
 Return
 
-Static Function QryStruc (pedidoy,produtoy,remitoy)
+Static Function QryStruc (pedidoy,produtoy,remitoy,numseqy)
 Local cQestructura	:= ""
 
 	If Select("prodstruct") > 0
@@ -1428,11 +1435,11 @@ Local cQestructura	:= ""
 	Endif
 
 		cQestructura:=" SELECT  " + CRLF
-		cQestructura+=" A.D2_SERIE, D2_DOC, D2_COD, B.C6_NUMOP, B.C6_ITEMOP,C2_TPOP, C2_NUM, C2_ITEM, B.C6_SERIE, B.C6_NUMSERI, B.C6_LOTECTL, B.C6_LOCAL, B.C6_VALOR, B.C6_DESCRI, " + CRLF
+		cQestructura+=" A.D2_SERIE, D2_DOC, D2_COD, B.C6_NUMOP, B.C6_ITEMOP,C2_TPOP, C2_NUM, C2_ITEM, B.C6_SERIE, B.C6_NUMSERI, B.D2_LOTECTL, B.C6_LOCAL, B.C6_VALOR, B.C6_DESCRI, " + CRLF
 		cQestructura+=" C2_SEQUEN, C2_PRODUTO, D.D4_COD, (D4_QTDEORI- D4_QUANT) QTD_ANTERIOR, E.B1_DESC, D.D4_LOTECTL, D.D4_OP, B.C6_CODINF, A.D2_QUANT, B.C6_PRCVEN, A.D2_TOTAL,  " + CRLF
 		cQestructura+=" G.BH_CODCOMP, G.BH_QUANT, (A.D2_QUANT*G.BH_QUANT)  QTD_PROD,  " + CRLF
 		cQestructura+=" ISNULL(CAST(CAST(E.B1_XDESCRI AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS XDESCRI, " + CRLF
-		cQestructura+=" ISNULL(CAST(CAST(B.C6_VDOBS AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS C6VDOBS " + CRLF
+		cQestructura+=" ISNULL(CAST(CAST(B.C6_VDOBS AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS C6VDOBS, A.D2_NUMSEQ " + CRLF
 		//cQestructura+=" ISNULL(CAST(CAST(B.C6_INFAD AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS INFAD " + CRLF
 		cQestructura+=" FROM "+ InitSqlName("SD2") +" A " + CRLF
 		cQestructura+=" INNER JOIN "+ InitSqlName("SC6") +" B ON  " + CRLF
@@ -1446,7 +1453,9 @@ Local cQestructura	:= ""
 		cQestructura+=" LEFT JOIN "+InitSqlName("SBG")+" F ON D.D4_PRODUTO = F.BG_PRODUTO AND F.D_E_L_E_T_<>'*' " + CRLF
 		cQestructura+=" LEFT JOIN "+InitSqlName("SBH")+" G ON F.BG_PRODUTO=G.BH_PRODUTO AND G.D_E_L_E_T_<>'*' AND D.D4_COD = G.BH_CODCOMP " + CRLF
 		cQestructura+=" WHERE" + CRLF
-		cQestructura+=" D2_PEDIDO='"+pedidoy+"' AND D2_COD='"+produtoy+"' AND A.D_E_L_E_T_ <>'*' AND D2_DOC='"+remitoy+"'" + CRLF
+		cQestructura+=" D2_PEDIDO='"+pedidoy+"' AND D2_COD='"+produtoy+"' AND A.D_E_L_E_T_ <>'*' AND D2_DOC='"+remitoy+"' " + CRLF
+		// cQestructura+=" D2_PEDIDO='"+pedidoy+"' AND D2_COD='"+produtoy+"' AND A.D_E_L_E_T_ <>'*' AND D2_DOC='"+remitoy+"' AND D2_NUMSEQ='"+numseqy+"'" + CRLF
+
 
 	TCQuery cQestructura New Alias "prodstruct"
 
@@ -1493,6 +1502,7 @@ Static Function LookSerLot(producto,nuop,remision)
 	Clookserie+=" FROM "+ InitSqlName("SDB") +" A " + CRLF
 	Clookserie+=" WHERE"+ CRLF
 	Clookserie+=" A.DB_PRODUTO='"+producto+"' AND A.DB_DOC='"+remision+"' AND A.D_E_L_E_T_ <> '*' "  + CRLF
+	Clookserie+=" AND A.DB_NUMSEQ='"+cSeqRem+"' "  + CRLF
 	Clookserie+=" ORDER BY DB_NUMSERI DESC"  + CRLF
 	//Clookserie+=" DC_PRODUTO='"+producto+"' AND DC_PEDIDO='"+ped+"' AND DC_NUMSERI <> '' "  + CRLF
 	
@@ -1644,7 +1654,7 @@ Static function TipoQuery(cDocQuery,cDocumento,cSerie, cCliente,cLoja )
 		cQueryRem	+= " D2_QTSEGUM,  " + CRLF
 		cQueryRem	+= " A1_END, A1_COD_MUN, A1_BAIRRO, A1_ESTADO, A1_PAIS, A1_NOME, A1_CGC, A1_PFISICA, " + CRLF
 		cQueryRem	+= " J1_BAIRRO, J1_COD_MUN, J1_END, J1_ESTADO,  J1_NOME,  J1_PAIS, " + CRLF
-		cQueryRem	+= " CC2_MUN, D2_QUANT, "  + CRLF
+		cQueryRem	+= " CC2_MUN, D2_QUANT, D2_NUMSEQ, "  + CRLF
 		cQueryRem	+= " C5_NUM, C5_EMISSAO, C5_CLIENT, C5_LOJAENT, C5_CLIENTE, C5_LOJACLI, C6_DESCRI, C5_XENDENT, C5_XEST, C5_XMUN, C5_XORCOMP, " + CRLF
 		cQueryRem	+= " FP_NUMINI, FP_NUMFIM, FP_CAI, FP_DTRESOL, A7_CODCLI, A7_DESCCLI, " + CRLF
 		cQueryRem	+= " AH_DESCES, " + CRLF
@@ -1677,7 +1687,7 @@ Static function TipoQuery(cDocQuery,cDocumento,cSerie, cCliente,cLoja )
 		cQueryRem	+= " D2_QTSEGUM,  " + CRLF
 		cQueryRem	+= " A1_END, A1_COD_MUN, A1_BAIRRO, A1_ESTADO, A1_PAIS, A1_NOME, A1_CGC, A1_PFISICA, " + CRLF
 		cQueryRem	+= " J1_BAIRRO, J1_COD_MUN, J1_END, J1_ESTADO,  J1_NOME,  J1_PAIS, " + CRLF
-		cQueryRem	+= " CC2_MUN, D2_QUANT, "  + CRLF
+		cQueryRem	+= " CC2_MUN, D2_QUANT, D2_NUMSEQ, "  + CRLF
 		cQueryRem	+= " C5_NUM, C5_EMISSAO, C5_CLIENT, C5_LOJAENT, C5_CLIENTE, C5_LOJACLI, C6_DESCRI, C5_XENDENT, C5_XEST, C5_XMUN, C5_XORCOMP, " + CRLF
 		cQueryRem	+= " FP_NUMINI, FP_NUMFIM, FP_CAI, FP_DTRESOL, A7_CODCLI, A7_DESCCLI, " + CRLF
 		cQueryRem	+= " AH_DESCES, " + CRLF

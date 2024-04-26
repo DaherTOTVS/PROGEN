@@ -56,6 +56,9 @@ User Function M486OWSCOL
 	Local cVencimiento	:= ""
 	Local nValunitSD1	:= 0
 	Local cCorreo       := "" //Correo de facturacion electronica
+	Local _cAlias 		:= GetNextAlias()  // Juan Pablo Astorga 11.03.2024
+	Local cPreLista		:= 0 // Juan Pablo Astorga 11.03.2024
+	Local cvalor1		:= 0 // Juan Pablo Astorga 11.03.2024
 
 	If nOpc == 1 //Encabezado
 		oWs:ccantidadDecimales = '3'  // Para trasmision a 3 digitos el campo cantidad
@@ -921,14 +924,34 @@ User Function M486OWSCOL
 				oWSAdicion:cvalor 		:= TRANSFORM((nValunitSD1*SD1->D1_QUANT),"@E 999,999,999.99")
 				aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
 				*/
-
+				// Modificado Juan Pablo Astorga 11.03.2024	
+					cQuery := "SELECT D2_PRUNIT FROM " + InitSQLName("SD2")
+					cQuery += " WHERE D2_FILIAL = '" + xFilial('SD2') + "'"
+					cQuery += "   AND D2_DOC = '" + SD1->D1_NFORI + "'"
+					cQuery += "   AND D2_SERIE = '" + SD1->D1_SERIORI + "'"
+					cQuery += "   AND D2_CLIENTE = '" + SD1->D1_FORNECE + "'"
+					cQuery += "   AND D2_LOJA = '" + SD1->D1_LOJA + "'"
+					cQuery += "   AND D2_COD = '" + SD1->D1_COD + "'"
+					cQuery += "   AND D_E_L_E_T_ <> '*'"
+					dbUseArea( .T., "TOPCONN", TcGenQry( ,, cQuery ), _cAlias,.T.,.T.) 
+					If (_cAlias)->(!EOF()) 
+						cPreLista	:= (_cAlias)->D2_PRUNIT
+						cValor1 	:= SD1->D1_QUANT*cPreLista
+					Else
+						cPreLista	:= (SD1->D1_TOTAL+SD1->D1_VALDESC)/SD1->D1_QUANT
+						cValor1 	:= SD1->D1_TOTAL+SD1->D1_VALDESC
+					Endif
+					(_cAlias)->(DbCloseArea()) 
+					// Modificado Juan Pablo Astorga 11.03.2024	
 
 					// PARA EL PRECIO UNITARIO DE LISTA Y EL PRECIO TOTAL DE LA LINEA
 					oWSAdicion:=Service_LineaInformacionAdicional():New()
 					oWSAdicion:ccodigo 		:= "5173"
-					oWSAdicion:cnombre 		:= TRANSFORM((SD1->D1_TOTAL+SD1->D1_VALDESC)/SD1->D1_QUANT,"@E 999,999,999.99") // VR UNITARIO
+					oWSAdicion:cnombre 		:= TRANSFORM(cPreLista,"@E 999,999,999.99") // VR UNITARIO Modificado 11.03.2024 JPA
+					//oWSAdicion:cnombre 	:= TRANSFORM((SD1->D1_TOTAL+SD1->D1_VALDESC)/SD1->D1_QUANT,"@E 999,999,999.99") // VR UNITARIO
 					oWSAdicion:csecuencia 	:= "1"
-					oWSAdicion:cvalor 		:= TRANSFORM((SD1->D1_TOTAL+SD1->D1_VALDESC),"@E 999,999,999.99") // VR. TOTAL LINEA
+					oWSAdicion:cvalor 		:= TRANSFORM(cValor1,"@E 999,999,999.99") // VR. TOTAL LINEA Modificado 11.03.2024 JPA
+					//oWSAdicion:cvalor 	:= TRANSFORM((SD1->D1_TOTAL+SD1->D1_VALDESC),"@E 999,999,999.99") // VR. TOTAL LINEA
 					aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
 
 

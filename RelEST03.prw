@@ -265,14 +265,15 @@ Static function Encab()
     endif
 
     // Deestino
-    if len(alltrim(Imp))>35
+    if len(alltrim(Imp))>33
         if len(alltrim(Imp))>70
-            oPrinter:Say(0140,0120,cvaltochar(alltrim(substr(Imp,1,35))),oFont10,1400,CLR_BLACK)
-            oPrinter:Say(0150,0120,cvaltochar(alltrim(substr(Imp,36,70))),oFont10,1400,CLR_BLACK)
-            oPrinter:Say(0160,0120,cvaltochar(alltrim(substr(Imp,71,105))),oFont10,1400,CLR_BLACK)
+            oPrinter:Say(0140,0120,cvaltochar(alltrim(substr(Imp,1,33))),oFont10,1400,CLR_BLACK)
+            oPrinter:Say(0150,0120,cvaltochar(alltrim(substr(Imp,34,68))),oFont10,1400,CLR_BLACK)
+            oPrinter:Say(0160,0120,cvaltochar(alltrim(substr(Imp,69,100))),oFont10,1400,CLR_BLACK)
+
         else
-            oPrinter:Say(0140,0120,cvaltochar(alltrim(substr(Imp,1,35))),oFont10,1400,CLR_BLACK)
-            oPrinter:Say(0150,0120,cvaltochar(alltrim(substr(Imp,36,70))),oFont10,1400,CLR_BLACK)
+            oPrinter:Say(0140,0120,cvaltochar(alltrim(substr(Imp,1,33))),oFont10,1400,CLR_BLACK)
+            oPrinter:Say(0150,0120,cvaltochar(alltrim(substr(Imp,34,68))),oFont10,1400,CLR_BLACK)
 
         ENDIF
     else
@@ -480,10 +481,21 @@ Static function detalle(Ini,Long)
     for ix := Ini to Long
         //1 PRODUCTO, 2 CANTIDAD, 3 OP (VACIO), 4 PESO, 5 TEMP, 6 VENCIMIENTO
 
-        if ix <=fil
-            relleno(ix,nLinha)
-            nLinha += 35
-        ENDIF
+        if alltrim(str(Long)) $ '100200300400500600700800900' .AND. Long > 9
+
+            if ix <fil
+                relleno(ix,nLinha)
+                nLinha += 35
+            ENDIF
+
+        else
+
+            if ix <=fil
+                relleno(ix,nLinha)
+                nLinha += 35
+            ENDIF
+
+        EndIf
 
     next ix
 

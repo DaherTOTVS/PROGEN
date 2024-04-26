@@ -1,13 +1,10 @@
-#Include 'Protheus.ch'
-#Include 'FWMVCDEF.ch'
-
-User Function DIRZZE()
-  Private cCadastro  := "Dirección de clientes"
+User Function ZZ3FUNC()
+  Private cCadastro   := "Relacion De Categorias"
   Private aRotina   := MenuDef()
-  dbSelectArea("ZZE")
+  dbSelectArea("ZZ3")
   dbSetOrder(1)
-  mBrowse(6,1,22,75,"ZZE")
-  dbSelectArea("ZZE")
+  mBrowse(6,1,22,75,"ZZ3")
+  dbSelectArea("ZZ3")
   dbSetOrder(1)
 Return(nil)
 
