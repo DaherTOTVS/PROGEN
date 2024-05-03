@@ -255,8 +255,7 @@ Static Function AcmHeadPR()
 	Local i 			:= 0
 	Local nspace 		:= 0
 	Local tamtexto 		:= 0
-
-	Local cFileLogo		:= GetSrvProfString("Startpath","") + "xlogox.bmp"
+	Local cFileLogo		:= GetSrvProfString("Startpath","") +"xlogox"+cEmpAnt+".bmp"
 	Local n1Linea		:= 10
 	local nMargIqz		:= 10
 	local nLinea		:= 1
@@ -280,18 +279,30 @@ Static Function AcmHeadPR()
 
 	nPagNum++
 	cRfc := substr(cRfc,1,3)+"."+substr(cRfc,4,3)+"."+substr(cRfc,7,3)+"-"+substr(cRfc,10,1)
-				oPrinter:SayBitmap(-10,10,cFileLogo,500,200)  // Logo
+	IF "01" $ cEmpAnt
+		oPrinter:SayBitmap(-10,10,cFileLogo,500,200)  // Logo
+	Else
+		oPrinter:SayBitmap(-10,10,cFileLogo,1326,512)  // Logo
+	EndIf
 				//oPrinter:SayBitmap(-80,10,"C:\TOTVS\PROGEN\Facturacion\Formatos\logoprogen.png",400,400)  // Logo
 	            oPrinter:Say(n1Linea							,2140			, AcmePagina + STRZERO(nPagNum,3)	,	oArial12,,,,2)
 				oPrinter:Box(n1Linea+(nFontAlto*nLinea)-5		,nMargIqz+1490,nFontAlto*3,2250,"-8")
 				//oPrinter:Box(n1Linea+(nFontAlto*nLinea)-5		,1840,nFontAlto*3,2250,)
 	nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)-8		,nMargIqz+1500	, "PRO-FORMA "  					,	oArial14N,,,,2)
 				oPrinter:Say(n1Linea+(nFontAlto*nLinea)-8		,nMargIqz+1900	, cPedIMP						    ,	oArial14N,,,,2)
-	nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)+10		,nMargIqz+1500	, "AGENTE RETENEDOR DE IVA GRAN CONTRIBUYENTE"  		,	oArial11N,,,,2)					
-	nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)+10		,nMargIqz+1500	, "Resolución 41 de Enero 30/2014"  					,	oArial11,,,,2)					
-	nLinea ++
-	nLinea ++; oPrinter:Say(n1Linea+(nFontAlto*nLinea)-8		,nMargIqz+1700	, "www.progen.com.co"  					,	oArial12,,,,2)
-	nLinea ++; oPrinter:Say(n1Linea+(nFontAlto*nLinea)-8		,nMargIqz+1698	, "www.royalcondor.com"  					,	oArial12,,,,2)
+
+	
+	IF "01" $ cEmpAnt
+
+		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)+10		,nMargIqz+1500	, "AGENTE RETENEDOR DE IVA GRAN CONTRIBUYENTE"  		,	oArial11N,,,,2)					
+		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)+10		,nMargIqz+1500	, "Resolución 41 de Enero 30/2014"  					,	oArial11,,,,2)					
+		nLinea ++
+		nLinea ++; oPrinter:Say(n1Linea+(nFontAlto*nLinea)-8		,nMargIqz+1700	, "www.progen.com.co"  					,	oArial12,,,,2)
+		nLinea ++; oPrinter:Say(n1Linea+(nFontAlto*nLinea)-8		,nMargIqz+1698	, "www.royalcondor.com"  					,	oArial12,,,,2)
+	else
+		nLinea +=5
+	EndIf
+	
 	nLinea = nLinea+1
 				oPrinter:Box(n1Linea+(nFontAlto*nLinea)-10		,nMargIqz+1490,nFontAlto*12,1800,)
 				oPrinter:Box(n1Linea+(nFontAlto*nLinea)-10		,nMargIqz+1790,nFontAlto*12,2250,)
@@ -309,12 +320,19 @@ Static Function AcmHeadPR()
 				oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1840	, AllTrim((cRem)->A3_NOME)						,	oArial12,,,,2)
 				oPrinter:Line(n1Linea+(nFontAlto*nLinea)-10		,nMargIqz+1490,n1Linea+(nFontAlto*nLinea)-10,2250,,)
 
-	nLinebox2 = 5
-					
-	nLinebox2 ++;	Oprinter:Say(nFontAlto*nLinebox2,nMargIqz+50,"NIT: 8600163109",	oArial11N,,,,2)
-	nLinebox2 ++;	Oprinter:Say(nFontAlto*nLinebox2,nMargIqz+50,"PRODUCTOR - IMPORTADOR",	oArial11N,,,,2)
-	nLinebox2 ++;	Oprinter:Say(nFontAlto*nLinebox2,nMargIqz+50,"RESPONSABLE I.V.A. - REGIMEN COMUN",	oArial11N,,,,2)
-	nLinebox2 ++;	Oprinter:Say(nFontAlto*nLinebox2,nMargIqz+50,"REGISTRO 993-040",	oArial11N,,,,2)
+
+	IF "01" $ cEmpAnt
+
+		nLinebox2 = 5
+						
+		nLinebox2 ++;	Oprinter:Say(nFontAlto*nLinebox2,nMargIqz+50,"NIT: 8600163109",	oArial11N,,,,2)
+		nLinebox2 ++;	Oprinter:Say(nFontAlto*nLinebox2,nMargIqz+50,"PRODUCTOR - IMPORTADOR",	oArial11N,,,,2)
+		nLinebox2 ++;	Oprinter:Say(nFontAlto*nLinebox2,nMargIqz+50,"RESPONSABLE I.V.A. - REGIMEN COMUN",	oArial11N,,,,2)
+		nLinebox2 ++;	Oprinter:Say(nFontAlto*nLinebox2,nMargIqz+50,"REGISTRO 993-040",	oArial11N,,,,2)
+	else
+		nLinebox2 +=9
+	EndIf
+
 
 					oPrinter:Box(nFontAlto*10	,nMargIqz+30,nFontAlto*11,800,"-8")
 					oPrinter:Box(nFontAlto*11	,nMargIqz+30,nFontAlto*15,1450,"-8")
@@ -329,13 +347,18 @@ Static Function AcmHeadPR()
 
 	
 	nLinebox2 = 2
-	nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"PROGEN S.A"							,	oArial12,,,,2)
-	nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Carrera 3 No.56-07"					,	oArial12,,,,2)
-	nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Zona Industrial Cazuca Entrada No.2" ,	oArial12,,,,2)
-	nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Soacha Cundinamarca - Colombia"		,	oArial12,,,,2)
-	nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"PBX:730 6100 DIRECTO VENTAS:7306111" ,	oArial12,,,,2)
-	nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"FAX:730 6110 - 730 6090"				,	oArial12,,,,2)
-	
+	IF "01" $ cEmpAnt
+
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"PROGEN S.A"							,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Carrera 3 No.56-07"					,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Zona Industrial Cazuca Entrada No.2" ,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Soacha Cundinamarca - Colombia"		,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"PBX:730 6100 DIRECTO VENTAS:7306111" ,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"FAX:730 6110 - 730 6090"				,	oArial12,,,,2)
+	else
+		nLinebox1 +=6
+	EndIf
+
 	nLinebox3 = 14.5
 					oPrinter:Box(nFontAlto*15	,nMargIqz+30,(nFontAlto*23)-5,2250,"-8")
 	Qrymemovirtual(cA1cod)
