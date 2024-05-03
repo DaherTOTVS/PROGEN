@@ -380,7 +380,7 @@ Static Function AcmHeadPR()
 
 	//Local cCalle		:= Alltrim(SM0->M0_ENDENT)
 	//Local cTelf			:= Alltrim(SM0->M0_TEL)
-	Local cFileLogo		:= GetSrvProfString("Startpath","") + "xlogox.bmp"
+	Local cFileLogo		:= GetSrvProfString("Startpath","") +"xlogox"+cEmpAnt+".bmp"
 	Local n1Linea		:= 10
 	local nMargIqz		:= 10
 	local nLinea		:= 1
@@ -417,7 +417,12 @@ Static Function AcmHeadPR()
 
 	nPagNum++
 	cRfc := substr(cRfc,1,3)+"."+substr(cRfc,4,3)+"."+substr(cRfc,7,3)+"-"+substr(cRfc,10,1)
-				oPrinter:SayBitmap(-10,10,cFileLogo,500,200)  // Logo
+	IF "01" $ cEmpAnt
+		oPrinter:SayBitmap(-10,10,cFileLogo,500,200)  // Logo
+	Else
+		oPrinter:SayBitmap(-10,10,cFileLogo,1226,412)  // Logo
+	EndIf
+
 				//oPrinter:SayBitmap(-80,10,"C:\TOTVS\PROGEN\Facturacion\Formatos\logoprogen.png",400,400)  // Logo
 	            oPrinter:Say(n1Linea					,2140			, AcmePagina + STRZERO(nPagNum,3)	,	oArial12,,,,2)
 				oPrinter:Box(n1Linea+(nFontAlto*nLinea)-5,nMargIqz+1490,(n1Linea+(nFontAlto*nLinea))*6.7,1840,"-8")
@@ -455,12 +460,19 @@ Static Function AcmHeadPR()
 	
 	nLinea :=1;
 
-	nLinea +=3;
+	
 
-	nLinea ++;  oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , cEmisor							                ,	oArial12,,,,2)
-	nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , "Carrera 3 No 56-07" 	  				            ,	oArial12,,,,2)
-	nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , "Zona Industrial Cazuca Entrada No. 2" 	  	    ,	oArial12,,,,2)
-	nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , "PBX: 730 6100 DIRECTO VENTAS: 7306111" 		 	,	oArial12,,,,2)
+	IF "01" $ cEmpAnt
+
+		nLinea +=3;
+
+		nLinea ++;  oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , cEmisor							                ,	oArial12,,,,2)
+		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , "Carrera 3 No 56-07" 	  				            ,	oArial12,,,,2)
+		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , "Zona Industrial Cazuca Entrada No. 2" 	  	    ,	oArial12,,,,2)
+		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , "PBX: 730 6100 DIRECTO VENTAS: 7306111" 		 	,	oArial12,,,,2)
+	else
+		nLinea +=7
+	EndIf
 
 	//DIRECCIONES DE CLIENTS ENTREGA
 	nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , "Cliente entrega"						 	    ,	oArial12N,,,,2)
