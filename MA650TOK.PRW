@@ -62,12 +62,12 @@ If SG1->(MsSeek(FWxFilial("SG1")+M->C2_PRODUTO+M->C2_REVISAO))
 If Len(aSG1) > 0
     For nX := 1 To Len(aSG1)
         // mv_par02 - Considera saldo apenas Local Padrao ? 1-sim  2-nao   
-        If mv_par02 == 1
+        If  aSav650[02] == 1   // Modificado 30.04.2024 Juan Pablo Astorga - mv_par02 == 1
             nSaldo := RetSaldo(aSG1[nX,2],M->C2_LOCAL,M->C2_LOCAL,@aSG1[nX],@aSaldos)
         Else
 	        // mv_par03 - Almoxarifado De (Usado p/compor o estoque atual)
 	        // mv_par04 - Almoxarifado Ate 
-            nSaldo := RetSaldo(aSG1[nX,2],mv_par03,mv_par04,@aSG1[nX],@aSaldos)
+            nSaldo := RetSaldo(aSG1[nX,2],aSav650[03],aSav650[04],@aSG1[nX],@aSaldos)  // Modificado 30.04.2024 Juan Pablo Astorga - nSaldo := RetSaldo(aSG1[nX,2],mv_par03,mv_par04,@aSG1[nX],@aSaldos)
         EndIf
         If aScan( aRetorOpc , { |x| Left(x[1],nTamPrd) == M->C2_PRODUTO+aSG1[nX,2] }) > 0
             aSG1[nX,1] := If(nSaldo >= aSG1[nX,6], 1, 2)
@@ -170,7 +170,7 @@ Local nX
 
 aSldPrd := {}
 For nX := 1 To Len(aSaldos)
-    If mv_par02 == 1
+    If aSav650[02] == 1  // Juan Pablo Astorga modificado 30.04.2024 mv_par02 == 1
         If aSaldos[nX,1]+aSaldos[nX,2] == cProduto+cLocal
             aAdd( aSldPrd , aSaldos[nX] )
         EndIf
@@ -227,11 +227,11 @@ If SB2->(dbSeek(FWxFilial("SB2")+cProd))
             nQtde -= SB2->B2_QNPT
             nQtde += SB2->B2_QTNP
 
-            If mv_par14 == 2
+            If aSav650[14] == 2  // Modificado 30.04.2024 Juan Pablo Astorga mv_par14 == 2
                 // mv_par14 - Qtd. Nossa Poder 3o.  1-Ignora / 2-Soma
                 nQtde += SB2->B2_QNPT
             EndIf
-            If mv_par14 == 2
+            If aSav650[14] == 2 // Modificado 30.04.2024 Juan Pablo Astorga mv_par14 == 2
                 // mv_par15 - Qtd. 3o. Nosso Poder  1-Ignora / 2-Subtrai
                 nQtde -= SB2->B2_QTNP
             EndIf
