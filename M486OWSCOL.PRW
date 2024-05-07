@@ -341,7 +341,7 @@ User Function M486OWSCOL
 				DbSelectArea("SF2")
 				SF2->(DbSetOrder(1))
 				IF SF2->(DbSeek(xFilial("SF2") + cNumDoc + cSerieDoc + cCodCli + cCodLoj ))
-					OWS:CMONEDA := Posicione("CTO",1,xFilial("CTO")+Strzero(SF2->F2_MOEDA,2),"CTO_MOESAT")
+					 OWS:CMONEDA := Posicione("CTO",1,xFilial("CTO")+Strzero(SF2->F2_MOEDA,2),"CTO_MOESAT")
 					// DESCRIPTORES EN COLUMNAS (MONEDA)
 					oWSextra:=Service_Extras():new()
 					oWSextra:ccontrolInterno1     := "DESCRIPTORES COLUMNAS"
