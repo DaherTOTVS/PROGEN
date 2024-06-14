@@ -420,7 +420,7 @@ Static Function AcmHeadPR()
 	IF "01" $ cEmpAnt
 		oPrinter:SayBitmap(-10,10,cFileLogo,500,200)  // Logo
 	Else
-		oPrinter:SayBitmap(-10,10,cFileLogo,1226,412)  // Logo
+		oPrinter:SayBitmap(50,10,cFileLogo,500,200)  // Logo
 	EndIf
 
 				//oPrinter:SayBitmap(-80,10,"C:\TOTVS\PROGEN\Facturacion\Formatos\logoprogen.png",400,400)  // Logo
@@ -471,7 +471,14 @@ Static Function AcmHeadPR()
 		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , "Zona Industrial Cazuca Entrada No. 2" 	  	    ,	oArial12,,,,2)
 		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , "PBX: 730 6100 DIRECTO VENTAS: 7306111" 		 	,	oArial12,,,,2)
 	else
-		nLinea +=7
+		nLinea ++;  oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+600	    , "Domicilio Fiscal"	             ,	oArial12N,,,,2)
+		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+600	    , "Empoala 251-piso 10, col, Narvarte CD. Ciudad de México"           ,	oArial12,,,,2)
+		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+600	    , "C.P. 03020, Benito juarez, Ciudad de México, México" 	  	    ,	oArial12,,,,2)
+		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+600	    , "Bodega:" 		 	,	oArial12N,,,,2)
+		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+600	    , "Calle Carretera Federal Puebla  Tlaxcala no. 242 NAVE 5," 		 	,	oArial12,,,,2)
+		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+600	    , "Colonia San Pablo XOCHIMEHUACAN C.P. 72014 Puebla" 		 	,	oArial12,,,,2)
+		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+600	    , "México" 		 	,	oArial12,,,,2)
+
 	EndIf
 
 	//DIRECCIONES DE CLIENTS ENTREGA
@@ -1447,7 +1454,7 @@ Local cQestructura	:= ""
 	Endif
 
 		cQestructura:=" SELECT  " + CRLF
-		cQestructura+=" A.D2_SERIE, D2_DOC, D2_COD, B.C6_NUMOP, B.C6_ITEMOP,C2_TPOP, C2_NUM, C2_ITEM, B.C6_SERIE, B.C6_NUMSERI, B.D2_LOTECTL, B.C6_LOCAL, B.C6_VALOR, B.C6_DESCRI, " + CRLF
+		cQestructura+=" A.D2_SERIE, D2_DOC, D2_COD, B.C6_NUMOP, B.C6_ITEMOP,C2_TPOP, C2_NUM, C2_ITEM, B.C6_SERIE, B.C6_NUMSERI, A.D2_LOTECTL, B.C6_LOCAL, B.C6_VALOR, B.C6_DESCRI, " + CRLF
 		cQestructura+=" C2_SEQUEN, C2_PRODUTO, D.D4_COD, (D4_QTDEORI- D4_QUANT) QTD_ANTERIOR, E.B1_DESC, D.D4_LOTECTL, D.D4_OP, B.C6_CODINF, A.D2_QUANT, B.C6_PRCVEN, A.D2_TOTAL,  " + CRLF
 		cQestructura+=" G.BH_CODCOMP, G.BH_QUANT, (A.D2_QUANT*G.BH_QUANT)  QTD_PROD,  " + CRLF
 		cQestructura+=" ISNULL(CAST(CAST(E.B1_XDESCRI AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS XDESCRI, " + CRLF

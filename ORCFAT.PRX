@@ -139,7 +139,7 @@ Static Function AcmHeadPR()
 	IF "01" $ cEmpAnt
 		oPrinter:SayBitmap(-10,10,cFileLogo,500,200)  // Logo
 	Else
-		oPrinter:SayBitmap(-10,10,cFileLogo,1326,512)  // Logo
+		oPrinter:SayBitmap(50,10,cFileLogo,500,200)  // Logo
 	EndIf
 				//oPrinter:SayBitmap(-80,10,"C:\TOTVS\PROGEN\Facturacion\Formatos\logoprogen.png",400,400)  // Logo
 	dbSelectArea("SCJ")
@@ -222,7 +222,7 @@ Static Function AcmHeadPR()
 	// 			oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1810	, cDescuento1+"% + "+cDescuento2+"% + "+cDescuento3+"% + "+cDescuento4+"% "						,	oArial11,,,,2)
 	// 			oPrinter:Line(n1Linea+(nFontAlto*nLinea)-10		,nMargIqz+1490,n1Linea+(nFontAlto*nLinea)-10,2250,,)
 	nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1500	, "Nuestra Referencia"						,	oArial12N,,,,2)
-				oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1810	, AllTrim(cNomeVend)					,	oArial11,,,,2)
+				oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1810	, AllTrim(cNomeVend)					,	oArial10,,,,2)
 				oPrinter:Line(n1Linea+(nFontAlto*nLinea)-10		,nMargIqz+1490,n1Linea+(nFontAlto*nLinea)-10,2250,,)
 
 	IF "01" $ cEmpAnt
@@ -259,7 +259,16 @@ Static Function AcmHeadPR()
 		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"PBX:730 6100 DIRECTO VENTAS:7306111"		,	oArial12,,,,2)
 		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"FAX:730 6110 - 730 6090"					,	oArial12,,,,2)
 	else
-		nLinebox2 +=6
+			
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Domicilio Fiscal"						,	oArial12N,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Empoala 251-piso 10, col, Narvarte CD. Ciudad de México"						,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"C.P. 03020, Benito juarez, Ciudad de México, México"		,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Bodega:"			,	oArial12N,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Calle Carretera Federal Puebla  Tlaxcala no. 242 NAVE 5,"		,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Colonia San Pablo XOCHIMEHUACAN C.P. 72014 Puebla"					,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"México"					,	oArial12,,,,2)
+
+
 	EndIf
 
 
@@ -268,7 +277,7 @@ Static Function AcmHeadPR()
 	nLinea ++;  oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	, "ITEM"											,	oArial11N,,,,2)
 				oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,750			, "CANTIDAD"										,	oArial11N,,,,2)
 				oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,950			, "UNID"										    ,	oArial11N,,,,2)
-				oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,1050			, "DESPACHOF"										,	oArial11N,,,,2)
+				oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,1050			, "DESPACHO"										,	oArial11N,,,,2)
 				oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,1300			, "PRECIO"											,	oArial11N,,,,2)
 				oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,1550			, "DESCUENT"										,	oArial11N,,,,2)
 				oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,1780			, "% IVA"											,	oArial11N,,,,2)

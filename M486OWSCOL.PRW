@@ -128,7 +128,7 @@ User Function M486OWSCOL
 			//Tempalte a usar
 			IF (ALLTRIM(cEspecie)<>'NCC')
 				IF cTipDocT == "02"
-					cTempalte	:= "co-progenFE-66" //"co-progenFE-55" //"co-progenFE-52"//Exportacion co-progenFE-40
+					cTempalte	:= "co-progenFE-67" //"co-progenFE-55" //"co-progenFE-52"//Exportacion co-progenFE-40
 				ELSE
 					cTempalte	:= "co-progenFV-68" //"co-progenFV-64"//Nacional co-progenFV-59
 				ENDIF
@@ -341,7 +341,7 @@ User Function M486OWSCOL
 				DbSelectArea("SF2")
 				SF2->(DbSetOrder(1))
 				IF SF2->(DbSeek(xFilial("SF2") + cNumDoc + cSerieDoc + cCodCli + cCodLoj ))
-					 OWS:CMONEDA := Posicione("CTO",1,xFilial("CTO")+Strzero(SF2->F2_MOEDA,2),"CTO_MOESAT")
+					//  OWS:CMONEDA := Posicione("CTO",1,xFilial("CTO")+Strzero(SF2->F2_MOEDA,2),"CTO_MOESAT")
 					// DESCRIPTORES EN COLUMNAS (MONEDA)
 					oWSextra:=Service_Extras():new()
 					oWSextra:ccontrolInterno1     := "DESCRIPTORES COLUMNAS"
@@ -670,6 +670,7 @@ User Function M486OWSCOL
 				// CAMBIO CUDE A CUFE CUANDO VIENE REFERENCIADO A FACTURA
 				// DAHN 03/05/2024
 				If (OWS:OWSDOCUMENTOSREFERENCIADOS) != NIL
+					OWS:CMONEDA := REPLACE(OWS:CMONEDA,"USD","COP")
 					OWS:OWSDOCUMENTOSREFERENCIADOS:OWSDOCUMENTOREFERENCIADO[2]:CTIPOCUFE := REPLACE(OWS:OWSDOCUMENTOSREFERENCIADOS:OWSDOCUMENTOREFERENCIADO[2]:CTIPOCUFE,"CUDE","CUFE")
 				EndIF
 

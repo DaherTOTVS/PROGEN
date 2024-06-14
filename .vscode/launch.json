@@ -7,10 +7,20 @@
 			"name": "Depuración de lenguaje TOTVS",
 			"program": "${command:AskForProgramName}",
 			"cwb": "${workspaceFolder}",
-			"smartclientBin": "C:/CLIENTES/TOTVS-HMG-TCLOUD/smartclient.exe",
+			"smartclientBin": "C:/TOTVS/ERPROOT/Protheus/BIN/SmartClient_2310/smartclient.exe",
 			"isMultiSession": true,
 			"enableTableSync": true
 		}
+		// {
+		// 	"type": "totvs_Replay_debug",
+		// 	"request": "launch",
+		// 	"name": "TDS Replay Progen",
+		// 	"program": "${command:AskForProgramName}",
+		// 	"cwb": "${workspaceFolder}",
+		// 	"tdsReplayFile": "C:/Users/DUVAN.NINO/Downloads/replay_20240610_123757_without_lib.trplay",
+		// 	"ignoreFiles": false,
+		// 	"password": ""
+		// }
 	],
 	"lastPrograms": [
 		{

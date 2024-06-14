@@ -69,7 +69,8 @@ If Len(aSG1) > 0
 	        // mv_par04 - Almoxarifado Ate 
             nSaldo := RetSaldo(aSG1[nX,2],aSav650[03],aSav650[04],@aSG1[nX],@aSaldos)  // Modificado 30.04.2024 Juan Pablo Astorga - nSaldo := RetSaldo(aSG1[nX,2],mv_par03,mv_par04,@aSG1[nX],@aSaldos)
         EndIf
-        If aScan( aRetorOpc , { |x| Left(x[1],nTamPrd) == M->C2_PRODUTO+aSG1[nX,2] }) > 0
+       // Juan Pablo Astorga 07.05.2024 
+       If aScan( aRetorOpc , { |x| Left(x[1],nTamPrd) == M->C2_PRODUTO+aSG1[nX,2] }) > 0
             aSG1[nX,1] := If(nSaldo >= aSG1[nX,6], 1, 2)
             If lRet .And. nSaldo < aSG1[nX,6]
                 lRet := .F.
@@ -77,7 +78,8 @@ If Len(aSG1) > 0
         Else
             aSG1[nX,1] := If(nSaldo >= aSG1[nX,6], 1, 2)
         EndIf
-
+        // Juan Pablo Astorga 07.05.2024 
+        
     Next nX
 EndIf
 

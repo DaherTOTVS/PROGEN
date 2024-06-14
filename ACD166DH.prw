@@ -53,7 +53,9 @@ BeginSQL Alias cAlias1
     INNER JOIN %table:CB9%  CB9 
     ON CB7_ORDSEP = CB9_ORDSEP
     AND CB9_PEDIDO = C9_PEDIDO
+    AND CB9_ITESEP=C9_ITEM
     AND CB9_NUMSER != ''
+    AND CB9_QTESEP > 0
     AND CB9.%notDel%
     WHERE CB7.%notDel%
     AND CB9_NUMSER NOT IN 

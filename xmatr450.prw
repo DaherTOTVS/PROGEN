@@ -18,7 +18,7 @@
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 /*/
-User Function xMATR450()
+User Function XMATR450()
 Local oReport := ReportDef()
 
 oReport:PrintDialog()
@@ -480,6 +480,9 @@ While !oReport:Cancel() .And. (cAliasNew)->(!Eof())
 			TcSetField( cAliasSG1,"SG1RECNO", "N", 8, 0 )
 
 			While (cAliasSG1)->(!Eof()) .And. cFilSG1+cProduto == (cAliasSG1)->(G1_FILIAL+G1_COD)
+
+				SB1->(MsSeek(cFilSB1+(cAliasSG1)->G1_COMP))
+				
 				If dDataBase < (cAliasSG1)->G1_INI .Or. dDataBase > (cAliasSG1)->G1_FIM
 					(cAliasSG1)->(dbSkip())
 					Loop
@@ -551,7 +554,6 @@ While !oReport:Cancel() .And. (cAliasNew)->(!Eof())
 					
 					cChvExEst := SG1->(G1_FILIAL+G1_COD+G1_COMP+G1_TRT+DTOS(G1_INI)+DTOS(G1_FIM)+G1_REVINI+G1_REVFIM)
 					cChvExEst += SC2->(C2_FILIAL+C2_NUM+C2_ITEM+C2_SEQUEN+C2_ITEMGRD)
-
 					If oExplEstr[cChvExEst] == Nil
 						nQtdBase := ExplEstr(1,SC2->C2_DATPRI,SC2->C2_OPC,SC2->C2_REVISAO,,,.F.)
 						cTipoDec := Posicione('SB1',1,FWxFilial('SB1')+SG1->G1_COMP,'B1_TIPODEC')
@@ -562,6 +564,9 @@ While !oReport:Cancel() .And. (cAliasNew)->(!Eof())
 					EndIf
 
 					nQuantG1 := nQtdBase * (cAliasNew)->D3_QUANT
+					
+
+
 					Do Case
 						Case cTipoDec == "A"
 							nQuantG1 := Round( nQuantG1,0 )
@@ -617,7 +622,7 @@ While !oReport:Cancel() .And. (cAliasNew)->(!Eof())
 						aLstTrb1[nPosTrb1,09] := 0
 						aLstTrb1[nPosTrb1,10] := 0
 						aLstTrb1[nPosTrb1,11] := 0
-						aLstTrb1[nPosTrb1,12] := 0
+						aLstTrb1[nPosTrb1,12] := 0 //aca para para el punto 12
 						aLstTrb1[nPosTrb1,13] := 0
 						aLstTrb1[nPosTrb1,14] := 0
 					
@@ -627,7 +632,7 @@ While !oReport:Cancel() .And. (cAliasNew)->(!Eof())
 					aLstTrb1[nPosTrb1,07] := cProduto
 					aLstTrb1[nPosTrb1,08] := (cAliasSG1)->G1_FIXVAR
 					aLstTrb1[nPosTrb1,10] += Round(nQuantG1,nTamDecQtd)
-					aLstTrb1[nPosTrb1,12] += R450Cus("S",mv_par06,Round(nQuantG1,nTamDecCus))
+					aLstTrb1[nPosTrb1,12] += R450Cus("S",mv_par06,Round(nQuantG1,nTamDecCus)) // y aca  tambien para y pone valor despues de poner valor 0
 				EndIf
 				(cAliasSG1)->(dbSkip())
 			EndDo
@@ -727,7 +732,7 @@ For nI:=1 To Len(aLstTrb1)
 	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 	//³ Impressao por OP e PRODUTO                               ³
 	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-	If mv_par01 = 1
+	If mv_par01 == 1
 		nPosTrb2 := aScan(aLstTrb2,{|x| x[2]==aLstTrb1[nI,2]})
 	Else
 		nPosTrb2 := aScan(aLstTrb2,{|x| x[1]==aLstTrb1[nI,7]})
@@ -754,7 +759,7 @@ For nI:=1 To Len(aLstTrb1)
 		nQtdVar    := aLstTrb1[nI,09]-aLstTrb1[nI,10]	//	QTDREAL-QTDSTD
 		nPercent   := (nQtdVar/aLstTrb1[nI,10])*100	//	((QTDREAL-QTDSTD)/QTDSTD)*100
 		nCusUnit   := IIf(Empty(aLstTrb1[nI,09]),aLstTrb1[nI,13],Round(aLstTrb1[nI,13]/aLstTrb1[nI,09],nTamDecCus))	//Round(CUSTOREAL/IIF(QTDREAL=0,1,QTDREAL),nTamDecCus)
-		nCusUStd   := IIf(Empty(aLstTrb1[nI,10]),aLstTrb1[nI,12],Round(aLstTrb1[nI,12]/aLstTrb1[nI,10],nTamDecCus))	//Round(CUSTOSTD/IIF(QTDSTD=0,1,QTDSTD),nTamDecCus)
+		nCusUStd   := IIf(Empty(aLstTrb1[nI,10]),aLstTrb1[nI,12],aLstTrb1[nI,12]/Round(aLstTrb1[nI,10],nTamDecCus))	//Round(CUSTOSTD/IIF(QTDSTD=0,1,QTDSTD),nTamDecCus)
 		nSValor    := Round(nCusUnit*nQtdVar,nTamDecCus)
 		nSQuant    := Round(nTotalVar-nSValor,nTamDecCus)
 
@@ -763,6 +768,9 @@ For nI:=1 To Len(aLstTrb1)
 		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 		SB1->(DbSetOrder(1))
 		SB1->(dbSeek(xFilial("SB1")+aLstTrb1[nI,01]))
+		IF "MOD" $ aLstTrb1[nI,01]
+			nSQuant := nSQuant
+ 		Endif
 		If mv_par02 == 1 .And. (mv_par09 == 1 .Or. (QtdComp(aLstTrb1[nI,09],.T.) # QtdComp(0,.T.)))
 			oSection2:Cell("CPROD"	):SetValue(aLstTrb1[nI,01])
 			oSection2:Cell("CDESC"	):SetValue(SB1->B1_DESC)
@@ -887,7 +895,11 @@ Local nRet      := 0
 Default cAliasSD3 := "SD3"
 Default nQtd      := 0
 
-If cTipo = "R" 	// Custo Real
+If "MBPOM" $ SB1->B1_COD .AND. nQtd>0
+	nRet      := 0
+EndIf
+
+If cTipo == "R" 	// Custo Real
 	nRet := (cAliasSD3)->( &("D3_CUSTO"+ Str(nMoeda,1)) ) * IIf(SubStr((cAliasSD3)->D3_CF, 1, 1) == 'R', 1, -1)
 Else  // Custo Standard
 	dbSelectArea("SB1")
@@ -1085,7 +1097,7 @@ Local nRet       := 0
 
 Default cAliasSD3:= "SD3"
 
-If cTipo = "R" // Quantidade Real
+If cTipo == "R" // Quantidade Real
 	nRet := (cAliasSD3)->D3_QUANT*IIf(SubStr((cAliasSD3)->D3_CF, 1, 1)=='R', 1, -1)
 Else // Quantidade Standard
 	nRet := nQuant

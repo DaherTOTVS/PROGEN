@@ -34,13 +34,24 @@ User Function LocxPE15()
             Return MsgStop("Error al guardar la descripcion de los productos " + TCSQLError())
         EndIf
 
-		IF EMPTY(F1_SERIE2)
+		IF EMPTY(SF1->F1_SERIE2)
 
 			dbSelectArea("SFP")
-        	SFP->(dbSetOrder(1))
-        	SFP->(dbSeek( Xfilial("SFP") + cFilAnt + cSerie )) 
-			F1_SERIE2=SFP->FP_SERIE2
-			("SFP")->(DBCloseArea())	
+			SFP->(dbSetOrder(1))
+			SFP->(dbSeek( Xfilial("SFP") + cFilAnt + cSerie )) 
+
+		    DbSelectArea("SX3")
+			DbSetOrder(2)	
+			If MsSeek("FP_SERIE2")
+				SF1->F1_SERIE2=SFP->FP_SERIE2
+			else
+				SF1->F1_SERIE2=SFP->FP_SERIE
+			Endif
+
+			("SX3")->(dbClosearea())
+			("SFP")->(DBCloseArea())
+
+			
 
 		EndIF
 	EndIF

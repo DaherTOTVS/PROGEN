@@ -11,12 +11,22 @@
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
 User Function GENFATTXT()
 
-Local lSigue        := .T.
-Local cQuery        := ""
+Local   lSigue      := .T.
+Local   cQuery      := ""
+Local   cTextSer    := ""
+Private cPerg 		:= "TXTFAT"
 Private nTotReg 	:= 0
+
+//cTextSer := FormatIn(Padr(Alltrim(MV_PAR01),3),";")
 
 MakeDir("C:\TOTVS")
 MakeDir("C:\TOTVS\FATPROV")
+
+AjustaSX1(cPerg)
+
+If !Pergunte(cPerg,.T.)
+    Return
+EndIf
 
 If lSigue
         cFechaGen:=DTOS(dDatabase)
@@ -52,6 +62,9 @@ IF lSigue
     cQuery += " WHERE "
     cQuery += " D1_DTDIGIT BETWEEN '"+Dtos(dDatabase-180)+"' AND '"+dTos(dDatabase) + "' AND "
     cQuery += " D1_ESPECIE IN ('NF','NDP') AND " 
+    if !Empty(Alltrim(MV_PAR01))
+        cQuery += " D1_SERIE IN " + FormatIn(Alltrim(MV_PAR01),";") + " AND "
+    EndIf
     cQuery += " D_E_L_E_T_ <> '*' "
     cQuery += " UNION "
     cQuery += " SELECT D2_PEDIDO AS PEDIDO , D2_CLIENTE AS PROVEEDOR  , D2_LOJA  AS LOJA , D2_DOC AS COMPROBANTE, D2_SERIE AS SERIE , D2_ESPECIE AS ESPECIE , D2_EMISSAO AS EMISION , D2_DTDIGIT AS FECHACONTB "
@@ -59,6 +72,9 @@ IF lSigue
     cQuery += " WHERE "
     cQuery += " D2_DTDIGIT BETWEEN '"+Dtos(dDatabase-180)+"' AND '"+dTos(dDatabase) + "' AND "
     cQuery += " D2_ESPECIE IN ('NCP')  AND " 
+    if !Empty(Alltrim(MV_PAR01))
+        cQuery += " D2_SERIE IN " + FormatIn(Alltrim(MV_PAR01),";") + " AND "
+    EndIf
     cQuery += " D_E_L_E_T_ <> '*' "
     cQuery := ChangeQuery( cQuery )
     dbUseArea( .T., "TOPCONN", TCGenQry(,,cQuery), 'TRB', .F., .T.)
@@ -110,14 +126,14 @@ GenSC7() //Encabezado
         cHora       := u_lhora(TRB->ESPECIE) 
 
         aDeta       := { }
-        cIDNum      := Alltrim(TRB->PROVEEDOR)+Alltrim(TRB->COMPROBANTE)+cHora // 1
+        cIDNum      := Alltrim(TRB->PROVEEDOR)+Alltrim(TRB->COMPROBANTE)  // 1 08.05.2024 Juan Pablo Astorga Alltrim(TRB->PROVEEDOR)+Alltrim(TRB->COMPROBANTE)+cHora // 1
         cNIT        := Alltrim(TRB->PROVEEDOR)      //2
         cRazon      := Alltrim(Posicione("SA2",1,xFilial("SA2")+TRB->PROVEEDOR+TRB->LOJA,"A2_NOME"))    //3
         cFolio      := Alltrim(TRB->COMPROBANTE)    //4
         cTipoDoc    := BuscaTipo(ESPECIE)           //5
         cFechaFol   := TRB->FECHACONTB              //6
         cDescripDoc := ""                           //7
-        cTipoDoc2   := ""                           //8
+        cTipoDoc2   := TRB->SERIE                   //8  Modificado 30.04.2024 Juan Pablo Astorga
         cNumDoc     := Alltrim(TRB->COMPROBANTE)    //9
         cOrdenComp  := Alltrim(TRB->PEDIDO) //10
         cFechaEmis  := TRB->EMISION     //11
@@ -540,3 +556,35 @@ EndIf
 Return Alltrim(cHoraCon2)
 
 
+/*ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
+Programa: AjustaSX1
+Titulo	:
+Fecha	: 22/12/202
+Autor 	: Juan Pablo Astorga
+Descripcion : Pregunta para la integracion plataforma PROGEN
+ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ*/
+Static Function AjustaSX1(cPerg)
+    Local aArea := GetArea()
+    Local aRegs := {}, i, j
+
+    cPerg := Padr(cPerg,Len(SX1->X1_GRUPO))
+
+    DbSelectArea("SX1")
+    DbSetOrder(1)
+
+    aAdd(aRegs,{cPerg,"01","Serie a Filtrar","Serie a Filtrar","Serie a Filtrar","mv_ch1","C",90,0,0,"G","","MV_PAR01","","","","","","","","","","","","","","","","","","","","","","","","","","","" } )
+    
+    For i:=1 to Len(aRegs)
+        If !dbSeek(cPerg+aRegs[i,2])
+            RecLock("SX1",.T.)
+            For j:=1 to FCount()
+                If j <= Len(aRegs[i])
+                    FieldPut(j,aRegs[i,j])
+                Endif
+            Next
+            MsUnlock()
+        Endif
+    Next
+
+    RestArea(aArea)
+Return

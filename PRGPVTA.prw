@@ -166,7 +166,7 @@ User Function ACMRP2K(cPedido, cCliente, cTienda, cModalidad)
 	Private cRem			:= GetNextAlias()
 	Private nFontAlto		:= 44
 	Private oPrinter
-	Private nLineasPag		:= 59			// <----- cantidad de lineas en el GRID
+	Private nLineasPag		:= 56			// <----- cantidad de lineas en el GRID
 	Private nPagNum			:= 0
 	Private nItemRegistro	:= 0			// Item del Registro
 	Private oCouNew10		:= TFont():New("Courier New",10,10,,.F.,,,,.T.,.F.)
@@ -282,7 +282,7 @@ Static Function AcmHeadPR()
 	IF "01" $ cEmpAnt
 		oPrinter:SayBitmap(-10,10,cFileLogo,500,200)  // Logo
 	Else
-		oPrinter:SayBitmap(-10,10,cFileLogo,1326,512)  // Logo
+		oPrinter:SayBitmap(50,10,cFileLogo,500,200)  // Logo
 	EndIf
 				//oPrinter:SayBitmap(-80,10,"C:\TOTVS\PROGEN\Facturacion\Formatos\logoprogen.png",400,400)  // Logo
 	            oPrinter:Say(n1Linea							,2140			, AcmePagina + STRZERO(nPagNum,3)	,	oArial12,,,,2)
@@ -304,21 +304,36 @@ Static Function AcmHeadPR()
 	EndIf
 	
 	nLinea = nLinea+1
-				oPrinter:Box(n1Linea+(nFontAlto*nLinea)-10		,nMargIqz+1490,nFontAlto*12,1800,)
-				oPrinter:Box(n1Linea+(nFontAlto*nLinea)-10		,nMargIqz+1790,nFontAlto*12,2250,)
+				oPrinter:Box(n1Linea+(nFontAlto*nLinea)-10		,nMargIqz+1490,nFontAlto*13,1800,)
+				oPrinter:Box(n1Linea+(nFontAlto*nLinea)-10		,nMargIqz+1790,nFontAlto*13,2250,)
 				oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1500	, "Fecha" 					    ,	oArial12N,,,,2)
-				oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1840	, fecha((cRem)->C5_EMISSAO," ")	    			,	oArial12,,,,2)
+				oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1810	, fecha((cRem)->C5_EMISSAO," ")	    			,	oArial12,,,,2)
 				oPrinter:Line(n1Linea+(nFontAlto*nLinea)-10		,nMargIqz+1490,n1Linea+(nFontAlto*nLinea)-10,2250,,)
 				
 	nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1500	, "Su N° de orden" 						,	oArial12N,,,,2)
-				oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1840	, AllTrim((cRem)->C5_XORCOMP)			,	oArial12,,,,2)
+				oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1810	, AllTrim((cRem)->C5_XORCOMP)			,	oArial12,,,,2)
 				oPrinter:Line(n1Linea+(nFontAlto*nLinea)-10		,nMargIqz+1490,n1Linea+(nFontAlto*nLinea)-10,2250,,)
 	nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1500	, "Terminos de pago" 					,	oArial12N,,,,2)
-				oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1840	, AllTrim((cRem)->E4_COND) +" DIAS" 	,	oArial12,,,,2)
+				oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1810	, AllTrim((cRem)->E4_COND) +" DIAS" 	,	oArial12,,,,2)
 				oPrinter:Line(n1Linea+(nFontAlto*nLinea)-10		,nMargIqz+1490,n1Linea+(nFontAlto*nLinea)-10,2250,,)
 	nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1500	, "Nuestra Referencia"				,	oArial12N,,,,2)
-				oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1840	, AllTrim((cRem)->A3_NOME)						,	oArial12,,,,2)
+				oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1810	, substr(AllTrim((cRem)->A3_NOME),1,26),	oArial11,,,,2)
 				oPrinter:Line(n1Linea+(nFontAlto*nLinea)-10		,nMargIqz+1490,n1Linea+(nFontAlto*nLinea)-10,2250,,)
+				// If len(AllTrim((cRem)->A3_NOME))>24
+				// 	nLinea ++
+				// 	oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1820	, substr(AllTrim((cRem)->A3_NOME),25,50),	oArial11,,,,2)
+				// 	nLinea --
+				// EndIf
+
+	nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1810	, substr(AllTrim((cRem)->A3_EMAIL),1,33),	oArial11,,,,2)
+
+				// If len(AllTrim((cRem)->A3_EMAIL))>24
+				// 	nLinea ++
+				// 	oPrinter:Say(n1Linea+(nFontAlto*nLinea)			,nMargIqz+1820	, substr(AllTrim((cRem)->A3_EMAIL),31,60),	oArial11,,,,2)
+				// 	nLinea --
+				// EndIf
+
+	 nLinea --			
 
 
 	IF "01" $ cEmpAnt
@@ -356,7 +371,15 @@ Static Function AcmHeadPR()
 		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"PBX:730 6100 DIRECTO VENTAS:7306111" ,	oArial12,,,,2)
 		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"FAX:730 6110 - 730 6090"				,	oArial12,,,,2)
 	else
-		nLinebox1 +=6
+
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+650,"Domicilio Fiscal"							,	oArial12N,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+650,"Empoala 251-piso 10, col, Narvarte CD. Ciudad de México,"					,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+650,"C.P. 03020, Benito juarez, Ciudad de México, México" ,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+650,"Bodega:"		,	oArial12N,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+650,"Calle Carretera Federal Puebla  Tlaxcala no. 242 NAVE 5," ,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+650,"Colonia San Pablo XOCHIMEHUACAN C.P. 72014 Puebla"				,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+650,"México"				,	oArial12,,,,2)
+
 	EndIf
 
 	nLinebox3 = 14.5
@@ -378,7 +401,19 @@ Static Function AcmHeadPR()
 		(aliasmemoqry)->(dbSkip())
 	end
 	(aliasmemoqry)->(DBCLOSEAREA())
-	nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50,"INCOTERMS / TERMINO DE NEGOCIACION: " +AllTrim((cRem)->C5_INCOTER)+" - "+AllTrim((cRem)->TEXCLI) 		,	oArial11,,,,2)
+	nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50,"INCOTERMS / TERMINO DE NEGOCIACION: " + SUBSTR( AllTrim((cRem)->C5_INCOTER)+" - "+ AllTrim((cRem)->TEXCLI), 1, 103),	oArial11,,,,2)
+	
+	If len(AllTrim((cRem)->TEXCLI))>97
+		nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50, SUBSTR(AllTrim((cRem)->C5_INCOTER)+" - "+AllTrim((cRem)->TEXCLI), 104, 137),	oArial11,,,,2)
+		If len(AllTrim((cRem)->TEXCLI))>140
+			nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50, SUBSTR(AllTrim((cRem)->C5_INCOTER)+" - "+AllTrim((cRem)->TEXCLI), 241, 137),	oArial11,,,,2)
+			If len(AllTrim((cRem)->TEXCLI))>365
+				nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50, SUBSTR(AllTrim((cRem)->C5_INCOTER)+" - "+AllTrim((cRem)->TEXCLI), 378, 137),	oArial11,,,,2)
+			EndIf
+		EndIf
+	EndIf
+
+	
 	nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50,"CURRENCY / MONEDA: " +AllTrim((cRem)->CTO_SIMB) + " " + AllTrim((cRem)->CTO_DESC),	oArial11,,,,2)
 	//nLinebox3+= ImpMemo(oPrinter,zMemoToA(AllTrim((cRem)->C5_MENNOTA), 130)	, nFontAlto*nLinebox3 , nMargIqz+50, 2100  	, nFontAlto	, oArial12	, 0			,0)
 	nLinebox3+=ImpMemo(oPrinter,zMemoToA(AllTrim((cRem)->C5_MENNOTA),130)	,nFontAlto*nLinebox3+15 , nMargIqz+50, 2280 	, nFontAlto-5	, oArial11	, 0			,0)
@@ -429,16 +464,20 @@ Static Function AcmDtaiPR()
 		nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+100	, (AliasQDetail)->C6_DESCRI							,	oArial11,,,,2)
 
 		if Alltrim((AliasQDetail)->XDESCRI) <>"" 
-				//nLinea++; oPrinter:Say((n1Linea)+(nFontAlto*nLinea)	,nMargIqz+3	, ">"								,	oArial12,,,,2); nLinea--
-				nLinea+=0.5	/*oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+10	, (cQueryx)->XDESCRI	,	oArial12,,,,2)*/
-				nLinea +=ImpMemo(oPrinter,zMemoToA( "> "+(AliasQDetail)->XDESCRI, 80)	,n1Linea+(nFontAlto*nLinea) , nMargIqz+25, 1100  	, nFontAlto	, oArial12	, 0			,0)
-				endif
+			//nLinea++; oPrinter:Say((n1Linea)+(nFontAlto*nLinea)	,nMargIqz+3	, ">"								,	oArial12,,,,2); nLinea--
+			nLinea+=0.5	/*oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+10	, (cQueryx)->XDESCRI	,	oArial12,,,,2)*/
+			nLinea +=ImpMemo(oPrinter,zMemoToA( "> "+(AliasQDetail)->XDESCRI, 80)	,n1Linea+(nFontAlto*nLinea) , nMargIqz+25, 1100  	, nFontAlto	, oArial12	, 0			,0)
+		endif
 
 		if Alltrim(AliasQDetail->A7_CODCLI) <>"" .OR. Alltrim(AliasQDetail->A7_DESCCLI) <> ""
 
 			nLinea ++;  oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+30	, "Su item..... "						,	oArial11N,,,,2)
 						oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+300	, AliasQDetail->A7_CODCLI				,	oArial11N,,,,2)
 			nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+300	, AliasQDetail->A7_DESCCLI				,	oArial11N,,,,2)
+			if Alltrim((AliasQDetail)->OBS) <>"" 
+				nLinea +=0.5
+				nLinea +=ImpMemo(oPrinter,zMemoToA( "+ "+(AliasQDetail)->OBS, 80)	,n1Linea+(nFontAlto*nLinea) , nMargIqz+25, 1100  	, nFontAlto	, oArial12	, 0			,0)
+			endif
 		endif
 
 		(AliasQDetail)->(dbSkip())
@@ -449,7 +488,7 @@ Static Function AcmDtaiPR()
 				oPrinter:StartPage()
 				//AcmHeadPR(cTipo,.T.)
 				AcmHeadPR()
-				nLinea:=21.5
+				nLinea:=22.5
 		EndIf
 
 		if ((AliasQDetail)->(EOF()))
@@ -496,34 +535,57 @@ Static Function AcmFootPR(lSaltoPagina)
 	EndIf
 	cRespon	:= ALLTRIM("")
 
-				
-	nLinea =61
-				oPrinter:Line(n1Linea+(nFontAlto*nLinea),0,n1Linea+(nFontAlto*nLinea), 2400,,"-8")
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"PROGEN S.A"							,	oArial11,,,,2)
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"Carrera 3 No.56-07"					,	oArial11,,,,2)
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"Zona Industrial Cazuca Entrada No.2"	,	oArial11,,,,2)
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"Soacha Cundinamarca - Colombia"		,	oArial11,,,,2)
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"PBX:730 6100 DIRECTO VENTAS:7306111"	,	oArial11,,,,2)
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"FAX:730 6110 - 730 6090"				,	oArial11,,,,2)
+	IF "01" $ cEmpAnt			
+		nLinea =61
+					oPrinter:Line(n1Linea+(nFontAlto*nLinea),0,n1Linea+(nFontAlto*nLinea), 2400,,"-8")
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"PROGEN S.A"							,	oArial11,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"Carrera 3 No.56-07"					,	oArial11,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"Zona Industrial Cazuca Entrada No.2"	,	oArial11,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"Soacha Cundinamarca - Colombia"		,	oArial11,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"PBX:730 6100 DIRECTO VENTAS:7306111"	,	oArial11,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"FAX:730 6110 - 730 6090"				,	oArial11,,,,2)
 
-	nLinea = 61
+		nLinea = 61
 
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+750,"PRODUCTOR - IMPORTADOR"					,	oArial11N,,,,2)
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+650,"RESPONSABLE I.V.A. - REGIMEN COMUN"		,	oArial11N,,,,2)
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+750,"REGISTRO 993-040"						,	oArial11N,,,,2)
-	nLinea ++
-	nLinea ++; 	oPrinter:Say(nFontAlto*nLinea,nMargIqz+750, "www.progen.com.co"  					,	oArial11,,,,2)
-	nLinea ++; 	oPrinter:Say(nFontAlto*nLinea,nMargIqz+750, "www.royalcondor.com"  					,	oArial11,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+750,"PRODUCTOR - IMPORTADOR"					,	oArial11N,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+650,"RESPONSABLE I.V.A. - REGIMEN COMUN"		,	oArial11N,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+750,"REGISTRO 993-040"						,	oArial11N,,,,2)
+		nLinea ++
+		nLinea ++; 	oPrinter:Say(nFontAlto*nLinea,nMargIqz+750, "www.progen.com.co"  					,	oArial11,,,,2)
+		nLinea ++; 	oPrinter:Say(nFontAlto*nLinea,nMargIqz+750, "www.royalcondor.com"  					,	oArial11,,,,2)
 
-	nLinea = 61
+		nLinea = 61
 
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1300,"AGENTE RETENEDOR DE IVA GRAN CONTRIBUYENTE"						,	oArial12N,,,,2)
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1400,"Resolución 41 de Enero 30/2014"									,	oArial11N,,,,2)
-	nLinea ++
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1400,"Actividad Económica Principal 2821"								,	oArial11N,,,,2)
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1200,"NO EFECTUAR RETENCIÓN A TITULO DE RENTA E IMPUESTO CREE"			,	oArial12N,,,,2)
-	nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1200,"SOMOS AUTORRETENEDORES Res.000041 Julio 16/92"						,	oArial14N,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1300,"AGENTE RETENEDOR DE IVA GRAN CONTRIBUYENTE"						,	oArial12N,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1400,"Resolución 41 de Enero 30/2014"									,	oArial11N,,,,2)
+		nLinea ++
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1400,"Actividad Económica Principal 2821"								,	oArial11N,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1200,"NO EFECTUAR RETENCIÓN A TITULO DE RENTA E IMPUESTO CREE"			,	oArial12N,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1200,"SOMOS AUTORRETENEDORES Res.000041 Julio 16/92"						,	oArial14N,,,,2)
+	else
+				nLinea =61
+					oPrinter:Line(n1Linea+(nFontAlto*nLinea),0,n1Linea+(nFontAlto*nLinea), 2400,,"-8")
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"Domicilio Fiscal"					,	oArial11N,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"Empoala 251-piso 10, col, Narvarte CD. Ciudad de México,"					,	oArial11,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"C.P. 03020, Benito juarez, Ciudad de México, México"	,	oArial11,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"Bodega:"		,	oArial11N,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"Calle Carretera Federal Puebla  Tlaxcala no. 242 NAVE 5,"	,	oArial11,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"Colonia San Pablo XOCHIMEHUACAN C.P. 72014 Puebla"				,	oArial11,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+50,"México"				,	oArial11,,,,2)
 
+		nLinea = 61
+
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1200,"RFC EMISOR"					,	oArial11N,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1200,"No. De Series del CSD"		,	oArial11N,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1200,"RÉGIMEN FISCAL"						,	oArial11N,,,,2)
+
+		nLinea = 61
+
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1700,"TIER050426R62"						,	oArial11N,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1700,"00001000000505551459"									,	oArial11N,,,,2)
+		nLinea ++;	Oprinter:Say(nFontAlto*nLinea,nMargIqz+1700,"General de Ley Pesonas Morales"								,	oArial11N,,,,2)
+
+	EndIf
 Return
 /*
 +===========================================================================+
@@ -614,7 +676,7 @@ Local cQrylotser := ""
 
 		cQrylotser:=" SELECT  " + CRLF
 		cQrylotser+=" D2_PEDIDO, D2_COD, B1_DESC, D2_QUANT, D2_SERIE, D2_LOTECTL, D2_DOC, C6_SERIE, C6_LOCAL, C6_CLI, C6_NUMSERI, C6_LOTECTL, D2_NUMLOTE, D2_NUMSERI, D2_LOJA, " + CRLF
-		cQrylotser+=" ISNULL(CAST(CAST(B1_XDESCRI AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS XDESCRI, C6_CODINF " + CRLF
+		cQrylotser+=" ISNULL(CAST(CAST(B1_XDESCRI AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS XDESCRI, C6_CODINF , ISNULL(CAST(CAST(C6_VDOBS AS VARBINARY(8000)) AS VARCHAR(8000)),'') OBS" + CRLF
 		//cQrylotser+=" ISNULL(CAST(CAST(B.C6_INFAD AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS INFAD " + CRLF
 		cQrylotser+=" FROM "+ InitSqlName("SD2") +" SD2 " + CRLF
 		cQrylotser+=" INNER JOIN "+ InitSqlName("SB1") +" SB1 ON  " + CRLF
@@ -684,11 +746,11 @@ if SELECT("AliasQDetail")>0
 	DBCLOSEAREA()
 
 endif
-cQryDetail:= "SELECT C6_NUM, C6_PRODUTO, C6_DESCRI, C6_PRCVEN, C6_QTDVEN, C6_VALOR, C6_LOJA, C6_CLI, C6_LOCAL, C6_UM, " 
+cQryDetail:= "SELECT C6_NUM, C6_PRODUTO, ISNULL(CAST(CAST(C6_VDOBS AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS OBS , C6_DESCRI, C6_PRCVEN, C6_QTDVEN, C6_VALOR, C6_LOJA, C6_CLI, C6_LOCAL, C6_UM, " 
 cQryDetail+= "A7_CODCLI, A7_DESCCLI,   " + CRLF
 cQryDetail+= " ISNULL(CAST(CAST(C.B1_XDESCRI AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS XDESCRI " + CRLF
 cQryDetail+= "FROM "+InitSqlName("SC6")+" A "  + CRLF
-cQryDetail+= "LEFT JOIN "+InitSqlName("SA7")+" B ON A.C6_PRODUTO=B.A7_PRODUTO AND A.C6_LOJA=B.A7_LOJA AND A.C6_CLI=B.A7_CLIENTE "  + CRLF
+cQryDetail+= "LEFT JOIN "+InitSqlName("SA7")+" B ON A.C6_PRODUTO=B.A7_PRODUTO AND A.C6_LOJA=B.A7_LOJA AND A.C6_CLI=B.A7_CLIENTE AND B.D_E_L_E_T_<>'*' "  + CRLF
 cQryDetail+= "LEFT JOIN "+InitSqlName("SB1")+" C ON A.C6_PRODUTO = C.B1_COD AND C.D_E_L_E_T_ <>'*' "  + CRLF
 cQryDetail+= "WHERE A.C6_NUM = '"+cPedido+"' AND A.C6_LOJA='"+cTienda+"'  AND A.C6_CLI =  '"+cCliente+"'  AND A.D_E_L_E_T_ <>'*' " + CRLF
 
@@ -793,7 +855,7 @@ Static function TipoQuery(cDocQuery,cPedido,cCliente,cTienda )
 
 	If cDocQuery==1
 		cQueryRem	:= " SELECT  "
-		cQueryRem	+= " C5_NUM, C5_CLIENTE, C5_EMISSAO, C5_LOJACLI, C5_INCOTER, E4_DESCRI, E4_COND, CTO_MOEDA, CTO_DESC, CTO_SIMB, C5_XORCOMP, A3_NOME, C5_MENNOTA," + CRLF
+		cQueryRem	+= " C5_NUM, C5_CLIENTE, C5_EMISSAO, C5_LOJACLI, C5_INCOTER, E4_DESCRI, E4_COND, CTO_MOEDA, CTO_DESC, CTO_SIMB, C5_XORCOMP, A3_NOME, A3_EMAIL, C5_MENNOTA," + CRLF
 		// cQueryRem	+= " SUBSTRING((CONVERT(VARCHAR(8000),CONVERT(VARBINARY(8000),C5_XTEXCLI))),1,LEN((CONVERT(VARCHAR(8000),CONVERT(VARBINARY(8000),C5_XOBS))))) AS C5_XOBS, "  + CRLF
 		cQueryRem	+= " ISNULL(CAST(CAST(C5_XTEXCLI AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS TEXCLI "  + CRLF
 		cQueryRem	+= " FROM "+ InitSqlName("SC5") +" A  " + CRLF
