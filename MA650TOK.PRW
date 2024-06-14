@@ -29,6 +29,12 @@ Local aRetorOpc:= {}        // Juan Pablo 31.03.2023
 Local lRet     := .T.
 Local nX
 
+// Modificado 12.06.2024 Juan Pablo Astorga
+IF ValType(aSav650[01])=="C"               
+    aSav650[01]:= Val(aSav650[01])
+EndIf
+// Modificado 12.06.2024 Juan Pablo Astorga
+
 SG1->(dbSetOrder(6))        // Juan Pablo 31.03.2023     
 //SG1->(dbSetOrder(1))
 If SG1->(MsSeek(FWxFilial("SG1")+M->C2_PRODUTO+M->C2_REVISAO))
@@ -47,10 +53,10 @@ If SG1->(MsSeek(FWxFilial("SG1")+M->C2_PRODUTO+M->C2_REVISAO))
                 // aAdd( aSG1, { 1, SG1->G1_COMP, AllTrim(SB1->B1_DESC), SB1->B1_UM, SG1->G1_LOCCONS, (M->C2_QUANT*SG1->G1_QUANT), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }  )
             Else
                 If aScan( aRetorOpc , { |x| Left(x[1],nTamPrd) == M->C2_PRODUTO+SG1->G1_COMP }) > 0
-                 aAdd( aSG1, { 1, SG1->G1_COMP, AllTrim(SB1->B1_DESC), SB1->B1_UM, If(!Empty(SG1->G1_XBODEGA),SG1->G1_XBODEGA,SB1->B1_LOCPAD), (SG1->G1_QUANT/nBase)*M->C2_QUANT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }  )
+                    aAdd( aSG1, { 1, SG1->G1_COMP, AllTrim(SB1->B1_DESC), SB1->B1_UM, If(!Empty(SG1->G1_XBODEGA),SG1->G1_XBODEGA,SB1->B1_LOCPAD), (SG1->G1_QUANT/nBase)*M->C2_QUANT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }  )
                 // aAdd( aSG1, { 1, SG1->G1_COMP, AllTrim(SB1->B1_DESC), SB1->B1_UM, SG1->G1_LOCCONS, (M->C2_QUANT*SG1->G1_QUANT), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }  )
                 Else
-                aAdd( aSG1, {  3, SG1->G1_COMP, AllTrim(SB1->B1_DESC), SB1->B1_UM, If(!Empty(SG1->G1_XBODEGA),SG1->G1_XBODEGA,SB1->B1_LOCPAD), (SG1->G1_QUANT/nBase)*M->C2_QUANT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }  )
+                    aAdd( aSG1, { 3, SG1->G1_COMP, AllTrim(SB1->B1_DESC), SB1->B1_UM, If(!Empty(SG1->G1_XBODEGA),SG1->G1_XBODEGA,SB1->B1_LOCPAD), (SG1->G1_QUANT/nBase)*M->C2_QUANT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }  )
                 // aAdd( aSG1, { 3, SG1->G1_COMP, AllTrim(SB1->B1_DESC), SB1->B1_UM, SG1->G1_LOCCONS, (M->C2_QUANT*SG1->G1_QUANT), 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }  )
                 EndIf
             EndIf    
@@ -69,8 +75,7 @@ If Len(aSG1) > 0
 	        // mv_par04 - Almoxarifado Ate 
             nSaldo := RetSaldo(aSG1[nX,2],aSav650[03],aSav650[04],@aSG1[nX],@aSaldos)  // Modificado 30.04.2024 Juan Pablo Astorga - nSaldo := RetSaldo(aSG1[nX,2],mv_par03,mv_par04,@aSG1[nX],@aSaldos)
         EndIf
-       // Juan Pablo Astorga 07.05.2024 
-       If aScan( aRetorOpc , { |x| Left(x[1],nTamPrd) == M->C2_PRODUTO+aSG1[nX,2] }) > 0
+        If aScan( aRetorOpc , { |x| Left(x[1],nTamPrd) == M->C2_PRODUTO+aSG1[nX,2] }) > 0
             aSG1[nX,1] := If(nSaldo >= aSG1[nX,6], 1, 2)
             If lRet .And. nSaldo < aSG1[nX,6]
                 lRet := .F.
@@ -78,8 +83,6 @@ If Len(aSG1) > 0
         Else
             aSG1[nX,1] := If(nSaldo >= aSG1[nX,6], 1, 2)
         EndIf
-        // Juan Pablo Astorga 07.05.2024 
-        
     Next nX
 EndIf
 
