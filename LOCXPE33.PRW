@@ -106,6 +106,11 @@ If nTipo == 4 .and. alltrim(CESPECIE)='NDP'
 	AADD(aDetalles,{"F1_XOBS"       ,.T.      	,.F.      ,.F.   })   
 EndIF
 
+If nTipo == 7 .and. Alltrim(CESPECIE)='NCP' // NCP - Nota de Credito Compras - Proveedores
+    //Detalles,      Campo       Usado  Obligatorio  Visual
+    AADD(aDetalles,{"F2_XOBSNC" , .T.      ,.F.      ,.F.   })
+Endif
+
 //зддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддд©
 //Ё No cambiar dentro del Loop For...Next, llamar AC/Localizaciones Ё
 //юддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддддды

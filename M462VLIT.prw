@@ -20,6 +20,8 @@ If Select(cAlias1) > 0
 	(cAlias1)->(dbCloseArea())
 EndIf
 
+CONOUT("M462VLIT",cOrdsep,"DDATABASE",dDataBase,"cPedido",cPedido,"cProduto",cProduto,"cSequen",cSequen,"cItem",cItem)
+
 CB7->(dbSetOrder(1))
 If ALLTRIM(cOrdsep)!= "" .AND. CB7->(dbSeek(xFilial("CB7")+cOrdsep))
 

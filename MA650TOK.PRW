@@ -14,7 +14,7 @@ User Function MA650TOK()
 Local oDlg
 Local oLbx1
 Local oLbx2
-Local oVerd	   := LoadBitmap( GetResources(), "ENABLE"  )
+Local oVerd	   := LoadBitmap( GetResoufrces(), "ENABLE"  )
 Local oVerm	   := LoadBitmap( GetResources(), "DISABLE" )
 Local oAzul	   := LoadBitmap( GetResources(), "BR_AZUL" )
 

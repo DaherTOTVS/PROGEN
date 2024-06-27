@@ -401,14 +401,14 @@ Static Function AcmHeadPR()
 		(aliasmemoqry)->(dbSkip())
 	end
 	(aliasmemoqry)->(DBCLOSEAREA())
-	nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50,"INCOTERMS / TERMINO DE NEGOCIACION: " + SUBSTR( AllTrim((cRem)->C5_INCOTER)+" - "+ AllTrim((cRem)->TEXCLI), 1, 103),	oArial11,,,,2)
+	nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50,"INCOTERMS / TERMINO DE NEGOCIACION: " + SUBSTR( AllTrim((cRem)->C5_INCOTER)+" - "+ AllTrim((cRem)->C5_XPUERTO)+" "+ AllTrim((cRem)->TEXCLI), 1, 103),	oArial11,,,,2)
 	
 	If len(AllTrim((cRem)->TEXCLI))>97
-		nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50, SUBSTR(AllTrim((cRem)->C5_INCOTER)+" - "+AllTrim((cRem)->TEXCLI), 104, 137),	oArial11,,,,2)
+		nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50, SUBSTR(AllTrim((cRem)->C5_INCOTER)+" - "+AllTrim((cRem)->C5_XPUERTO)+" "+AllTrim((cRem)->TEXCLI), 104, 137),	oArial11,,,,2)
 		If len(AllTrim((cRem)->TEXCLI))>140
-			nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50, SUBSTR(AllTrim((cRem)->C5_INCOTER)+" - "+AllTrim((cRem)->TEXCLI), 241, 137),	oArial11,,,,2)
+			nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50, SUBSTR(AllTrim((cRem)->C5_INCOTER)+" - "+AllTrim((cRem)->C5_XPUERTO)+" "+AllTrim((cRem)->TEXCLI), 241, 137),	oArial11,,,,2)
 			If len(AllTrim((cRem)->TEXCLI))>365
-				nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50, SUBSTR(AllTrim((cRem)->C5_INCOTER)+" - "+AllTrim((cRem)->TEXCLI), 378, 137),	oArial11,,,,2)
+				nLinebox3++;	Oprinter:Say(nFontAlto*nLinebox3,nMargIqz+50, SUBSTR(AllTrim((cRem)->C5_INCOTER)+" - "+AllTrim((cRem)->C5_XPUERTO)+" "+AllTrim((cRem)->TEXCLI), 378, 137),	oArial11,,,,2)
 			EndIf
 		EndIf
 	EndIf
@@ -855,7 +855,7 @@ Static function TipoQuery(cDocQuery,cPedido,cCliente,cTienda )
 
 	If cDocQuery==1
 		cQueryRem	:= " SELECT  "
-		cQueryRem	+= " C5_NUM, C5_CLIENTE, C5_EMISSAO, C5_LOJACLI, C5_INCOTER, E4_DESCRI, E4_COND, CTO_MOEDA, CTO_DESC, CTO_SIMB, C5_XORCOMP, A3_NOME, A3_EMAIL, C5_MENNOTA," + CRLF
+		cQueryRem	+= " C5_NUM, C5_CLIENTE, C5_EMISSAO, C5_LOJACLI, C5_INCOTER, E4_DESCRI, E4_COND, CTO_MOEDA, CTO_DESC, CTO_SIMB, C5_XORCOMP, A3_NOME, A3_EMAIL, C5_MENNOTA, C5_XPUERTO, " + CRLF
 		// cQueryRem	+= " SUBSTRING((CONVERT(VARCHAR(8000),CONVERT(VARBINARY(8000),C5_XTEXCLI))),1,LEN((CONVERT(VARCHAR(8000),CONVERT(VARBINARY(8000),C5_XOBS))))) AS C5_XOBS, "  + CRLF
 		cQueryRem	+= " ISNULL(CAST(CAST(C5_XTEXCLI AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS TEXCLI "  + CRLF
 		cQueryRem	+= " FROM "+ InitSqlName("SC5") +" A  " + CRLF

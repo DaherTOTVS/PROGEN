@@ -9,6 +9,7 @@ P.E. Acrescenta rotina no menu de Outras Opções do Browse
 @return     variant, sem retorno
 /*/
 User Function MTA650MNU()
+    aAdd( aRotina, { "Imprime OP"         ,"U_XMATR820()" , 0 , 13, 0, nil} )
     aAdd( aRotina, { "# Saldo del Producto"         ,"U_PGSLDB1" , 0 , 7, 0, nil} )
     aAdd( aRotina, { "# Saldo del Producto por referencia"         ,"U_PGSLDB2" , 0 , 7, 0, nil} )
     aAdd( aRotina, { "# Asignación Multiple"        ,"U_PGEMPD4" , 0 , 7, 0, nil} )
@@ -16,6 +17,7 @@ User Function MTA650MNU()
     aAdd( aRotina, { "# Actualiza Fechas Previstas" ,"U_PGFHSH8" , 0 , 7, 0, nil} )
     aAdd( aRotina, { "# Control Apunte Produccion"  ,"PCPA115" , 0 , 7, 0, nil} )
     // aAdd( aRotina, { "# Imprime Orden de Producion" ,"MATR820  " , 0 , 7, 0, nil} )
+    Pergunte("MTA650",.F.)
 Return
 
 

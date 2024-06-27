@@ -16,14 +16,16 @@
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 */
 User function Locxpe16
-Local _lRet	    	:= .T.
-Local nPosPedD1		:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_PEDIDO"})  	// Pedido de Compra
-Local nPosLote  	:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_LOTECTL"})
-Local nPosLoteF		:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_DTVALID"})
-Local nPosCod   	:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_COD"})
-Local nPosQuant 	:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_QUANT"})
-Local nPosPed		:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_PEDIDO"})
-Local nPosImPed 	:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_ITEMPC"})
+Local _lRet	    := .T.
+Local nPosPedD1	:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_PEDIDO" })  	// Pedido de Compra
+Local nPosLote  := aScan(aHeader,{|x| AllTrim(x[2]) == "D1_LOTECTL"})
+Local nPosLoteF	:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_DTVALID"})
+Local nPosCod   := aScan(aHeader,{|x| AllTrim(x[2]) == "D1_COD"    })
+Local nPosQuant := aScan(aHeader,{|x| AllTrim(x[2]) == "D1_QUANT"  })
+Local nPosPed	:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_PEDIDO" })
+Local nPosImPed := aScan(aHeader,{|x| AllTrim(x[2]) == "D1_ITEMPC" })
+Local nPosCC	:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_CC"     }) 	// 19.02.2024 Juan P. Astorga
+Local nPosItemC := aScan(aHeader,{|x| AllTrim(x[2]) == "D1_ITEMcta"})	// 19.02.2024 Juan P. Astorga
 Local nPosForne 	:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_FORNECE"})
 Local nPosLoja 		:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_LOJA"})
 Local nPosRemito 	:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_REMITO"})
@@ -32,12 +34,11 @@ Local nPosDoc 		:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_DOC"})
 Local nPosSerie 	:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_SERIE"})
 Local nPosSeriF 	:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_SERIORI"})
 Local nPosDocF	 	:= aScan(aHeader,{|x| AllTrim(x[2]) == "D1_NFORI"})
-
 Local cPedQuant := ""
 Local _aArea	:= GetArea()
-Local nx      
+Local nx          
 Local cModalidad:="" 
-             
+                       
 If Funname()== "MATA102N"
 	for nx := 1 to len(acols)
 		If !aCols[nX,Len(aHeader)+1]
@@ -59,7 +60,21 @@ If Funname()== "MATA102N"
 					_lRet:=.F.                                                           
 				EndIf
 			EndIf
-
+			// Modificacion Fuente para que se pueda informar item contable 19.02.2024 Juan P. Astorga
+			if !Empty(gdfieldget("D1_CC",nx)) 
+				If Posicione("CTT",1,xFilial("CTT")+gdfieldget("D1_CC",nx),"CTT_ACITEM")=="1"
+					If Empty(gdfieldget("D1_ITEMCTA",nx))
+						Alert("Ingresar un Item Contable Obligatorio para el Producto:"+ Alltrim(Acols[nx][nPosCod]) +" en el item " + gdfieldget("D1_ITEM",nx)  )
+			  		  _lRet  := .F.
+					EndIf
+				else
+					if !Empty(gdfieldget("D1_ITEMCTA",nx))
+						Alert("No es necesario ingresar un Item Contable Obligatorio para el Producto:"+ Alltrim(Acols[nX][nPosCod]) +" en el item " + gdfieldget("D1_ITEM",nx)   )
+						_lRet  := .F.
+					EndIf
+				EndIf
+			Endif
+			// Modificacion Fuente para que se pueda informar item contable 19.02.2024 Juan P. Astorga
 			cPedQuant := Posicione("SC7",1,xFilial("SC7")+Acols[nx][nPosPed]+Acols[nx][nPosImPed],"C7_QUANT")
 			If !Empty(cPedQuant)
 				If	cPedQuant <> Acols[nx][nPosQuant]
@@ -80,8 +95,7 @@ If(Funname()=="MATA465N".AND. AllTrim(cEspecie)=="NCC")
 
 	for nx := 1 to len(acols)
 		If !aCols[n,Len(aHeader)+1]
-			IF M->F1_TIPOPE == "20"
-		
+			IF M->F1_TIPOPE == "20"		
 				//IF	acols[nx][45]=="RDV"
 				IF	acols[nx][nPosSerirem]=="RDV"
 					c1Query := "SELECT F1_NATUREZ "
@@ -179,3 +193,6 @@ If FUNNAME() $ "MATA462DN" .AND."RFD"$cEspecie
 Endif
 
 Return _lRet
+
+
+

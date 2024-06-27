@@ -459,7 +459,7 @@ Local cQueryOS := ""
 		EndDo
 		(_cAliOS)->(dbCloseArea())
 
-		U_ACD166DH()
+		// U_ACD166DH()
 
 	EndIf
 
