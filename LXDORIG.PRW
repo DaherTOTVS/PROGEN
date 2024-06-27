@@ -20,7 +20,12 @@ description cambiar campos en la Nota Credito Moneda y descripcion
 @return return_type, return_description
 /*/
 
-User Function LXDORIG
+User Function LXDORIG()
+Local aArea    	:= GetArea()
+Local aAreaSF2 	:= SF2->(GetArea())
+Local aAreaSF1 	:= SF1->(GetArea())
+Local aAreaSD2 	:= SD2->(GetArea())
+Local aAreaSD1 	:= SD1->(GetArea())
 Local nLenAcols	    := Len(aCols)
 Local nPosxDescri	:= aScan(aHeader,{|x| Upper(AllTrim(x[2])) == "D1_XDESCRI"	})
 Local nPosCod  	    := aScan(aHeader,{|x| Upper(AllTrim(x[2])) == "D1_COD"	})
@@ -36,8 +41,6 @@ Local nPosIt   	:= GdFieldPos( "D1_ITEMORI", aHeader)
 
 Local cCliFor  	:= aCols[n,nPosCli]
 Local cLoja    	:= aCols[n,nPosLoj]
-Local aArea    	:= GetArea()
-Local aAreaSD2 	:= SD2->(GetArea())
 Local nMoneda  	:= ""
 Local cNaturez  := ""
 Local nRegSD1     := SD1->(RECNO()) //Variable para posicionarse en el registro de la SD1 F.GONZALEZ
@@ -69,16 +72,17 @@ If FUNNAME() $ "MATA462DN" .AND."RFD"$cEspecie  // solo para las Notas Credito
         M->F1_TXMOEDA  := nTxCambio
     EndIf
    
-//Descripcion: Ajuste para cargue de Naturaleza desde la remision sin importar la moneda, realizando el remito de devolucion
-//Autor: Felipe Gonzalez
-//Fecha: 08/08/2023
-        M->F1_NATUREZ  := cNaturez
+    //Descripcion: Ajuste para cargue de Naturaleza desde la remision sin importar la moneda, realizando el remito de devolucion
+    //Autor: Felipe Gonzalez
+    //Fecha: 08/08/2023
+    M->F1_NATUREZ  := cNaturez
+
 
     Dbselectarea("SB1")
-        SB1->(Dbsetorder(1))
-        If SB1->(Dbseek(xFilial("SB1")+SD2->D2_COD))
-                aCols[nLenAcolsd][aScan(aHeader,{|x| Upper(AllTrim(x[2])) == "D1_XDESCRI"})] := SB1->B1_DESC
-        Endif
+    SB1->(Dbsetorder(1))
+    If SB1->(Dbseek(xFilial("SB1")+SD2->D2_COD))
+            aCols[nLenAcolsd][aScan(aHeader,{|x| Upper(AllTrim(x[2])) == "D1_XDESCRI"})] := SB1->B1_DESC
+    Endif
 
 Endif
 
@@ -88,17 +92,25 @@ Endif
 If "NCC"$cEspecie
 
     Dbselectarea("SB1")
-        SB1->(Dbsetorder(1))
-        If SB1->(Dbseek(xFilial("SB1")+SD2->D2_COD))
-                aCols[nLenAcolsd][aScan(aHeader,{|x| Upper(AllTrim(x[2])) == "D1_XDESCRI"})] := SB1->B1_DESC
-        Endif
-        
-        M->F1_MOEDA     := SF2->F2_MOEDA
-        M->F1_TXMOEDA   := SF2->F2_TXMOEDA
+    SB1->(Dbsetorder(1))
+    If SB1->(Dbseek(xFilial("SB1")+SD2->D2_COD))
+            aCols[nLenAcolsd][aScan(aHeader,{|x| Upper(AllTrim(x[2])) == "D1_XDESCRI"})] := SB1->B1_DESC
+    Endif
+    
+    M->F1_MOEDA     := SF2->F2_MOEDA
+    M->F1_TXMOEDA   := IIF(M->F1_MOEDA <> 1,xMoeda(1,M->F1_MOEDA,1,M->F1_EMISSAO,4),1)
+    M->F1_NATUREZ   := SF2->F2_NATUREZ
+    
 
 ENDIF
 
 Eval(bDoRefresh)
 oGetDados:obrowse:refresh()
+
+RestArea(aAreaSD2)
+RestArea(aAreaSD1)
+RestArea(aAreaSF2)
+RestArea(aAreaSF1)
+RestArea(aArea)
 
 Return
