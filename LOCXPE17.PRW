@@ -51,7 +51,7 @@ User Function LocxPE17()
 			cQuery += " F2_FILIAL = '" +XFILIAL("SF2")+"' "
 			cQuery += " AND F2_CLIENTE = '" +Alltrim(SD2->D2_CLIENTE)+"' "
 			cQuery += " AND F2_LOJA = '" +  Alltrim(SD2->D2_LOJA) + "' "
-			cQuery += " AND F2_DOC = " + Alltrim(SD2->D2_DOC)
+			cQuery += " AND F2_DOC = '" + Alltrim(SD2->D2_DOC) + "' "
 			cQuery += " AND F2_SERIE = '" + SD2->D2_SERIE +"' "
 			cQuery += " AND F2_ESPECIE = 'NF' "
 			cQuery += " AND SF2.D_E_L_E_T_ <> '*' "
@@ -92,7 +92,7 @@ User Function LocxPE17()
 		cQuery += " F2_FILIAL = '" +XFILIAL("SF2")+"' "
 		cQuery += " AND F2_CLIENTE = '" +Alltrim(SD2->D2_CLIENTE)+"' "
 		cQuery += " AND F2_LOJA = '" +  Alltrim(SD2->D2_LOJA) + "' "
-		cQuery += " AND F2_DOC = " + Alltrim(SD2->D2_DOC)
+		cQuery += " AND F2_DOC = '" + Alltrim(SD2->D2_DOC) + "' "
 		cQuery += " AND F2_SERIE = '" + SD2->D2_SERIE +"' "
 		cQuery += " AND F2_ESPECIE = 'RFN' "
 		cQuery += " AND SF2.D_E_L_E_T_ <> '*' "

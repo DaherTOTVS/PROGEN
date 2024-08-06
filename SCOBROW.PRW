@@ -28,11 +28,14 @@ Return Nil
 //|Função: BInclui - Rotina de Inclusão
 //+---------------------------------------
 User Function BInclui(cAlias,nReg,nOpc)
+    Local Seek := ""
     (cAlias)->((nReg))
 
+    Seek := (cAlias)->CO_CODIGO+(cAlias)->CO_REVISAO
+
     SCO->(DbSetOrder(1))
-	SCO->(DbSeek(xFilial("SCO")+(cAlias)->CO_CODIGO+(cAlias)->CO_REVISAO))
-    While !SCO->(Eof())
+	SCO->(DbSeek(xFilial("SCO")+Seek))
+    While !SCO->(Eof()) .AND. SCO->(CO_CODIGO+CO_REVISAO) == Seek
 
         RecLock("SCO",.F.)
         SCO->(DbDelete())

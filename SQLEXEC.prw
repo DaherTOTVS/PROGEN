@@ -1,7 +1,9 @@
 #Include "PROTHEUS.CH"
+#include "fileIO.ch"
 #Include "Rwmake.ch"
 #Include "Topconn.ch"
 #Include 'totvs.ch'
+
 
 Static oBmpVerde    := LoadBitmap( GetResources(), "BR_VERDE_ESCURO")
 Static oBmpVermelho := LoadBitmap( GetResources(), "BR_AZUL")
@@ -127,7 +129,7 @@ Local nI            := 0
 Local aDados        :=  aApunte
 Local aLogAuto      := {}
 Local cLogTxt       := ""
-Local cArquivo      := 'C:\TOTVS\'+DTOS(dDataBase)+'_'+'log.txt'
+Local cArquivo      := 'C:\TOTVS\'+DTOS(dDataBase)+'_'+'BOGO.txt'
 Local cPasta        := DTOS(dDataBase)+'_'+'log.txt'
 Local nRet          := 0
 Local SQL           := ""
@@ -179,6 +181,7 @@ For nI := 1 to len(aDados)
     If !EMPTY( aLogAuto )
         cLogTxt += aLogAuto + CRLF
         MemoWrite(cArquivo, cLogTxt)
+        U_XCREABAT("C:\TOTVS\")
     EndIf
 next nI
     

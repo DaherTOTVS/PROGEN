@@ -32,6 +32,7 @@ User function MA265TDOK()
 	Local txt 
 	Local cDaDoc
 	Local aLogAuto := ""
+	Local  aItens := {}
 
 	If(Funname()=="MATA265" )
 		IF !(M->DA_SERIE $ "NCC|RDV")
@@ -52,6 +53,17 @@ User function MA265TDOK()
 				cEstorno := aCols[i,2]
 				
 				If ALLTRIM(cEstorno) ==''
+
+				    
+                	If ( Ascan( aItens, {|x| x[1]+x[2] == cLocaliz+cNumser} ) ) == 0
+						aAdd( aItens, {cLocaliz,cNumser})
+					else
+						aLogAuto := "*************************"+CRLF+;
+						"Item "+ALLTRIM(cItem)+" - Numero de serie "+ALLTRIM(cNumser)+" no permitido, tuvo entrada en este mismo documento "+CRLF+;
+						"*************************"+CRLF
+						// MSGALERT( "Item "+ALLTRIM(cItem)+" - Numero de serie "+ALLTRIM(cNumser)+" no permitido, tuvo entrada en el documento "+ALLTRIM(SDB->(DB_DOC)), "Entrada duplicada" )
+						lRet := .F.
+					EndIf
 					dbSelectArea( "SDB" )
 					dbSelectArea( "SD3" )
 					SDB ->(dbSetOrder(2))
