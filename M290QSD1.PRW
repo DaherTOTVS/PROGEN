@@ -4,13 +4,11 @@
 #Include "Topconn.ch"
 
 
-User Function M290QSD3()
+User Function M290QSD1()
  Local aArea    := GetArea()
  Local cQueryUsr := ""
 //SE ADICIONA FILTRO PARA TENER EN CUENTA SOLO SALIDAS
- cQueryUsr := " AND D3_TM > 499"
- cQueryUsr += " AND D3_CF NOT LIKE '%6%' "
- cQueryUsr += " AND D3_ESTORNO <> 'S' "
+ cQueryUsr := " AND D1_TES > 499"
 
 
     RestArea(aArea)

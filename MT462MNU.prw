@@ -47,6 +47,8 @@ Return
 User Function SD2Alt(cCliente,cLoja,cDocumento,cSerie)
 
 Local aArea := GetArea()
+Local cUserActua := upper(cusername)
+Local cUserPermi := upper(SuperGetMv("PG_PMEDIT",.F.,""))
 Private aHeadSBM := {}
 Private aColsSBM := {}
 Private oDlgPvt
@@ -61,6 +63,13 @@ Private oFontSub   := TFont():New(cFontUti,,-20)
 Private oFontSubN  := TFont():New(cFontUti,,-20,,.T.)
 Private oFontBtn   := TFont():New(cFontUti,,-14)
 Private ldatos     := .F. 
+
+if !(cUserActua $ cUserPermi)
+    msgalert("Usuario no autorizado","PERMISOS")
+    RestArea(aArea)
+	Return
+EndIF
+
 
  //              Título               Campo        Máscara                        Tamanho                   Decimal                   Valid               Usado  Tipo F3     Combo
 aAdd(aHeadSBM, {"Item",          	 "D2_ITEM",     "",                             TamSX3("D2_ITEM")[01],      	0,                        ".T.",              ".T.", "C", "",    ""} )
@@ -236,6 +245,7 @@ Static Function fSalvar(cliente,loja,doc,serie,ldatos)
                     SD2->D2_PRUNIT    := aColsAux[nLinha][nListaPre]
                     SD2->D2_DESCON    := aColsAux[nLinha][nDescont]
                     SD2->D2_DESC      := aColsAux[nLinha][nDesPorc]
+                    SD2->D2_EDTPRC    := cusername
                     SD2->(MsUnlock())
                 EndIf
                
@@ -261,6 +271,7 @@ Static Function fSalvar(cliente,loja,doc,serie,ldatos)
 					SF2->F2_VALBRUT := nTotal
 					SF2->F2_VALMERC	:= nTotal
                     SF2->F2_DESCONT := nDesc
+                    SF2->F2_EDTPRC  := cusername
 				EndIf
 			EndIf
             

@@ -13,44 +13,20 @@ User Function A680MOD()
     Local cTempo := SH6->H6_TEMPO
     Local nRet := PARAMIXB
     Local nNewTempo := 0
-    // Local lIntSFC    := IntegraSFC() .And. IsInCallStack("AUTO681")
-    // Local lProces    := SuperGetMV("MV_APS",.F.,"") == "TOTVS" .Or. lIntSFC .OR. SuperGetMV("MV_PCPATOR",.F.,.F.) == .T.
 
-    // cRotPad := SB1->B1_OPERPAD
-    // If !Empty(SC2->C2_ROTEIRO)
-	//    cRoteiro := SC2->C2_ROTEIRO
-    // Else
-	//     If !Empty(cRotPad)
-	//         cRoteiro := cRotPad
-	//     Else
-	//         cRoteiro := StrZero(1, Len(SG2->G2_CODIGO))
-	//     EndIf
-	// EndIf
+    CONOUT("A680MOD","DESARROLLO_WS",cMOD)
+
 
     If !EMPTY(cMOD)
 
         nNewTempo := MultiplicaTiempo(cTempo,cMOD)
 
-        // If lProces
-        //     dbSelectArea("SG2")
-        //     SG2->(dbSetOrder(1))
-        //     If SG2->(dbSeek(xFilial("SG2")+SH6->H6_PRODUTO+cRoteiro+SH6->H6_OPERAC))
-
         RecLock("SH6", .F.)
             SH6->H6_TEMPO := nNewTempo
         SH6->(MsUnlock())
 
-        //         nRet := A680QtMod()*If(Empty(SG2->G2_MAOOBRA),1,SG2->G2_MAOOBRA)
-        //     Else
         nRet := A680QtMod()
-        //     EndIf
-        // else
-            // RecLock("SH6", .F.)
-            //     SH6->H6_TEMPO := nNewTempo
-            // SH6->(MsUnlock())
 
-        //     nRet := A680QtMod()*If(Empty(SG2->G2_MAOOBRA),1,SG2->G2_MAOOBRA)
-        // endIf
 
         RecLock("SH6", .F.)
             SH6->H6_TEMPO := cTempo

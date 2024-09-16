@@ -32,7 +32,19 @@ IF CantVta > nSaldoDis                              // Valida que el saldo dispo
         nDias := 1               
     ENDIF
 ELSE   
-    nDias := 1                
+    SB1->(dbSeek(xFilial("SB1")+Producto)) 
+    IF !EMPTY(AllTrim(SB1->B1_PROC))                // Valida que tenga Proveedor Estandar
+        nDias := POSICIONE("SA5",2,XFILIAL("SA5")+SB1->B1_COD+SB1->B1_PROC+SB1->B1_LOJPROC,"A5_PE") 
+        nDias := nDias + POSICIONE("SA5",2,XFILIAL("SA5")+SB1->B1_COD+SB1->B1_PROC+SB1->B1_LOJPROC,"A5_TEMPTRA")
+        nDias := nDias + POSICIONE("SB5",1,XFILIAL("SB5")+SB1->B1_COD,"B5_PRZCQ")
+        
+                                                    // Fecha Entrega + Tiempo Trasporte
+    ELSEIF SB1->B1_PE > 0                           // Si no tiene proveedor estandar 
+        nDias := SB1->B1_PE                         // Fecha Entrega Producto
+    ELSE
+        nDias := 1               
+    ENDIF
+    // nDias := 1  13.09.2024                
 ENDIF
 
 Return nDias

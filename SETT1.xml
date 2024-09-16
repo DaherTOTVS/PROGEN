@@ -1,0 +1,272 @@
+<Enviar xmlns="http://tempuri.org/">
+    <tokenEmpresa>eb8df2c9b5aadb91d16dc1eb8df623e9e84e33b6</tokenEmpresa>
+    <tokenPassword>e2221a20d9b25591bd9f1622becadcfc17f75263</tokenPassword>
+    <factura xmlns="http://tempuri.org/">
+        <cantidadDecimales xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">3</cantidadDecimales>
+        <cliente xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+            <destinatario xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <Destinatario xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                    <canalDeEntrega xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</canalDeEntrega>
+                    <email xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                        <string xmlns="http://schemas.microsoft.com/2003/10/Serialization/Arrays">PRUEBA@PROGEN.COM</string>
+                    </email>
+                </Destinatario>
+            </destinatario>
+            <detallesTributarios xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <Tributos xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                    <codigoImpuesto xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">01</codigoImpuesto>
+                </Tributos>
+            </detallesTributarios>
+            <direccionCliente xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <ciudad xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">NEIVA</ciudad>
+                <codigoDepartamento xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">41</codigoDepartamento>
+                <departamento xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">HUILA</departamento>
+                <direccion xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">CL 29 SUR TV 14 65</direccion>
+                <lenguaje xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">es</lenguaje>
+                <municipio xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">41001</municipio>
+                <pais xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">CO</pais>
+                <zonaPostal xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">410001</zonaPostal>
+            </direccionCliente>
+            <direccionFiscal xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <ciudad xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">NEIVA</ciudad>
+                <codigoDepartamento xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">41</codigoDepartamento>
+                <departamento xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">HUILA</departamento>
+                <direccion xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">CL 29 SUR TV 14 65</direccion>
+                <lenguaje xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">es</lenguaje>
+                <municipio xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">41001</municipio>
+                <pais xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">CO</pais>
+                <zonaPostal xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">410001</zonaPostal>
+            </direccionFiscal>
+            <email xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">PRUEBA@PROGEN.COM</email>
+            <informacionLegalCliente xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <nombreRegistroRUT xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">ALMA-G S.A.S.</nombreRegistroRUT>
+                <numeroIdentificacion xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">900829016</numeroIdentificacion>
+                <numeroIdentificacionDV xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</numeroIdentificacionDV>
+                <tipoIdentificacion xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">31</tipoIdentificacion>
+            </informacionLegalCliente>
+            <nombreRazonSocial xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">ALMA-G S.A.S.</nombreRazonSocial>
+            <notificar xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">SI</notificar>
+            <numeroDocumento xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">900829016</numeroDocumento>
+            <numeroIdentificacionDV xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</numeroIdentificacionDV>
+            <responsabilidadesRut xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <Obligaciones xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                    <obligaciones xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">O-99</obligaciones>
+                    <regimen xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">48</regimen>
+                </Obligaciones>
+            </responsabilidadesRut>
+            <telefono xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">3143692589</telefono>
+            <tipoIdentificacion xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">31</tipoIdentificacion>
+            <tipoPersona xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</tipoPersona>
+        </cliente>
+        <consecutivoDocumento xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">SETT2</consecutivoDocumento>
+        <detalleDeFactura xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+            <FacturaDetalle xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <cantidadPorEmpaque xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</cantidadPorEmpaque>
+                <cantidadReal xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1.000</cantidadReal>
+                <cantidadRealUnidadMedida xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">94</cantidadRealUnidadMedida>
+                <cantidadUnidades xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1.000</cantidadUnidades>
+                <cargosDescuentos xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                    <CargosDescuentos xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                        <descripcion xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">Aplicación de descuento</descripcion>
+                        <indicador xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</indicador>
+                        <monto xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">698750.00</monto>
+                        <montoBase xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">2150000.00</montoBase>
+                        <porcentaje xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">32.50</porcentaje>
+                        <secuencia xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</secuencia>
+                    </CargosDescuentos>
+                </cargosDescuentos>
+                <codigoProducto xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">TR01M_FS-7C-TRN</codigoProducto>
+                <codigoTipoPrecio xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">01</codigoTipoPrecio>
+                <descripcion xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">FUM. ESTACIONARIA COMPACTA 7HP BOMBA 25 CERAMICA</descripcion>
+                <descripcion2 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object"> - </descripcion2>
+                <estandarCodigo xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">999</estandarCodigo>
+                <estandarCodigoProducto xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">TR01M_FS-7C-TRN</estandarCodigoProducto>
+                <impuestosDetalles xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                    <FacturaImpuestos xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                        <baseImponibleTOTALImp xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1451250.00</baseImponibleTOTALImp>
+                        <codigoTOTALImp xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">01</codigoTOTALImp>
+                        <porcentajeTOTALImp xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5.00</porcentajeTOTALImp>
+                        <valorTOTALImp xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">72562.50</valorTOTALImp>
+                    </FacturaImpuestos>
+                </impuestosDetalles>
+                <impuestosTotales xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                    <ImpuestosTotales xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                        <codigoTOTALImp xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">01</codigoTOTALImp>
+                        <montoTotal xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">72562.5</montoTotal>
+                    </ImpuestosTotales>
+                </impuestosTotales>
+                <informacionAdicional xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                    <LineaInformacionAdicional xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                        <codigo xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5171</codigo>
+                        <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5171</nombre>
+                        <secuencia xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</secuencia>
+                        <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">021910</valor>
+                    </LineaInformacionAdicional>
+                    <LineaInformacionAdicional xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                        <codigo xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5173</codigo>
+                        <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">  2.150.000,00</nombre>
+                        <secuencia xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</secuencia>
+                        <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">  2.150.000,00</valor>
+                    </LineaInformacionAdicional>
+                    <LineaInformacionAdicional xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                        <codigo xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5174</codigo>
+                        <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">01</nombre>
+                        <secuencia xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</secuencia>
+                        <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">      1,000</valor>
+                    </LineaInformacionAdicional>
+                </informacionAdicional>
+                <muestraGratis xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</muestraGratis>
+                <precioReferencia xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1451250</precioReferencia>
+                <precioTotal xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</precioTotal>
+                <precioTotalSinImpuestos xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</precioTotalSinImpuestos>
+                <precioVentaUnitario xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1451250</precioVentaUnitario>
+                <secuencia xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</secuencia>
+                <unidadMedida xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">94</unidadMedida>
+            </FacturaDetalle>
+        </detalleDeFactura>
+        <extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+            <Extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <controlInterno1 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">TEMPLATE</controlInterno1>
+                <controlInterno2 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object"></controlInterno2>
+                <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">333221</nombre>
+                <pdf xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</pdf>
+                <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">co-progenFV-68</valor>
+                <xml xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</xml>
+            </Extras>
+            <Extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <controlInterno1 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">Descuento</controlInterno1>
+                <controlInterno2 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object"></controlInterno2>
+                <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5170001</nombre>
+                <pdf xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</pdf>
+                <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">    698.750,00</valor>
+                <xml xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</xml>
+            </Extras>
+            <Extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <controlInterno1 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">valor del subtotal</controlInterno1>
+                <controlInterno2 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object"></controlInterno2>
+                <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5170008</nombre>
+                <pdf xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</pdf>
+                <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">  2.150.000,00</valor>
+                <xml xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</xml>
+            </Extras>
+            <Extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <controlInterno1 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">Total</controlInterno1>
+                <controlInterno2 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object"></controlInterno2>
+                <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5170003</nombre>
+                <pdf xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</pdf>
+                <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">          0,00</valor>
+                <xml xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</xml>
+            </Extras>
+            <Extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <controlInterno1 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">Total Antes IVA</controlInterno1>
+                <controlInterno2 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object"></controlInterno2>
+                <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5170016</nombre>
+                <pdf xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</pdf>
+                <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">          0,00</valor>
+                <xml xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</xml>
+            </Extras>
+            <Extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <controlInterno1 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">IVA</controlInterno1>
+                <controlInterno2 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object"></controlInterno2>
+                <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5170017</nombre>
+                <pdf xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</pdf>
+                <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">          0,00</valor>
+                <xml xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</xml>
+            </Extras>
+            <Extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <controlInterno1 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">pagina web</controlInterno1>
+                <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5170010</nombre>
+                <pdf xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</pdf>
+                <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">www.progen.com.co</valor>
+                <xml xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</xml>
+            </Extras>
+            <Extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <controlInterno1 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">telVentas</controlInterno1>
+                <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5170012</nombre>
+                <pdf xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</pdf>
+                <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">57 1 7306090 / 57 1 7306119</valor>
+                <xml xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</xml>
+            </Extras>
+            <Extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <controlInterno1 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">Country</controlInterno1>
+                <controlInterno2 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object"></controlInterno2>
+                <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5170009</nombre>
+                <pdf xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</pdf>
+                <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">COLOMBIA</valor>
+                <xml xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</xml>
+            </Extras>
+            <Extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <controlInterno1 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">RESPONSABLE DE I.V.A</controlInterno1>
+                <controlInterno2 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">Consulte nuestra Politica de Proteccion de Datos en www.progen.com.co</controlInterno2>
+                <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5170011</nombre>
+                <pdf xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</pdf>
+                <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object"><![CDATA[NO EFECTUAR RETENCION A TITULO DE RENTA E ICA <br> AUTORRETENEDOR RENTA RESOLUCION 000041 JULIO 16/1992 <br> AUTORRETENEDOR ICA RESOLUCION 01 ENERO 2/2017 <br>   <br>]]></valor>
+                <xml xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</xml>
+            </Extras>
+            <Extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <controlInterno1 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">OPCIONES PARA REALIZAR EL PAGO.IMPORTANTE : Envíar el soporte del pago al correo cartera@progen.com.co</controlInterno1>
+                <controlInterno2 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object"></controlInterno2>
+                <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5170013</nombre>
+                <pdf xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</pdf>
+                <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object"><![CDATA[Por PSE ingresando a nuestra web www.progen.com.co o consignacion a las cuentas: <br> BANCOLOMBIA Cta.Corriente No. 13803226741 Recaudo Empresarial Convenio 3319 <br> DAVIVIENDA cuenta Ahorros No.0004900108079 Convenio 0049108079 <br> BANCO BOGOTA Cta.Corriente No.123282188 Formato Sistema Nacional Rec.Empresarial ]]></valor>
+                <xml xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</xml>
+            </Extras>
+            <Extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <controlInterno1 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">27/08/2024</controlInterno1>
+                <controlInterno2 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object"></controlInterno2>
+                <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5170014</nombre>
+                <pdf xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</pdf>
+                <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">8 % </valor>
+                <xml xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</xml>
+            </Extras>
+            <Extras xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <controlInterno1 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">18/09/2024</controlInterno1>
+                <controlInterno2 xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object"></controlInterno2>
+                <nombre xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5170015</nombre>
+                <pdf xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</pdf>
+                <valor xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5 % </valor>
+                <xml xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0</xml>
+            </Extras>
+        </extras>
+        <fechaEmision xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">2024-08-20 20:05:52</fechaEmision>
+        <impuestosGenerales xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+            <FacturaImpuestos xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <baseImponibleTOTALImp xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1451250.00</baseImponibleTOTALImp>
+                <codigoTOTALImp xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">01</codigoTOTALImp>
+                <porcentajeTOTALImp xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">5.00</porcentajeTOTALImp>
+                <valorTOTALImp xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">72562.50</valorTOTALImp>
+            </FacturaImpuestos>
+        </impuestosGenerales>
+        <impuestosTotales xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+            <ImpuestosTotales xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <codigoTOTALImp xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">01</codigoTOTALImp>
+                <montoTotal xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">72562.5</montoTotal>
+            </ImpuestosTotales>
+        </impuestosTotales>
+        <mediosDePago xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+            <MediosDePago xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <fechaDeVencimiento xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">2024-10-18</fechaDeVencimiento>
+                <medioPago xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">ZZZ</medioPago>
+                <metodoDePago xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">2</metodoDePago>
+                <numeroDeReferencia xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">01</numeroDeReferencia>
+            </MediosDePago>
+        </mediosDePago>
+        <moneda xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">COP</moneda>
+        <ordenDeCompra xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+            <OrdenDeCompra xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">
+                <codigoCliente xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">900829016-01</codigoCliente>
+                <numeroOrden xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">. </numeroOrden>
+                <numeroPedido xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">017047</numeroPedido>
+            </OrdenDeCompra>
+        </ordenDeCompra>
+        <rangoNumeracion xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">SETT-1</rangoNumeracion>
+        <tipoDocumento xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">01</tipoDocumento>
+        <tipoOperacion xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">10</tipoOperacion>
+        <totalBaseImponible xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1451250.00</totalBaseImponible>
+        <totalBrutoConImpuesto xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">72562.50</totalBrutoConImpuesto>
+        <totalMonto xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">72562.50</totalMonto>
+        <totalProductos xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">1</totalProductos>
+        <totalSinImpuestos xmlns="http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object">0.00</totalSinImpuestos>
+    </factura>
+    <adjuntos>0</adjuntos>
+</Enviar>

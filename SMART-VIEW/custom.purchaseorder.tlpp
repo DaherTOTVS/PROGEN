@@ -1,0 +1,145 @@
+#include "protheus.ch"
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+
+namespace custom.materiais.purchaseorder.integratedprovider
+ 
+@totvsFrameworkTReportsIntegratedProvider(active=.T., team="SIGAFAT", tables="CB7", name="Customizado", country="ALL", initialRelease="12.1.2310")
+
+class POSmartViewBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+
+    public method new() as object
+    // public method getDisplayName() as character
+    // public method getDescription() as character
+    public method getData() as object
+    public method getSchema() as object
+
+    protected data aFields as array
+
+endclass
+
+method new() class POSmartViewBusinessObject 
+
+	_Super:new()
+    self:appendArea("Facturación") 		//"Faturamento"
+    self:setDisplayName("Separación personalizado")	//"Clientes"
+    self:setDescription("Informe de orden de separación personalizado")	//"Relação de Clientes"
+    // self:setIsLookUp(.T.)  
+	// self:cAliasTmpLoc 	:= ""
+	 self:aFields        := {}
+
+return self
+
+method getData(nPage as numeric, oFilter as object) as object class POSmartViewBusinessObject
+    
+    local nCount as numeric
+    local cQuery as character 
+    local cAlias as character
+    local oExec as Object
+    local aPDFields as array
+    local lObfuscated as logical
+    local aAllFields as array
+    local jItems as json
+    local nX as numeric
+    local cId as character
+    local cRealName as character
+
+    ncount := 0
+    Cquery := "SELECT " + self_getSQLFields(,,,.T.) + "FROM " + RetSqlName("CB7") + " WHERE D_E_L_E_T_= ' ' "
+
+    // if oFilter:hasFilter()
+    //     cQuery = " AND " + oFilter:getSQLExpression()
+    // EndIf
+
+    oExec := FwExecStatement():new(changeQuery(cQuery))
+    calias := oExec:OpenAlias()
+
+    aPDFields := FwProtectedDataUtil():UsrAccesPDField(_cUserId,self:aFields)
+
+    lObfuscated := len(aPDFields) != len(self:aFields)
+    
+    aAllFields := self:FatTrGetStructField()
+
+    if nPage > 1
+        nSkip := ((nPage -1)* self:getPageSize())
+
+        (cAlias)->(DbSkip(nSkip))
+
+    EndIF
+    
+    while !(cAlias)->(Eof())
+
+        jItems := JsonObject():new()
+
+        for nX := 1 to len(aAllFields)
+            cId := aAllFields[nX]:getName() //Pedido
+            cRealName := aAllFields[nX]:getRealName()
+
+            if lObfuscated .and. ascan(aPDFields,cRealName) ==0
+                if aAllFields[nX]:getType() == "date"
+                    jItems[cId] := nil
+                elseif aAllFields[nX]:getType() =="number"
+                    jItems[cId]= val(replicate("9",Len(cAlias->&(cRealName))))
+                else 
+                    jItems[cId] := FwProtectedDataUtil():ValueAsteriskToAnonymous(cAlias->&(cRealName))
+                EndIf
+            else
+                if aAllFields[nX]:getType() == "date"
+                    jItems[cId] := totvs.framework.treports.date.stringToTimeStamp(cAlias->&(cRealName))
+                else
+                    jItems[cId] = cAlias->&(cRealName)
+                EndIf
+            Endif
+        next nX
+
+        self:appendData(jItems)
+        (calias)->(DbSkip())
+        nCount++
+
+        if nCount == self:getPageSize()
+            exit
+        Endif
+
+    EndDo
+
+    self:setHasNext(!(cAlias)->(Eof()))
+
+    (cAlias)->(dbCloseArea())
+return self:oData
+
+
+method getSchema() as object class POSmartViewBusinessObject
+
+    Local nX := 0 as numeric
+
+    self:aFields := {"CB7_ORDSEP", "CB7_PEDIDO"}
+    self:aStruct := FatTrGetStruct(self:aFields)
+
+    For nX := 1 To Len(self:aStruct)
+        self:addProperty(self:aStruct[nX][1], self:aStruct[nX][2], self:aStruct[nX][3], self:aStruct[nX][4], self:aStruct[nX][5])
+    Next nX
+
+    //    Local nX := 0 as numeric
+
+    // self:aFields := {"CB7_ORDSEP", "CB7_PEDIDO"}
+    // self:aStruct := FatTrGetStruct(self:aFields)
+
+    // For nX := 1 To Len(self:aStruct)
+    //     self:addProperty(self:aStruct[nX][1], self:aStruct[nX][2], self:aStruct[nX][3], self:aStruct[nX][4], self:aStruct[nX][5])
+    // Next nX
+
+
+
+       self:oSchema:addParameter("ORDERDE",   "De Orden:", "string", .F.) //Filial de:
+    self:oSchema:addParameter("ORDERATE",  "A Orden:", "string", .F.) //Filial até:
+    self:oSchema:addParameter("PEDIDODE",      "De Pedido:", "string", .F.) //Código de:
+    self:oSchema:addParameter("PEDIDOATE",     "A Pedido:", "string", .F.) //Código até:
+    // self:oSchema:addParameter("PRODUTOADE",     "De Producto:", "string", .F.) //Loja de:
+    // self:oSchema:addParameter("PRODUTOATE",    "A Producto:", "string", .F.) //Loja até:
+
+    self:setCustomURL("ORDERDE",  "/api/framework/v1/genericLookupService/smartview/CB7", 2)
+	self:setCustomURL("ORDERATE", "/api/framework/v1/genericLookupService/smartview/CB7", 2)
+    self:setCustomURL("PEDIDODE",  "/api/framework/v1/genericLookupService/smartview/SC5", 2)
+	self:setCustomURL("PEDIDOATE", "/api/framework/v1/genericLookupService/smartview/SC5", 2)
+
+return self:oSchema

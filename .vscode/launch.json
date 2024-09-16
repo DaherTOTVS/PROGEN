@@ -10,7 +10,7 @@
 			"smartclientBin": "C:/TOTVS/ERPROOT/Protheus/BIN/SmartClient_2310/smartclient.exe",
 			"isMultiSession": true,
 			"enableTableSync": true,
-			"enableMultiThread": true
+			// "enableMultiThread": true
 		}
 		// {
 		// 	"type": "totvs_Replay_debug",

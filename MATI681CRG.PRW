@@ -5,7 +5,7 @@ User Function MATI681CRG()
 Local aRet := {} 
 Local nPos := aScan(PARAMIXB,{|aX| AllTrim(aX[1]) == "H6_TIPO"})
 Local RealCrew := ""
-CONOUT('RealCrew_dh',RealCrew )
+CONOUT('MATI681CRG_FUNNAME',FUNNAME() )
 IF Type("oXml:_TotvsMessage:_BusinessMessage:_BusinessContent:_RealCrew:Text") != "U" .And. ;
     !Empty(oXml:_TotvsMessage:_BusinessMessage:_BusinessContent:_RealCrew:Text)
     CONOUT('MATI681CRG_PARAMIXB',PARAMIXB[nPos,2] )

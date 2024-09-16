@@ -84,7 +84,6 @@ Static cMayUse,__aCodLocs
 Static aSX7_Total
 Static lFolios := .T.
 Static lHashPTG :=  cPaisLoc=="PTG" .And. SF1->(ColumnPos("F1_HASH")) > 0   .And. SF2->(ColumnPos("F2_HASH")) > 0  .And.  SF2->(ColumnPos("F2_VERHASH")) > 0
-Static lLxModPE	:= FindFunction("LxModPE")
 /*³Programador ³Data    ³ BOPS     ³ Motivo da Alteracao ³±±
 ±±³Ivan Gomez  ³18/10/17³DMICNS-335³Se realiza replica de Issue DMICNS-132 ³±±
 Funcao    Mata467n     Autor Leandro C.G. Data 14.03.2002
@@ -1061,7 +1060,9 @@ Local cFunCanc
 Local aBotoes		:= {}
 //Local aTeclas		:= {}
 Local aCposExt  	:= NIL
+Local cWhen     	:= NIL
 Local nPos			:=	0
+Local cAgente   	:= GetNewPar("MV_AGENTE", "   ")
 Local aEspecies		:= {{'SF2 /SF2N/SF2B','MATA467N/MATA462N'},;
 							 {'SF2C/SF1D','MATA465N'},;
 							 {'SF1C'	 ,'MATA466N/MATA101N'},;
@@ -1074,16 +1075,21 @@ Local aPosObj	    :=	{}
 Local aCoordGD   	:= {060,002,130,317}	//Array com as coordenadas da GetDados
 Local aCordW    	:= Nil
 Local aPosFold		:=	{132,002,315,074}
+Local lChange		:= GetMV("MV_GETNREM")
+Local lVer116  		:= .T.
 Local lRetOrigem    := .T.
 Local lSeqEspecie   := SuperGetMV("MV_SEQESPE",,.F.)
 Local aOrdItem		:= {}
 Local xRet
+Local lCodBar		:= .F.
 Local dDatRet       := MVUlmes()
 Local cMsgCFD       := ""
 Local lContrFol     :=	.F.
 //Local cAliasAtual   := ""
 //Local nRecnoAtual   := 0
 // Passagens aereas - Bolivia
+Local lPassag 	:= 	cPaisLoc == "BOL" .And. GetNewPar("MV_PASSBOL",.F.)
+Local lTipComp  :=  cPaisLoc == "BOL"
 //Local cMsgPTG   := ""
 //Local cAliasCab := ""
 //Local cAliasIte := ""
@@ -1091,19 +1097,26 @@ Local aCposPE	:={}
 Local cFilSF1	:= xFilial("SF1")
 Local cFilSF2	:= xFilial("SF2")
 Local lEditImp  := GetNewPar( "MV_EDITIMP", .F. )
+Local cAuxPaisL := "ANG|ARG|AUS|BOL|CHI|COL|COS|DOM|EQU|EUA|HAI|MEX|PAD|PAN|PAR|PER|POR|PTG|SAL|URU|VEN"
 Local cDescSai	:= GetNewPar('MV_DESCSAI','1')
 Local dDataBloq	:= GetNewPar("MV_ATFBLQM",CTOD("")) //Data de Bloqueio da Movimentação - MV_ATFBLQM
 Local lRet			:= .T.
 Local dDataRef	:= CTOD("  /  /  ")
 //Local cSFx := "", cSFT := ""
+Local cPE33 := LocxPE(33)
+Local lLxWhen := .T.
 Local cTabla := ""
 Local cNtabla:=""
 Local nTamPSE5   := TamSX3('E5_PARCELA')[1]
 //Local nTamTSE5   := TamSX3('E5_TIPO')[1]
+Local lRTSPAR:= .F. //RTS PARAGUAY
 Local aBkpCfgInc := {}
 Local lBkpCfgInc := .F.
-Local lEstruc	:= .T.
+Local lfina998  := IsInCallStack("FINA887") .Or. IsInCallStack("FINA998")
+Local lEstruc	:= SuperGetMv("MV_LOCXEST", .F., .F.)
 Local oCampos
+Local cX3When	as Character
+Local cX3F3		as Character
 Local nPosCurren := 0
 Local lConsTrack	:= (!(cPaisLoc$"BRA|RUS") .And. (IsInCallStack("MaPrepView") .Or. IsInCallStack("MaComView")) .And. Type("cCadastro") <> "U" .And. !Empty(cCadastro))
 Local cMoneda := ""
@@ -1541,11 +1554,8 @@ If  (cPaisLoc == "ARG") .And. aCfgNf[SlFormProp] .And. ( cFunName $ "MATA465N|MA
 		cIdPVArg := POSICIONE("CFH",1, xFilial("CFH")+cLocxNFPV,"CFH_IDPV")
 	EndIf
 EndIf
-	lEstruc := FindFunction("InputFields") .and. FindFunction("OutputFields")
+	lEstruc := (lEstruc .or. cVersion >= "12.1.2310")
 Do Case
-	Case !lEstruc
-		Help("",1,"LOCXNF",,STR0430 + "LOCXNF",1,0) //"Rutina desatualizada, solicite paquete con actualizaciones:"
-		Return .F.
 	Case aCfgNf[SAliasHead]=="SF1" .and. lEstruc
 		oCampos := InputFields(cPaisLoc,.T., .F., .F., lInclui, .F., .F., aCfgNF[ScEspecie])
 
@@ -1558,6 +1568,604 @@ Do Case
 
 		aCposNF := Aclone(oCampos:GetStructure(l103Class, l103Visual, lLocxAuto, cLocxNFPV, lDocSp, lGerarCFD, lSerie2, lAutoFact, aCfgNf))
 
+		If !(lInclui)
+			cNFiscal	:=	SF1->F1_DOC
+			cSerie		:=	SF1->F1_SERIE
+			nTaxa		:=	SF1->F1_TXMOEDA
+			nMoedaNF	:=	SF1->F1_MOEDA
+		Endif
+	Case aCfgNf[SAliasHead]=="SF1"
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. !aCfgNF[SlFormProp] .AND. SX3->(MsSeek('F1_CODBAR'))
+			cVld := LocX3Valid("F1_CODBAR")
+			cVld+= IIf(!Empty(cVld),".AND.","") + "LocxchkCB(M->F1_CODBAR,.T.,M->F1_ESPECIE)"
+			AAdd(aCposNF,{,"F1_CODBAR",,,,cVld,,,,,,,,,,,"!(l103Visual .OR. l103Class .OR. " + IIF(aCfgNf[SnTipo] == 64,'.T.','.F.')+")"})
+			lCodBar:=.T.
+		Else
+			lCodBar:=.F.
+		Endif
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. ;
+           IIf(Type("lFiscal")#"U",lFiscal,.F.)
+			SX3->(MsSeek("F1_ECF"))
+			cVld := "LocXVal('F1_ECF')"
+			cVld += Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. ","")+SX3->X3_VLDUSER,"")
+			AAdd(aCposNF,{X3Titulo(),"F1_ECF",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,"lCFiscal := Iif(M->F1_ECF<>'1',.F.,.T.)",SX3->X3_F3})
+		EndIF
+		If aCfgNf[ScCliFor]=="SA1"
+			SX3->(MsSeek("F2_CLIENTE"))
+			cWhen	:=	Iif(lCodBar,"Empty(M->F1_CODBAR)"+IIf(Empty(SX3->X3_WHEN),"",".AND."+SX3->X3_WHEN),"")
+			cVld:=LocX3Valid("F2_CLIENTE")
+			cVld+=IIf(!Empty(cVld)," .AND. ","") + "Posicione('" + aCfgNF[ScCliFor] + "',1,xFilial('" + aCfgNF[ScCliFor] + "')+M->F1_FORNECE,'" + cP1 + "COD') == M->F1_FORNECE"
+			cVld+=IIf(!Empty(cVld)," .AND. ","") + "SetVar('F1_FORNECE')"+" .AND. LxA103VFold('NF_CODCLIFOR',M->F1_FORNECE)"
+			bVld	:=	{}
+			If cPaisLoc != "RUS"
+				cWhen	:=	IIf(Empty(SX3->X3_WHEN),cWhen,SX3->X3_WHEN+".AND."+cWhen)
+			Else
+				cX3When	:= AllTrim(GetSX3Cache("F1_FORNECE", "X3_WHEN"))
+				cX3F3	:= AllTrim(GetSX3Cache("F2_CNTID", "X3_F3"))
+				cWhen	:= IIf(Empty(cX3When),cWhen,Iif(!EMPTY(cWhen),cX3When+".AND."+cWhen,cX3When))
+				SX3->(MsSeek("F2_CLIENTE"))
+			EndIf
+			AAdd(aCposNF,{X3Titulo(),"F1_FORNECE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,cWhen})
+		Else
+			SX3->(MsSeek("F1_FORNECE"))
+			//Inclui os campos que sao exclusivos do remito de transf..
+			If aCfgNf[SlRemito] .AND. lInclui .AND. aCfgNf[SnTipo] == 64
+				AAdd(aCposNF,{STR0177,'F1_FILORIG',"@!",LEN(SM0->M0_CODFIL),,"NfTrfOri(M->F1_FILORIG)",,'C',,,,,,,,'SM0'})
+  	      	cWhen := ".F."
+			Else
+				cWhen	:=	Iif(lCodBar,"Empty(M->F1_CODBAR)"+IIf(Empty(SX3->X3_WHEN),"",".AND."+SX3->X3_WHEN),"")
+ 	        EndIf
+			cVld:=LocX3Valid("F1_FORNECE")
+			cVld+=IIf(!Empty(cVld)," .AND. ","") + "Posicione('" + aCfgNF[ScCliFor] + "',1,xFilial('" + aCfgNF[ScCliFor] + "')+&(__ReadVar),'" + cP1 + "COD') == &(__ReadVar)"
+			cVld+=IIf(!Empty(cVld)," .AND. ","") + "SetVar('F1_FORNECE')"+" .AND. LxA103VFold('NF_CODCLIFOR',M->F1_FORNECE)"
+			cVld+=IIf(!Empty(cVld)," .And. ","") + " AtuCliFor()"
+			If cPaisLoc  $ "MEX|PER" .AND. lLxWhen
+				cWhen	:=	"LxWhenAdt()"+IIf(Empty(cWhen),"",".AND.")+cWhen
+			ElseIf cPaisLoc == "RUS"
+				cWhen	:=	IIf(Empty(SX3->X3_WHEN),cWhen,Iif(!EMPTY(cWhen),SX3->X3_WHEN+".AND."+cWhen,SX3->X3_WHEN))
+				cX3F3	:= AllTrim(GetSX3Cache("F1_CNTID", "X3_F3"))
+				SX3->(MsSeek("F1_FORNECE"))
+			EndIf
+			AAdd(aCposNF,{,"F1_FORNECE",,,,cVld,,,,,,,,,,,"!(l103Visual .OR. l103Class .OR. " + IIF(aCfgNf[SnTipo] == 64,'.T.','.F.')+")" + Iif(!Empty(cWhen),".AND.","") + cWhen})
+		Endif
+		cVld := LocX3Valid("F1_LOJA")
+		cVld+=IIf(!Empty(cVld)," .AND. ","") + "ExistCpo('"+ aCfgNf[ScCliFor]+"',M->F1_FORNECE+M->F1_LOJA)"
+		cVld += IIf(!Empty(cVld)," .AND. ","") + "SetVar('F1_LOJA')"+" .AND. LxA103VFold('NF_LOJA',M->F1_LOJA)"
+		If aCfgNf[ScCliFor]=="SA1"
+			cVld += IIf(!Empty(cVld)," .AND. ","") + "LocXVal('F1_LOJA')"+".AND. AtuCliFor()"
+	    Else
+			cVld += IIf(!Empty(cVld)," .AND. ","") + "LocXVal('F1_LOJA')"+".AND. VldForLoja('SA2') " + ".AND. AtuCliFor()"
+	    EndIf
+		cWhen	:=	Iif(lCodBar,"Empty(M->F1_CODBAR)"+IIf(Empty(SX3->X3_WHEN),"",".AND."+SX3->X3_WHEN),"")
+		If cPaisLoc  $ "MEX|PER" .AND. lLxWhen
+			cWhen	:=	"LxWhenAdt()"+IIf(Empty(cWhen),"",".AND.")+cWhen
+		ElseIf cPaisLoc == "RUS"
+			SX3->(MsSeek("F1_LOJA"))
+			cWhen	:= IIf(Empty(SX3->X3_WHEN),cWhen,Iif(!EMPTY(cWhen),SX3->X3_WHEN+".AND."+cWhen,SX3->X3_WHEN))
+		EndIf
+		AAdd(aCposNF,{,"F1_LOJA",,,,cVld,,,,,,,,,,,"!(l103Visual .OR. l103Class .OR. " + IIF(aCfgNf[SnTipo] == 64,'.T.','.F.')+")" + Iif(!Empty(cWhen),".AND.","") + cWhen})
+		SX3->(MsSeek(cP1+"NOME"))
+		AAdd(aCposNF,{X3Titulo(),"cNome",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, SX3->X3_ARQUIVO, SX3->X3_CONTEXT,"Posicione('"+ aCfgNf[ScCliFor]+"',1,xFilial('"+ aCfgNf[ScCliFor]+"')+M->F1_FORNECE+M->F1_LOJA,cP1+ 'NOME')",,,,,,".F."})
+		SX3->(MsSeek(cP1+"NUMTIM"))
+		AAdd(aCposNF,{,"F1_NUMTIM"})
+		cVld:=LocX3Valid("F1_SERIE")
+		If lCodBar
+			cVld+=IIf(!Empty(cVld)," .AND. ","") +"LocxSERIE('SF1',M->F1_CODBAR,M->F1_SERIE)"
+		Endif
+		cVld+=IIf(!Empty(cVld)," .AND. ","") +"AtuNumIt()"
+		cVld+=IIf(!Empty(cVld)," .AND. ","") +"LocXVal('F1_SERIE')"
+		cVld+=IIf(!Empty(cVld)," .AND. ","") +  "LocxValNum()"
+
+		If cPaisLoc=="VEN" .And.  SF1->(ColumnPos("F1_FORMLIB")) > 0 .And. aCfgNf[SlFormProp]
+		 	cVld+=IIf(!Empty(cVld)," .AND. "," ") +"FormLibre()"
+		EndIf
+		//³Para o Peru pode-se utilizar o campo especifico para serie com 4 digitos caso nao utilizem formulario proprio.  ³
+        If (cPaisLoc $ "PER|COL|" .And. lSerOri) .OR. (cPaisLoc == "PAR")
+			AAdd(aCposNF,{,"F1_SERIE2"})
+		Endif
+        If cPaisLoc $ "PER|" .And. lSerOri
+			AAdd(aCposNF,{,"F1_SERORI",,,,cVld,,,,,,,,,,IIf(aCfgNf[SlFormProp],cSerSXB,),".F."})
+		EndIf
+        If cPaisLoc == "ARG"
+			If aCfgNf[SlFormProp] .AND. !aCfgNf[SlRemito] .AND. IIf(Type("lFiscal")#"U",lFiscal,.F.)
+				cWhen := "M->F1_ECF <> '1'"
+			Else
+				cWhen := "!(l103Visual .OR. l103Class .OR. " + IIF(aCfgNf[SnTipo] == 64,'.T.','.F.')+")"+ " .AND. Iif(lFuncAtual,Iif(lAltSerie,.T.,Iif(!Empty(M->F1_SERIE),.F.,.T.)),.T.)"
+			EndIf
+			// Leandro Prado - 19/02/2014 -Para argentina foi implementado o controle de ponto de venda.
+	         If ( cFunName $ "MATA465N|MATA466N|MATA467N|MATA468N|MATA101N|MATA462N|MATA462DN|MATA462TN|FINA074|FINA084|MATA462R|FINA846|FINA935|OMSA320") .Or. lfina998
+				If aCfgNf[SlFormProp]
+					AAdd(aCposNF,{,"F1_PV",,,,,,,,,"'"+cLocxNFPV+"'",,,,,,".F."})
+					cVld+= IIf(!Empty(cVld)," .AND. ","") +  "LNF2VldSer()" //Add o valid para ver se a série é valida para o PV.
+				EndIf
+				cVld+= IIf(!Empty(cVld)," .AND. ","") +  "GrvRG1415()" //Add o valid para preencher o F1_RG1415
+				AAdd(aCposNF,{,"F1_SERIE",,,,cVld,,,,,,,,,,IIf(aCfgNf[SlFormProp],"X501PV",),cWhen})
+			Else
+				AAdd(aCposNF,{,"F1_SERIE",,,,cVld,,,,,,,,,,IIf(aCfgNf[SlFormProp],"01",),cWhen})
+			EndIf
+       ElseIf cPaisLoc == "MEX" .And. lFuncAtual
+			cWhen := "!(l103Visual .Or. l103Class .Or. " + IIF(aCfgNf[SnTipo] == 64,'.T.','.F.')+")"+ " .And. Iif(lAltSerie,.T.,Iif(!Empty(M->F1_SERIE),.F.,.T.))"
+			AAdd(aCposNF,{,"F1_SERIE",,,,cVld,,,,,,,,,,IIf(aCfgNf[SlFormProp],cSerSXB,),cWhen})
+		Else
+			AAdd(aCposNF,{,"F1_SERIE",,,,cVld,,,,,,,,,,IIf(aCfgNf[SlFormProp],cSerSXB,),Iif((cPaisLoc == "PER") .and. lSerie2,".F.","!(l103Visual .OR. l103Class .OR. " + IIF(aCfgNf[SnTipo] == 64,'.T.','.F.')+")")})
+		EndIf
+		cVld:=LocX3Valid("F1_DOC")
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. !aCfgNF[SlFormProp]   // Trazer o ultimo numero de CAI e vencto - somente para bases TOP e dif. de AS400
+				cVld+=IIf(!Empty(cVld)," .AND. ","") + "AutNumCai(M->F1_ESPECIE)"
+		EndIf
+		cVld+=IIf(!Empty(cVld)," .AND. ","") + "AtuNumIt()"
+		If ( Type("lLocxAuto") == "U" .OR. !lLocxAuto )
+			cVld+=IIf(!Empty(cVld)," .AND. ","") + "EnablePanel()"
+		Endif
+		cVld+=IIf(!Empty(cVld)," .AND. ","") +  "LocXVal('F1_DOC')"
+	    cVld+=IIf(!Empty(cVld)," .AND. ","") +  "LocxValNum()"
+	    If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. IIf(Type("lFiscal")#"U",lFiscal,.F.)
+	    	cWhen := If(lInclui.AND.aCfgNf[SlFormProp],"Substr(cAcesso,50,1)=='S' .AND. M->F1_ECF <> '1'","!(l103Visual .OR. l103Class .OR. " + IIF(aCfgNf[SnTipo] == 64,'.T.','.F.')+")")+" .AND. "+ IIf(aCfgNF[SnTipo]== 60 .OR. aCfgNF[SnTipo]== 62,IIf(lChange,".T.",".F."),".T.")
+	    Else
+ 			cWhen := If(lInclui.AND.aCfgNf[SlFormProp],"Substr(cAcesso,50,1)=='S'","!(l103Visual .OR. l103Class .OR. " + IIF(aCfgNf[SnTipo] == 64,'.T.','.F.')+")")+" .AND. "+ IIf(aCfgNF[SnTipo]== 60 .OR. aCfgNF[SnTipo]== 62,IIf(lChange,".T.",".F."),".T.")
+	    EndIf
+	    If cPaisLoc == "ARG"
+	    	cVld    +=  Iif(!Empty(cVld)," .AND. ","") +  "GrvRG1415()"
+	    EndIf
+		AAdd(aCposNF,{,"F1_DOC",,,,cVld,,,,,,,,,,,cWhen})
+		If cPaisLoc == "ARG"
+			If ( cFunName $ "MATA465N|MATA466N|MATA467N|MATA468N|MATA101N|MATA462N|MATA462DN|MATA462TN|FINA074|FINA084|MATA462R|FINA846|FINA935|FINA096|FINA847|FINA472")  .Or. lfina998
+				AAdd(aCposNF,{,"F1_RG1415",,,,,,,,,,,,,,,".T."})
+				If SF1->(ColumnPos("F1_CC")) > 0
+					AAdd(aCposNF,{,"F1_CC"    ,,,,Iif(cFunName $"MATA101N",".T.","VldCC(M->F1_FORNECE,M->F1_LOJA,M->F1_CC,M->F1_RG1415)"),,,,,,,,,,Iif(cFunName $"MATA101N","","FVS"),Iif(aCfgNf[SlFormProp],".F.",".T.")})
+				Endif
+			Endif
+		Endif
+		//³ Grava o campo F1_HAWB com o numero do Processo de import. para o Compras Internacional para rotina automatica na LocxGen.           ³
+		If lLocxAuto .And. SuperGetMv("MV_COMPINT") == .T. .And. SuperGetMv("MV_EASY") == "N"
+			AAdd(aCposNF,{,"F1_HAWB",,,,,,,,,,,,,,,"!(l103Visual .OR. l103Class .OR. " + IIF(aCfgNf[SnTipo] == 64,'.T.','.F.')+")" })
+        EndIf
+		//campos referentes ao certificado e numero de aprovacao - comprovantes fiscais digitais
+		If lGerarCFD
+			AAdd(aCposNF,{,"F1_APROFOL",,,,,,,,,,,,,,,".F."})
+			AAdd(aCposNF,{,"F1_CERTFOL",,,,,,,,,,,,,,,".F."})
+		Endif
+		If aCfgNf[SlFormProp]
+			If lContrFol .And. cPaisLoc <> "ARG"
+				AAdd(aCposNF,{,"F1_NUMAUT",,,,,,,,,,,,,,,".F."}) //Numero de Autorizacao
+				AAdd(aCposNF,{,"F1_CODCTR",,,,,,,,,,,,,,,".F."}) //Codigo de Controle
+			Endif
+			If lPassag
+				AAdd(aCposNF,{,"F1_COMPANH",,,,,,,,,,,,,,,".F."}) //Codigo da companhia aerea
+				AAdd(aCposNF,{,"F1_LOJCOMP",,,,,,,,,,,,,,,".F."}) //Loja da companhia aerea
+				AAdd(aCposNF,{,"F1_PASSAGE",,,,,,,,,,,,,,,".F."}) //Numero da passagem
+				AAdd(aCposNF,{,"F1_DTPASSA",,,,,,,,,,,,,,,".F."}) //Data da passagem
+			Endif
+			If lTipComp
+				AAdd(aCposNF,{,"F1_TIPCOMP",,,,,,,,,,,,,,,".T."}) //Tipo da companhia
+			Endif
+		Else
+			If lContrFol .And. cPaisLoc <> "ARG"
+				AAdd(aCposNF,{,"F1_NUMAUT"})
+				AAdd(aCposNF,{,"F1_CODCTR"})
+			Endif
+			If lPassag
+				AAdd(aCposNF,{,"F1_COMPANH"})
+				AAdd(aCposNF,{,"F1_LOJCOMP"})
+				AAdd(aCposNF,{,"F1_PASSAGE"})
+				AAdd(aCposNF,{,"F1_DTPASSA"})
+			Endif
+			If lTipComp
+				AAdd(aCposNF,{,"F1_TIPCOMP"})
+			Endif
+		Endif
+		// Forma Libre - Venezuela
+		If cPaisLoc=="VEN" .And. SF1->(ColumnPos("F1_FORMLIB")) > 0
+			If aCfgNf[SlFormProp]
+				AAdd(aCposNF,{,"F1_FORMLIB",,,,cVld,,,,,,,,,,,".F."})
+			Else
+				AAdd(aCposNF,{,"F1_FORMLIB",,,,cVld,,,,,,,,,,,".T."})
+			EndIf
+		EndIf
+		cVld:=LocX3Valid("F1_NATUREZ")
+		cVld+=IIf(!Empty(cVld)," .AND. "," ") +"LocXVal('F1_NATUREZ')"
+		If cPaisLoc $ "VEN|URU|DOM"
+			cVld += IIf(!Empty(cVld)," .AND. "," ") + "LxA103VFold('NF_NATUREZA',M->F1_NATUREZ)"
+		EndIf
+		If cPaisLoc == "MEX"
+			if !( StrZero(aCfgNf[SnTipo],2)  $ "|20|" )
+				AAdd(aCposNF,{,"F1_NATUREZ",,,,cVld,,,,,,,,,,"SED","!(l103Visual .OR. l103Class)"})
+			endif
+		Else
+			AAdd(aCposNF,{,"F1_NATUREZ",,,,cVld,,,,,,,,,,"SED","!(l103Visual .OR. l103Class)"})
+		EndIf
+		//Estados Unidos
+		If cPaisLoc == 'EUA' .and. Trim(aCfgNf[ScEspecie]) $ "NCC|NF"
+			IF SF1->(ColumnPos( "F1_CODMUN" )) > 0
+				SX3->(MsSeek("F1_CODMUN"))
+				cVld := LocX3Valid("F1_CODMUN")
+				AAdd(aCposNF,{X3Titulo(),"F1_CODMUN",	SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld, SX3->X3_USADO,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			EndIF
+			If SF1->(ColumnPos( "F1_EST" )) > 0
+				SX3->(MsSeek("F1_EST"))
+				cVld := LocX3Valid("F1_EST")
+				AAdd(aCposNF,{X3Titulo(),"F1_EST",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,".F."})
+			EndIf
+			If SF1->(ColumnPos( "F1_PROVENT" )) > 0
+				SX3->(MsSeek("F1_PROVENT"))
+				cVld := LocX3Valid("F1_PROVENT")
+				AAdd(aCposNF,{X3Titulo(),"F1_PROVENT",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			EndIf
+			If SF1->(ColumnPos( "F1_ZONGEO" )) > 0
+				SX3->(MsSeek("F1_ZONGEO"))
+				cVld := LocX3Valid("F1_ZONGEO")
+				AAdd(aCposNF,{X3Titulo(),"F1_ZONGEO",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,".F."})
+			EndIf
+			If Trim(aCfgNf[ScEspecie]) $ "NCC"
+				If SF1->(ColumnPos( "F1_TPACTIV" ) ) > 0
+					SX3->(MsSeek("F1_TPACTIV"))
+					cVld := LocX3Valid("F1_TPACTIV")
+					AAdd(aCposNF,{X3Titulo(),"F1_TPACTIV",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,,,,,,})
+				EndIf
+			EndIf
+		EndIf
+		AAdd(aCposNF,{,"F1_ESPECIE",,,,,,,,,IIF(lInclui,"aCfgNf[" + AllTrim(Str(ScEspecie)) + "]",),,,,,,".F."})
+		cVld:= "(SetVar('F1_EMISSAO')"+" .AND. !aCfgNf["+AllTrim(Str(SlFormProp)+ "] "+ Iif(cPaisLoc=="RUS" .And. aCfgNf[ScEspecie] $ 'NCC/NDP', ".Or. .T.)"," .OR. M->F1_EMISSAO == dDataBase)"))
+		cVld+=" .And. "+"LocXVal('F1_EMISSAO')" + If(cPaisLoc == "ARG"," .and. LocEmisPro() ","")
+		If cPaisLoc == "RUS" .And. aCfgNf[SnTipo] >= 2 .And. aCfgNf[SnTipo] <= 5
+			AAdd(aCposNF,{,"F1_EMISSAO",,,,cVld,,,,,,,,,,,"!(l103Visual .OR. l103Class ) "})
+		Else
+			AAdd(aCposNF,{,"F1_EMISSAO",,,,cVld,,,,,,,,,,,"!(l103Visual .OR. l103Class .OR. " + IIF(aCfgNf[SnTipo] == 64,'.T.','.F.')+") .AND. "+ IIf(aCfgNf[SlFormProp]== .T.,'.F.','.T.')})
+		EndIf
+		If ! aCfgNf[SlFormProp]
+			AAdd(aCposNF,{,"F1_DTDIGIT",,,,,,,,,,,,,,"",".F."})
+		EndIf
+		cWhen	:=	SX3->X3_WHEN
+		If cPaisLoc  $ "MEX|PER" .AND. lLxWhen
+			cWhen := " LxWhenAdt()"+IIf(Empty(cWhen),cWhen,".AND."+cWhen)
+		EndIf
+		If cPaisLoc == 'RUS'
+			SX3->(MsSeek("F1_MOEDA"))
+			cWhen	:=	SX3->X3_WHEN
+	        AAdd(aCposNF,{X3Titulo(),"F1_MOEDA",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,,SX3->X3_USADO,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,,,,,"LocXVal('F1_MOEDA')",SX3->X3_F3,IIf(Empty(cWhen),"",Alltrim(cWhen) + " .And. ") + "!(l103Visual .OR. l103Class .OR. " + IIF(aCfgNf[SnTipo] == 64,'.T.','.F.')+")"})
+			SX3->(MsSeek("F1_CONUNI"))
+			AAdd(aCposNF,{,"F1_CONUNI",,SX3->X3_TAMANHO,,,,,,,,,,,"Pertence('12')",,SX3->X3_WHEN ,,,.T.,{STR0135,STR0136},    ,{|| M->F1_CONUNI := '2' } } ) //'1=Sim'###'2=Nao'
+		    SX3->(MsSeek("CTO_SIMB"))
+	  	    AAdd(aCposNF,{,"CTO_SIMB",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,"Posicione('CTO', 1, xFilial('CTO')+StrZero(SF1->F1_MOEDA, TamSX3('CTO_MOEDA')[1]),'CTO_SIMB')",SX3->X3_USADO,SX3->X3_TIPO, SX3->X3_ARQUIVO, SX3->X3_CONTEXT,"Posicione('CTO', 1, xFilial('CTO')+StrZero(M->F1_MOEDA, TamSX3('CTO_MOEDA')[1]),'CTO_SIMB')",,,,,,".F."})
+	    	cVld:=LocX3Valid("F1_TXMOEDA")
+	    	cVld+=IIf(!Empty(cVld)," .AND. "," ") + "LocXVal('F1_TXMOEDA')"
+	        cWhen	:=	SX3->X3_WHEN
+            AAdd(aCposNF,{,"F1_TXMOEDA",,,,cVld,,,,,,,,,,,"!(l103Visual .OR. l103Class)"+ Iif(!Empty(cWhen),".AND.","") + cWhen})
+            AAdd(aCposNF,{,"F1_CNORSUP",,,,,,,,,,,,,"Pertence('12')",,,,,.T.,{STR0399,STR0398},    ,{|| M->F1_CNORSUP := '1' } } ) //'1=Vendor'###'2=Other'
+            AAdd(aCposNF,{,"F1_CNEEBUY",,,,,,,,,,,,,"Pertence('12')",,,,,.T.,{STR0397,STR0398},    ,{|| M->F1_CNEEBUY := '1' } } ) //'1=Byuer'###'2=Other'
+            SX3->(MsSeek("F1_CNORCOD"))
+			cVld	:=	LocX3Valid("F1_CNORCOD")
+			cWhen	:=	SX3->X3_WHEN
+            AAdd(aCposNF,{,"F1_CNORCOD",,,,cVld,,,,,,,,,,SX3->X3_F3,cWhen})
+			SX3->(MsSeek("F1_CNEECOD"))
+			cVld	:=	LocX3Valid("F1_CNEECOD")
+			cWhen	:=	SX3->X3_WHEN
+            AAdd(aCposNF,{,"F1_CNEECOD",,,,cVld,,,,,,,,,,SX3->X3_F3,cWhen})
+			SX3->(MsSeek("F1_CNORBR"))
+            cVld	:=	LocX3Valid("F1_CNORBR")
+			cWhen	:=	SX3->X3_WHEN
+         	AAdd(aCposNF,{,"F1_CNORBR",,SX3->X3_TAMANHO,,cVld,,,,,,,,,,,cWhen})//when cant be false, execauto at UCLD cant fill the field
+			SX3->(MsSeek("F1_CNEEBR"))
+            cVld	:=	LocX3Valid("F1_CNEEBR")
+			cWhen	:=	SX3->X3_WHEN
+         	AAdd(aCposNF,{,"F1_CNEEBR",,SX3->X3_TAMANHO,,cVld,,,,,,,,,,,cWhen})//when cant be false, execauto at UCLD cant fill the field
+			SX3->(MsSeek("F1_CNTID"))
+	        AAdd(aCposNF,{X3Titulo(),"F1_CNTID",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,"LocXVal('F1_CNTID')",SX3->X3_USADO,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,"RUXXTS05()"})
+			SX3->(MsSeek("F1_F5QUID"))
+	        AAdd(aCposNF,{X3Titulo(),"F1_F5QUID",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,,,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,"RUXXTS05()"})
+			SX3->(MsSeek("F1_F5QDESC"))
+	        AAdd(aCposNF,{X3Titulo(),"F1_F5QDESC",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,,SX3->X3_USADO,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,"RUXXTS05()"})
+		Else
+			AAdd(aCposNF,{,"F1_MOEDA"  ,,,,"LocXVal('F1_MOEDA')",,,,,,,,,IIf(cPaisLoc=="MEX","","LocXVal('F1_MOEDA')"),,"!(l103Visual .OR. l103Class .OR. " + IIF(aCfgNf[SnTipo] == 64,'.T.','.F.')+")"+ Iif(!Empty(cWhen),".AND.","") + cWhen,,,.T.,aMoedas,{|x| x:nAt}})
+			cVld:=LocX3Valid("F1_TXMOEDA")
+			cVld+=IIf(!Empty(cVld)," .AND. "," ") + "LocXVal('F1_TXMOEDA')"
+			cWhen	:=	SX3->X3_WHEN
+			If cPaisLoc  $ "MEX|PER" .AND. lLxWhen
+				cWhen := " LxWhenAdt()"+IIf(Empty(cWhen),cWhen,".AND."+cWhen)
+			EndIf
+			AAdd(aCposNF,{,"F1_TXMOEDA",,,,cVld,,,,,,,,,,,"!(l103Visual .OR. l103Class)"+ Iif(!Empty(cWhen),".AND.","") + cWhen})
+		EndIf
+		//Inclui os campo define se a devolucao devera gerar pedido de venda
+		If aCfgNf[ScTipoDoc] == "D" .AND. aCfgNf[SnTipo] <> 63
+			If !ExistBlock("MT46205")
+				AAdd(aCposNF,{,"F1_GERAPED"  ,,,,,,,,,,,,,"Pertence('12')",,"(!l103Class)",,,.T.,{STR0135,STR0136},,{|| M->F1_GERAPED := '2' } } ) //'1=Sim'###'2=Nao'
+			Endif
+		Endif
+		//Inclui os campos que sao exclusivos do remito.
+		If aCfgNf[SlRemito]
+			If aCfgNf[ScTipoDoc] == "D"
+				nAprovar	:=	GETMV("MV_APRVDEV",.F.,1)
+				AAdd(aCposNF,{STR0137,"F1_APRVDEV",,1,,"Pertence('12')",,"C",,,,,,,,,If(nAprovar == 2,'.T.','.F.'),,,.T.,{STR0135,STR0136},,{|| M->F1_APRVDEV := If(nAprovar==3,'1','2')} } ) //'Aprov. Dev. ?'###'1=Sim'###'2=Nao'
+			Endif
+		Endif
+		//Inclui o vendedor para as devolucoes/complementos de venda.
+		If aCfgNf[SnTipo]>1 .AND. aCfgNf[SnTipo]<6 .AND.;
+		   cPaisLoc $ cAuxPaisL .AND. !aCfgNf[SlRemito]
+			SX3->(MsSeek("F1_VEND1"))
+			AAdd(aCposNF,{X3Titulo(),"F1_VEND1",,,,LocX3Valid("F1_VEND1"),,,,,,,,,,"SA3","!(l103Visual .OR. l103Class)"})
+		Endif
+		If lUsaCor  //numero correlativo
+		    If cPaisLoc == "CHI"
+		    	AAdd(aCposNF,{,"F1_NUMCOR",,,,"CORR_VERIF(M->F1_DTDIGIT,M->F1_NUMCOR,.T.,M->F1_RECHON)",,,,,})
+		    Else
+				AAdd(aCposNF,{,"F1_NUMCOR",,,,"CORR_VERIF(M->F1_DTDIGIT,M->F1_NUMCOR,.T.)",,,,,})
+		    EndIf
+		EndIf
+		//Exibe o campo para que seja informado o valor da retencao de SUSS...
+		If cPaisLoc == "ARG" .AND. SubStr(cAgente,6,1) == "S" .AND. aCfgNF[SnTipo] == 10
+			cVld :=	LocX3Valid("F1_VALSUSS")
+			AAdd(aCposNF,{X3Titulo(),"F1_VALSUSS",SX3->X3_PICTURE,SX3->X3_TAMANHO,	SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+		EndIf
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. !aCfgNF[SlFormProp]
+   			SX3->(MsSeek("F1_VENCAI"))
+			cWhen:=	Iif(lCodBar,"Empty(M->F1_CODBAR)"+IIf(Empty(SX3->X3_WHEN),"",".AND."+SX3->X3_WHEN),"")
+			cVld :=	LocX3Valid("F1_VENCAI")
+			cVld+=IIf(!Empty(cVld)," .AND. "," ") + "VenctoCAI(M->F1_EMISSAO,M->F1_VENCAI)"
+			AAdd(aCposNF,{X3Titulo(),"F1_VENCAI",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,cWhen})
+   			SX3->(MsSeek("F1_CAI"))
+			cWhen:=	Iif(lCodBar,"Empty(M->F1_CODBAR)"+IIf(Empty(SX3->X3_WHEN),"",".AND."+SX3->X3_WHEN),"")
+			cVld :=	LocX3Valid("F1_CAI")
+			If aCfgNf[ScCliFor]=="SA2" .And. TamSX3("F1_CAI")[1] == 15
+				nTipDc:=Iif(aCfgNF[SnTipo]=10,1,Iif(aCfgNF[SnTipo]=7,3,2))
+				cVld+=IIf(!Empty(cVld)," .AND. "," ") + " VldCAIE(alltrim(SA2->A2_CGC),Alltrim(M->F1_SERIE),nTipDc,Subs(Alltrim(M->F1_DOC),1,4),M->F1_CAI,M->F1_VENCAI)"  // (cCGC,ctipo,cPtVenda,cNum,dVencto)
+			EndIf
+			AAdd(aCposNF,{X3Titulo(),"F1_CAI",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3, cWhen})
+			SX3->(MsSeek("F1_QTDEFOL"))
+			cVld :=	LocX3Valid("F1_QTDEFOL")
+			AAdd(aCposNF,{X3Titulo(),"F1_QTDEFOL",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+  		EndIf
+		// %Base Calculo
+		If cPaisLoc == "COL" .AND. StrZero(aCfgNf[SnTipo],2)  $ "10"
+			SX3->(MsSeek("F1_TASARFT"))
+			AAdd(aCposNF,{X3Titulo(),"F1_TASARFT",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,"LocXVal('F1_TASARFT')",SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+		EndIf
+		If cPaisLoc == "ARG"
+			SX3->(MsSeek("F1_PROVENT"))
+			cVld := LocX3Valid("F1_PROVENT")
+			cVld := 'LocProvEnt()' + If(Empty(cVld),""," .And. " + cVld)
+			AAdd(aCposNF,{X3Titulo(),"F1_PROVENT",	SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld, SX3->X3_USADO,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			If  aCfgNF[SnTipo] >= 6 .aND. aCfgNF[SnTipo] <= 10
+				SX3->(MsSeek("F1_ZONGEO"))
+				If Found() .AND. X3Uso(SX3->X3_USADO)
+					cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+					AAdd(aCposNF,{X3Titulo(),"F1_ZONGEO",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				Endif
+				SX3->(MsSeek("F1_CONCOBR"))
+				If Found() .AND. X3Uso(SX3->X3_USADO)
+					cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+					AAdd(aCposNF,{X3Titulo(),"F1_CONCOBR",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				Endif
+				SX3->(MsSeek("F1_IMPNOCF"))
+				If Found() .AND. X3Uso(SX3->X3_USADO)
+					cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+					AAdd(aCposNF,{X3Titulo(),"F1_IMPNOCF",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				Endif
+			Endif
+
+			If  aCfgNF[SnTipo] == 4
+				SX3->(MsSeek("F1_FEFIDDE"))
+				If Found() .AND. X3Uso(SX3->X3_USADO)
+					cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+					AAdd(aCposNF,{X3Titulo(),"F1_FEFIDDE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				Endif
+
+				SX3->(MsSeek("F1_FEFIHTA"))
+				If Found() .AND. X3Uso(SX3->X3_USADO)
+					cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+					AAdd(aCposNF,{X3Titulo(),"F1_FEFIHTA",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				Endif
+			Endif
+			SX3->(MsSeek("F1_TPNFEXP"))
+			If Found() .And. X3Uso(SX3->X3_USADO)
+				cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .And. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+				AAdd(aCposNF,{X3Titulo(),"F1_TPNFEXP",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld, SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			Endif
+  		EndIf
+
+		// Campos referentes ao correlativo
+		If  UsaSeqCor()
+			SX3->(MsSeek("F1_DIACTB"))
+			cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+			AAdd(aCposNF,{X3Titulo(),"F1_DIACTB",SX3->X3_PICTURE,SX3->X3_TAMANHO,	SX3->X3_DECIMAL, cVld, SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+		EndIf
+		//Campo para informar NF eletronica (Somente Argentina)
+		If cPaisLoc == "ARG"
+			SX3->(MsSeek("F1_TPVENT"))
+			cVld :=	LocX3Valid("F1_TPVENT")
+			AAdd(aCposNF,{X3Titulo(),"F1_TPVENT",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			SX3->(MsSeek("F1_FECDSE"))
+			cVld :=	LocX3Valid("F1_FECDSE")
+			AAdd(aCposNF,{X3Titulo(),"F1_FECDSE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			SX3->(MsSeek("F1_FECHSE"))
+			cVld :=	LocX3Valid("F1_FECHSE")
+			AAdd(aCposNF,{X3Titulo(),"F1_FECHSE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+		EndIf
+		If cPaisLoc == "PAR" .AND. (AllTrim(FunName())=="MATA101N")
+			SX3->(MsSeek("F1_AUTOFAC"))
+			AAdd(aCposNF,{X3Titulo(),"F1_AUTOFAC",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,LocX3Valid("F1_AUTOFAC"),SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,IIF(__nOpcx==3,IIF(lAutoFact,"1","2"),SF1->F1_AUTOFAC),,,,,SX3->X3_F3,".F."})
+			nPos := Ascan(aCposNF,{ |x| UPPER(x[2]) == AllTrim("F1_SERIE") } )
+			IF nPos<>0
+				aCposNF[nPos,16]:=IIF(lAutoFact .And. aCfgNf[SnTipo] == 10,"SERNF","")
+			ENDIF
+			nPos := Ascan(aCposNF,{ |x| UPPER(x[2]) == AllTrim("F1_SERIE2") } )
+			IF nPos<>0
+				SX3->(MsSeek("F1_SERIE2"))
+				aCposNF[nPos]:={X3Titulo(),"F1_SERIE2",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, LocX3VALID(),SX3->X3_USADO,SX3->X3_TIPO, SX3->X3_ARQUIVO, SX3->X3_CONTEXT,,,,,,,".F."}
+			ENDIF
+		Endif
+		If cPaisLoc == "PAR" .AND. ((AllTrim(FunName())=="MATA466N") .OR. (AllTrim(FunName())=="MATA101N") .OR. IsBlind())
+			If SF1->(FieldPos("F1_DOCEL"))>0
+				If AllTrim(cEspecie)$"NDP|NF"
+					SX3->(MsSeek("F1_DOCEL"))
+					AAdd(aCposNF,{X3Titulo(),"F1_DOCEL",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,LocX3Valid("F1_DOCEL"),SX3->X3_USADO,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,IIF(__nOpcx==3,"2",SF1->F1_DOCEL),,,,,SX3->X3_F3,IIF(lAutoFact,".F.",".T.")})
+				EndIf
+			ENDIF
+		Endif
+		If cPaisLoc == "PAR" .And. StrZero(aCfgNf[SnTipo],2) == "10" .And. SF1->(ColumnPos("F1_TIPNOTA")) > 0
+			SX3->(MsSeek("F1_TIPNOTA"))
+			cVld := IIF(FindFunction("ValTpDocPer"),"ValTpDocPer()",LocX3Valid("F1_TIPNOTA"))
+			AAdd(aCposNF,{X3Titulo(),"F1_TIPNOTA",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,LocX3Valid("F1_TIPNOTA"),SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+		Endif
+		//Peru: campo Tipo de Comprovante
+		If cPaisLoc == "PER" .And. StrZero(aCfgNf[SnTipo],2)$"04|05|08|09|10|12|13|14|19"
+			SX3->(MsSeek("F1_TPDOC"))
+			cVld := IIF(FindFunction("ValTpDocPer"),"ValTpDocPer()",LocX3Valid("F1_TPDOC"))
+			AAdd(aCposNF,{X3Titulo(),"F1_TPDOC",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+		Endif
+		If (cPaisLoc == "PER") .and. (AllTrim(FunName()) == "MATA101N")
+			AAdd(aCposNF,{,"F1_IMPRP"})
+		EndIf
+		//Peru: campo Tipo de Renda - tabela 31 - Sunat
+		If cPaisLoc == "PER" .And. StrZero(aCfgNf[SnTipo],2)$"06|07|08|09|10|12|13|14|20" .And. SF1->(FieldPos("F1_TPRENTA")) > 0
+			SX3->(MsSeek("F1_TPRENTA"))
+			cVld := IIF(FindFunction("ValTpDocPer"),"ValTpDocPer()",LocX3Valid("F1_TPRENTA"))
+			AAdd(aCposNF,{,"F1_TPRENTA"})
+		Endif
+		 // CAEE
+		If cPaisLoc == "ARG" .AND. StrZero(aCfgNf[SnTipo],2)  $ "06|07|08|09|10"
+			SX3->(MsSeek("F1_CAE"))
+			AAdd(aCposNF,{X3Titulo(),"F1_CAE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,LocX3Valid("F1_CAE"),SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+			SX3->(MsSeek("F1_VCTOCAE"))
+			AAdd(aCposNF,{X3Titulo(),"F1_VCTOCAE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,LocX3Valid("F1_VCTOCAE"),SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+		EndIf
+		If Empty(cPE33)	.AND. StrZero(aCfgNf[SnTipo],2) == "10"	.AND. cPaisLoc == "ARG"
+			If SX3->(MsSeek("F1_NUMDES")) .AND. X3Uso(SX3->X3_USADO)
+				cVld :=	LocX3Valid("F1_NUMDES")
+				AAdd(aCposNF,{X3Titulo(),"F1_NUMDES",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			EndIf
+		EndIf
+		If cPaisLoc $ "EQU|VEN" .And. StrZero(aCfgNf[SnTipo],2)$"01|03|05|07|09|10|11|12|13|14"
+			SX3->(MsSeek("F1_NUMAUT"))
+			AAdd(aCposNF,{X3Titulo(),"F1_NUMAUT",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+		EndIf
+		If cPaisLoc $ "EQU|CHI|PER|COL" .And. StrZero(aCfgNf[SnTipo],2)$"10|02|04|01|09|51" 	//Campos para transferencia electronica a signature
+			IF StrZero(aCfgNf[SnTipo],2)$"02|04"
+				SX3->(MsSeek("F1_MOTIVO"))
+				AAdd(aCposNF,{X3Titulo(),"F1_MOTIVO",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+				If cPaisLoc $ "CHI|COL|PER"
+					SX3->(MsSeek("F1_TIPREF"))
+					AAdd(aCposNF,{X3Titulo(),"F1_TIPREF",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+				EndIf
+			EndIf
+			If cPaisLoc == "EQU"
+				If FindFunction("LxCposEqu")
+					LxCposEqu(@aCposNF, cFunName, aCfgNf)
+				EndIf
+			EndIf
+			If cPaisLoc $ "PER|COL"
+				IF StrZero(aCfgNf[SnTipo],2)$"02|04"
+					SX3->(MsSeek("F1_SERIE2"))
+					AAdd(aCposNF,{X3Titulo(),"F1_SERIE2",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+					If cPaisLoc == "COL" .And. !Empty(SuperGetMV("MV_PROVFE",,""))
+						SX3->(MsSeek("F1_TIPOPE"))
+						AAdd(aCposNF,{X3Titulo(),"F1_TIPOPE",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+					EndIf
+				EndIf
+			EndIf
+		EndIf
+		If cPaisLoc == "PAR" .and. StrZero(aCfgNf[SnTipo],2)$"04"
+			SX3->(MsSeek("F1_TIPREF"))
+			AAdd(aCposNF,{X3Titulo(),"F1_TIPREF",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+		EndIf
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. aCfgNF[SlFormProp]
+			SX3->(MsSeek("F1_EMCAEE"))
+			AAdd(aCposNF,{X3Titulo(),"F1_EMCAEE",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,".F."})
+		    SX3->(MsSeek("F1_CAEE"))
+			AAdd(aCposNF,{X3Titulo(),"F1_CAEE",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,".F."})
+		EndIf
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND.  aCfgNF[SlFormProp]
+			SX3->(MsSeek("F1_IDIOMA"))
+			cVld := LocX3Valid("F1_IDIOMA")
+			AAdd(aCposNF,{X3Titulo(),"F1_IDIOMA",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+		Endif
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND.  aCfgNF[SlFormProp]
+			SX3->(MsSeek("F1_INCOTER"))
+			cVld := LocX3Valid("F1_INCOTER")
+			AAdd(aCposNF,{X3Titulo(),"F1_INCOTER",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,X3_TIPO, "SF1", SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+		Endif
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. aCfgNF[SlFormProp] .And. !Strzero(aCfgNF[SnTipo],2)$"02|04"
+			SX3->(MsSeek("F1_PERMISS"))
+			cVld := LocX3Valid("F1_PERMISS")
+			AAdd(aCposNF,{X3Titulo(),"F1_PERMISS",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld, SX3->X3_USADO,SX3->X3_TIPO, "SF1", X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+		Endif
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. aCfgNF[SlFormProp]
+			SX3->(MsSeek("F1_PAISENT"))
+			cVld := LocX3Valid("F1_PAISENT")
+			AAdd(aCposNF,{X3Titulo(),"F1_PAISENT",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld, SX3->X3_USADO,X3_TIPO, "SF1", SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+		Endif
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. aCfgNF[SlFormProp]
+			SX3->(MsSeek("F1_NFEXPOR"))
+			cVld := LocX3Valid("F1_NFEXPOR")
+			AAdd(aCposNF,{X3Titulo(),"F1_NFEXPOR",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld, SX3->X3_USADO,SX3->X3_TIPO, "SF1", SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+		Endif
+		If cPaisLoc == "ARG"
+			SX3->(MsSeek("F1_ADIC5"))
+			cVld :=	LocX3Valid("F1_ADIC5")
+			AAdd(aCposNF,{X3Titulo(),"F1_ADIC5",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+
+			SX3->(MsSeek("F1_ADIC61"))
+			cVld :=	LocX3Valid("F1_ADIC61")
+			AAdd(aCposNF,{X3Titulo(),"F1_ADIC61",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+
+			SX3->(MsSeek("F1_ADIC62"))
+			cVld :=	LocX3Valid("F1_ADIC62")
+			AAdd(aCposNF,{X3Titulo(),"F1_ADIC62",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+
+			SX3->(MsSeek("F1_ADIC7"))
+			cVld :=	LocX3Valid("F1_ADIC7")
+			AAdd(aCposNF,{X3Titulo(),"F1_ADIC7",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+		EndIf
+		If cPaisLoc == "CHI" .AND. !aCfgNf[SlRemito] .AND.  !aCfgNF[SlFormProp]
+			SX3->(MsSeek('F1_RECHON'))
+			cVld := LocX3Valid('F1_RECHON')+" .AND. CORR_VERIF(M->F1_DTDIGIT,M->F1_NUMCOR,.T.,M->F1_RECHON)"
+			AAdd(aCposNF,{X3Titulo(),'F1_RECHON',SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+		Endif
+		// Campo de Observação e NCF na nota de credito/debito da Loc. Rep. Dom.
+		If cPaisLoc == "DOM"
+			If Trim(aCfgNf[ScEspecie]) $ "NCC"
+				AAdd(aCposNF,{,"F1_NCF",,,,,,,,,,,,,,,})
+				AAdd(aCposNF,{,"F1_OBS",,,,,,"M",,,,,,,,,})
+			EndIf
+		EndIf
+		//Campo de Observação na nota de crédito/debito Australia
+		If cPaisLoc == "AUS" .AND. Trim(aCfgNf[ScEspecie]) $ "NCC|NDE"
+			AAdd(aCposNF,{,"F1_OBS",,,,,,"M",,,,,,,,,})
+		EndIf
+		//Indica se a nota de entrada e recibo ou nao
+		If cPaisLoc == "BOL"
+			LxCposBol(@aCposNF, aCfgNf[SAliasHead])
+			If !aCfgNf[SlRemito] .And. !aCfgNF[SlFormProp]
+				SX3->(MsSeek("F1_RECIBO"))
+				cVld := LocX3Valid("F1_RECIBO")
+				AAdd(aCposNF,{X3Titulo(),"F1_RECIBO",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO,"SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+			EndIf
+		EndIf
+		If cPaisLoc == "ARG" .And. aCfgNf[SAliasHead] == "SF1" .And. (Alltrim(aCfgNf[ScEspecie]) $ "NF|NDP") .And. SF1->(ColumnPos("F1_MODCONS")) >0 .And. SF1->(ColumnPos("F1_CODAUT")) >0 .and. SF1->(ColumnPos("F1_VALCONS")) >0
+			SX3->(MsSeek("F1_MODCONS"))
+			cVld := LocX3Valid("F1_CODAUT")
+			AAdd(aCposNF,{X3Titulo(),"F1_MODCONS",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			SX3->(MsSeek("F1_CODAUT"))
+			cVld :=	LocX3Valid("F1_CODAUT")
+			AAdd(aCposNF,{X3Titulo(),"F1_CODAUT",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			SX3->(MsSeek("F1_VALCONS"))
+			cVld := "Afipcons()"
+			AAdd(aCposNF,{X3Titulo(),"F1_VALCONS",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+		Endif
+		If cPaisLoc == "ARG" .And. aCfgNf[SAliasHead] == "SF1" .And. SF1->(ColumnPos("F1_TPAJUS")) >0 .And. (Alltrim(aCfgNf[ScEspecie]) $ "NCC|NCI|NDP")
+			SX3->(MsSeek("F1_TPAJUS"))
+			cVld := LocX3Valid("F1_TPAJUS")
+			AAdd(aCposNF,{X3Titulo(),"F1_TPAJUS",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+		Endif
+		If cPaisLoc == "ARG" .And. aCfgNf[SAliasHead] == "SF1" .And. SF1->(ColumnPos("F1_RECPOS")) >0 .And. (Alltrim(aCfgNf[ScEspecie]) $ "NCC")
+			SX3->(MsSeek("F1_RECPOS"))
+			cVld := LocX3Valid("F1_RECPOS")
+			AAdd(aCposNF,{X3Titulo(),"F1_RECPOS",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+		Endif
+		If cPaisLoc == "ARG" .And. aCfgNf[SAliasHead] == "SF1" .And. SF1->(ColumnPos("F1_IVAPOS")) >0 .And. (Alltrim(aCfgNf[ScEspecie]) $ "NCC")
+			SX3->(MsSeek("F1_IVAPOS"))
+			cVld := LocX3Valid("F1_IVAPOS")
+			AAdd(aCposNF,{X3Titulo(),"F1_IVAPOS",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF1",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+		Endif
 		If !(lInclui)
 			cNFiscal	:=	SF1->F1_DOC
 			cSerie		:=	SF1->F1_SERIE
@@ -1593,7 +2201,626 @@ Do Case
 			nTaxa		:=	SF2->F2_TXMOEDA
 			nMoedaNF	:=	SF2->F2_MOEDA
 		Endif
+	Case aCfgNf[SAliasHead]=="SF2"
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. !aCfgNF[SlFormProp]  .AND. SX3->(MsSeek('F2_CODBAR'))
+			cVld := LocX3Valid("F2_CODBAR")
+			cVld+= IIf(!Empty(cVld),".AND.","") + "LocxchkCB(M->F2_CODBAR,.T.,M->F2_ESPECIE)"
+			AAdd(aCposNF,{,"F2_CODBAR",,,,cVld,,,,,,,,,,,"!(l103Visual .OR. l103Class .OR. " + IIF(aCfgNf[SnTipo] == 64,'.T.','.F.')+")"})
+			lCodBar:=.T.
+		Else
+			lCodBar:=.F.
+		Endif
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. ;
+           IIf(Type("lFiscal")#"U",lFiscal,.F.)
+			SX3->(MsSeek("F2_ECF"))
+			cVld := "LocXVal('F2_ECF')"
+			cVld += Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. ","")+SX3->X3_VLDUSER,"")
+			AAdd(aCposNF,{X3Titulo(),"F2_ECF",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,, "lCFiscal := Iif(M->F2_ECF<>'S',.F.,.T.)",SX3->X3_F3})
+		EndIF
+		If aCfgNf[ScCliFor]=="SA1"
+			SX3->(MsSeek("F2_CLIENTE"))
+			cWhen:=	Iif(lCodBar,"Empty(M->F2_CODBAR)"+IIf(Empty(SX3->X3_WHEN),"",".AND."+SX3->X3_WHEN),"")
+			cVld:=LocX3Valid("F2_CLIENTE")
+			cVld+=IIf(!Empty(cVld)," .AND. ","") + "Posicione('" + aCfgNF[ScCliFor] + "',1,xFilial('" + aCfgNF[ScCliFor] + "')+M->F2_CLIENTE,'" + cP1 + "COD') == M->F2_CLIENTE"
+			cVld+=If(!Empty(cVld)," .AND. "," ")+"LxA103VFold('NF_CODCLIFOR',M->F2_CLIENTE)"
+			If cPaisLoc  $ "MEX|PER" .AND. lLxWhen
+				cWhen	:=	"LxWhenAdt()"+IIf(Empty(cWhen),"",".AND.")+cWhen
+			ElseIf cPaisLoc == "RUS"
+				cWhen	:= IIf(Empty(SX3->X3_WHEN),cWhen,Iif(!EMPTY(cWhen),SX3->X3_WHEN+".AND."+cWhen,SX3->X3_WHEN))
+				cX3F3	:= AllTrim(GetSX3Cache("F2_CNTID", "X3_F3"))
+				IIf (FindFunction("RU05XFN031"), cVld += " .AND. RU05XFN031(.T.)", "") //autofill loja after cliente validation RULOC-1259
+				SX3->(MsSeek("F2_CLIENTE"))
+			EndIf
+			AAdd(aCposNF,{,"F2_CLIENTE",,,,cVld,,,,,,,,,,,cWhen})
+		Else
+			SX3->(MsSeek("F1_FORNECE"))
+			//Inclui os campos que sao exclusivos do remito de transf..
+			If aCfgNf[SlRemito].AND. lInclui .AND. aCfgNf[SnTipo] == 54
+				cVld:="NfFilDest(M->F2_FILDEST) .AND. NFGrpDep(M->F2_CLIENTE,M->F2_LOJA) .AND. LocXVal('F2_LOJA')"
+				AAdd(aCposNF,{STR0174,'F2_FILDEST',"@!",LEN(SM0->M0_CODFIL),,cVld,,'C',,,,,,,,'SM0'})
+    	      	cWhen := ".F."
+			Else
+				cWhen	:=	Iif(lCodBar,"Empty(M->F2_CODBAR)"+IIf(Empty(SX3->X3_WHEN),"",".AND."+SX3->X3_WHEN),"")
+	        EndIf
+			cVld:=LocX3Valid("F1_FORNECE")
+			cVld+=IIf(!Empty(cVld)," .AND. ","") + "Posicione('" + aCfgNF[ScCliFor] + "',1,xFilial('" + aCfgNF[ScCliFor] + "')+&(__ReadVar),'" + cP1 + "COD') == &(__ReadVar)"
+			cVld+=If(!Empty(cVld)," .AND. "," ")+"LxA103VFold('NF_CODCLIFOR',M->F2_CLIENTE)"
+			If cPaisLoc == "RUS"
+				cX3When	:=  AllTrim(GetSX3Cache("F2_CLIENTE", "X3_WHEN"))
+				cX3F3	:=	AllTrim(GetSX3Cache("F1_CNTID", "X3_F3"))
+				cWhen	:= IIf(Empty(cX3When),cWhen,Iif(!EMPTY(cWhen),cX3When+".AND."+cWhen,cX3When))
+			EndIf
+			SX3->(MsSeek("F1_FORNECE"))
+			AAdd(aCposNF,{X3Titulo(),"F2_CLIENTE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO,"SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,cWhen})
+		EndIf
+		cVld:=LocX3Valid("F2_LOJA")
+		cVld+=IIf(!Empty(cVld)," .AND. ","")  + "ExistCpo('"+ aCfgNf[ScCliFor]+"',M->F2_CLIENTE+M->F2_LOJA)"
+		cVld+=IIf(!Empty(cVld)," .And. ","") + "AtuCliFor()"
+		cVld+=If(!Empty(cVld)," .And. "," ")+"LxA103VFold('NF_LOJA',M->F2_LOJA)"
+		cVld+=IIf(!Empty(cVld)," .And. ","") + "LocXVal('F2_LOJA')"
+		If StrZero(aCfgNf[SnTipo],2) $ "06|07|61|22"
+			cVld+=IIf(!Empty(cVld)," .And. ","")  + "If(Empty(M->F2_CLIENTE),.T.,ExistCpo('"+ aCfgNf[ScCliFor]+"',M->F2_CLIENTE+M->F2_LOJA))"
+		EndIf
+		If aCfgNf[SlRemito] .AND. aCfgNf[SnTipo] == 54
+			cVld+=IIf(!Empty(cVld)," .AND. ","") + "NFGrpDep(M->F2_CLIENTE,M->F2_LOJA)"
+		EndIf
+		If cPaisLoc  $ "MEX|PER" .AND. lLxWhen
+			cWhen	:=	"LxWhenAdt()"+IIf(Empty(cWhen),"",".AND.")+cWhen
+		ElseIf cPaisLoc == "RUS"
+			SX3->(MsSeek("F2_LOJA"))
+			cWhen	:= IIf(Empty(SX3->X3_WHEN),cWhen,Iif(!EMPTY(cWhen),SX3->X3_WHEN+".AND."+cWhen,SX3->X3_WHEN))
+		EndIf
+		AAdd(aCposNF,{,"F2_LOJA",,,,cVld,,,,,,,,,,,cWhen})
+		SX3->(MsSeek(cP1+"NOME"))
+		AAdd(aCposNF,{X3Titulo(),"cNome",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,LocX3VALID(),SX3->X3_USADO,SX3->X3_TIPO,SX3->X3_ARQUIVO,SX3->X3_CONTEXT,"Posicione('"+ aCfgNf[ScCliFor]+"',1,xFilial('"+ aCfgNf[ScCliFor]+"')+M->F2_CLIENTE+M->F2_LOJA,cP1+'NOME')",,,,,,".F."})
+		AAdd(aCposNF,{,"F2_NUMTIM"})
+		//³Para o Peru pode-se utilizar o campo especifico para serie com 4 digitos caso se tratar de Notas de Credito(NCE/NCP) que nao utilizem formulario proprio. ³
+        If cPaisLoc $ "PER|COL|" .And. lSerOri
+			AAdd(aCposNF,{,"F2_SERIE2"})
+		Endif
+        If cPaisLoc $ "PER|" .And. lSerOri
+			AAdd(aCposNF,{,"F2_SERORI",,,,cVld,,,,,,,,,,IIf(aCfgNf[SlFormProp],cSerSXB,),".F."})
+		EndIf
+		cVld:=LocX3Valid("F2_SERIE")
+		If lCodBar
+			cVld+=IIf(!Empty(cVld)," .AND. ","") +"LocxSERIE('SF2',M->F2_CODBAR,M->F2_SERIE)"
+		Endif
+		cVld+=IIf(!Empty(cVld)," .AND. "," ") +"LocXVal('F2_SERIE')"
+        cVld+=IIf(!Empty(cVld)," .AND. ","") +  "LocxValNum()"
 
+        If cPaisLoc=="VEN" .And.  SF2->(ColumnPos("F2_FORMLIB")) > 0   .And. aCfgNf[SlFormProp]
+        	cVld+=IIf(!Empty(cVld)," .AND. "," ") +"FormLibre()"
+        EndIf
+		cWhen := ""
+        If cPaisLoc == "ARG"
+			If aCfgNf[SlFormProp] .AND. !aCfgNf[SlRemito] .AND. IIf(Type("lFiscal")#"U",lFiscal,.F.)
+				cWhen := "M->F2_ECF <> 'S'"
+			Else
+				cWhen := "!l103Visual .AND. Iif(lFuncAtual,Iif(lAltSerie,.T.,Iif(!Empty(M->F2_SERIE),.F.,.T.)),.T.)"
+			EndIf
+			// Leandro Prado - 19/02/2014 -Para argentina foi implementado o controle de ponto de venda.
+			If ( cFunName $ "MATA465N|MATA466N|MATA467N|MATA468N|MATA462N|MATA462DN|FINA096|MATA462TN|MATA462R|OMSA320") .or. (FUNNAME() $  "FINA095|FINA074|FINA084|FINA846|FINA935") .Or. lfina998
+				If aCfgNf[SlFormProp]
+					AAdd(aCposNF,{,"F2_PV",,,,,,,,,"'"+cLocxNFPV+"'",,,,,,".F."})
+					cVld+= IIf(!Empty(cVld)," .AND. ","") +  "LNF2VldSer()" //Add o valid para ver se a série é valida para o PV.
+				EndIf
+				cVld+= IIf(!Empty(cVld)," .AND. ","") +  "GrvRG1415()" //Add o valid para preencher o F1_RG1415
+				AAdd(aCposNF,{,"F2_SERIE",,,,cVld,,,,,,,,,,IIf(aCfgNf[SlFormProp],"X501PV",),cWhen})
+			Else
+				AAdd(aCposNF,{,"F2_SERIE",,,,cVld,,,,,,,,,,IIf(aCfgNf[SlFormProp],"01",),cWhen})
+			EndIf
+        ElseIf cPaisLoc == "MEX" .And. lFuncAtual
+			cWhen := "!l103Visual .And. Iif(lAltSerie,.T.,Iif(!Empty(M->F2_SERIE),.F.,.T.))"
+			AAdd(aCposNF,{,"F2_SERIE",,,,cVld,,,,,,,,,,IIf(aCfgNf[SlFormProp],cSerSXB,),cWhen})
+		ElseIf cPaisLoc == "CHI" .And. lVer116 .And. AllTrim(aCfgNf[ScEspecie]) $ "NCP"
+			cVld+=IIf(!Empty(cVld)," .AND. ","") +"VldNumCor(M->F2_SERIE)"
+			AAdd(aCposNF,{,"F2_SERIE",,,,cVld,,,,,,,,,,IIf(aCfgNf[SlFormProp],cSerSXB,"SDV")})
+		Else
+			AAdd(aCposNF,{,"F2_SERIE",,,,cVld,,,,,,,,,,IIf(aCfgNf[SlFormProp],cSerSXB,),Iif((cPaisLoc == "PER") .and. lSerie2,".F.",)})
+		EndIf
+		If cPaisLoc == "PER" .And. StrZero(aCfgNf[SnTipo],2)$"01|02|03|06|07|11|15|19|50"
+			SX3->(MsSeek("F2_TPDOC"))
+			AAdd(aCposNF,{X3Titulo(),"F2_TPDOC",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,LocX3Valid("F2_TPDOC"),SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+		Endif
+		//Peru: campo Tipo de Renda - tabela 31 - Sunat
+		If cPaisLoc == "PER" .And. StrZero(aCfgNf[SnTipo],2)$"06|07|08|09|10|12|13|14|20" .And. SF2->(FieldPos("F2_TPRENTA")) > 0
+			SX3->(MsSeek("F2_TPRENTA"))
+			cVld := IIF(FindFunction("ValTpDocPer"),"ValTpDocPer()",LocX3Valid("F2_TPRENTA"))
+			AAdd(aCposNF,{,"F2_TPRENTA"})
+		Endif
+		cVld	:=	LocX3Valid("F2_DOC")
+		cVld	+=	IIf(!Empty(cVld)," .AND. ","") + "AtuNumIt()"
+		If ( Type("lLocxAuto") == "U" .OR. !lLocxAuto )
+			cVld+=IIf(!Empty(cVld)," .AND. ","") + "EnablePanel()"
+		Endif
+		cVld	+=	IIf(!Empty(cVld)," .AND. ","")+ " LocXVal('F2_DOC')"
+		cVld	+=	IIf(!Empty(cVld)," .AND. ","") +  "LocxValNum()"
+   	    If aCfgNf[ScCliFor]=="SA2" .And. cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. !aCfgNF[SlFormProp]
+	    		cVld+=IIf(!Empty(cVld)," .AND. ","") + "AutNumCai(M->F2_ESPECIE)"
+	    EndIf
+	    If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. IIf(Type("lFiscal")#"U",lFiscal,.F.)
+	    	cWhen := If(lInclui.AND.aCfgNf[SlFormProp],"Substr(cAcesso,50,1)=='S' .AND. M->F2_ECF <> 'S'",)
+        ElseIf cPaisLoc == "MEX" .And. lFuncAtual
+ 			cWhen := If(lInclui.And.aCfgNf[SlFormProp],"Substr(cAcesso,50,1)=='S' .And. Iif(lFuncAtual,Iif(lAltSerie,.T.,Iif(!Empty(M->F2_DOC),.F.,.T.)),.T.)","Iif(lFuncAtual,Iif(lAltSerie,.T.,Iif(!Empty(M->F2_DOC),.F.,.T.)),.T.)")
+	    Else
+ 			cWhen := If(lInclui.AND.aCfgNf[SlFormProp],"Substr(cAcesso,50,1)=='S'",)
+	    EndIf
+		If cPaisLoc == "ARG"
+	    	cVld    +=  Iif(!Empty(cVld)," .AND. ","") +  "GrvRG1415()"
+	    EndIf
+		AAdd(aCposNF,{,"F2_DOC",,,,cVld,,,,,,,,,,,cWhen})
+		If cPaisLoc == "ARG"
+			If ( cFunName $ "MATA465N|MATA466N|MATA467N|MATA468N|MATA462N|MATA462DN|FINA096|MATA462TN|MATA462R|FINA472") .or. (FUNNAME() $  "FINA095|FINA074|FINA084|FINA846|FINA935|FINA847")  .Or. lfina998
+				AAdd(aCposNF,{,"F2_RG1415",,,,,,,,,,,,,,,".T."})
+				If SF2->(ColumnPos("F2_CC")) > 0
+					AAdd(aCposNF,{,"F2_CC",,,,"VldCC(M->F2_CLIENTE,M->F2_LOJA,M->F2_CC,M->F2_RG1415)",,,,,,,,,,Iif(cFunName $"MATA467N","","FVS"),Iif(aCfgNf[SlFormProp],".F.",".T.")})
+				Endif
+			Endif
+		Endif
+		//campos referentes ao certificado e numero de aprovacao - comprovantes fiscais digitais
+		If lGerarCFD
+			AAdd(aCposNF,{,"F2_APROFOL",,,,,,,,,,,,,,,".F."})
+			AAdd(aCposNF,{,"F2_CERTFOL",,,,,,,,,,,,,,,".F."})
+		Endif
+		If aCfgNf[SlFormProp]
+			If lContrFol .And. cPaisLoc <> "ARG"
+				AAdd(aCposNF,{,"F2_NUMAUT",,,,,,,,,,,,,,,".F."}) //Numero de Autorizacao
+				AAdd(aCposNF,{,"F2_CODCTR",,,,,,,,,,,,,,,".F."}) //Codigo de Controle
+				AAdd(aCposNF,{,"F2_LIMEMIS",,,,,,,,,,,,,,,".F."}) //Data Limite de Emissao
+			Endif
+			If lTipComp
+		   		AAdd(aCposNF,{,"F2_TIPCOMP",,,,,,,,,,,,,,,".T."})
+			Endif
+		Else
+			If lContrFol .And. cPaisLoc <> "ARG"
+				AAdd(aCposNF,{,"F2_NUMAUT"})
+				AAdd(aCposNF,{,"F2_CODCTR"})
+				AAdd(aCposNF,{,"F2_LIMEMIS"})
+			Endif
+			If lTipComp
+				AAdd(aCposNF,{,"F2_TIPCOMP"})
+			Endif
+		Endif
+		// Forma Libre - Venezuela
+		If  cPaisLoc=="VEN" .And.  SF2->(ColumnPos("F2_FORMLIB")) > 0
+			If aCfgNf[SlFormProp]
+				AAdd(aCposNF,{,"F2_FORMLIB",,,,cVld,,,,,,,,,,,".F."})
+			Else
+				AAdd(aCposNF,{,"F2_FORMLIB",,,,cVld,,,,,,,,,,,".T."})
+			EndIf
+		EndIf
+		If cPaisLoc $ "VEN|URU|DOM"
+			AAdd(aCposNF,{,"F2_NATUREZ",,,,"LxA103VFold('NF_NATUREZA',M->F2_NATUREZ)",,,,,,,,,,"SED"})
+		ElseIf cPaisLoc <> "MEX"
+			AAdd(aCposNF,{,"F2_NATUREZ",,,,,,,,,,,,,,"SED"})
+		EndIf
+		//Inclui os campos que sao exclusivos do remito de transf..
+		If aCfgNf[SlRemito].AND. lInclui .AND. aCfgNf[SnTipo] == 54
+			aCposExt := CposToHead({'D2_LOCDEST','D2_TESENT'})
+			aSize(aCposExt[1],12)
+			aSize(aCposExt[2],12)
+			aCposExt[1][12] := 16  // Def.ord.campo
+			aCposExt[2][12] := 10  // Def.ord.campo
+			cVld := LocX3VALID('D2_TESENT')
+			If !Empty(cVld)
+				cVld := "(" + cVld + ") .AND. "
+			EndIf
+			cVld += "NFVldTES()"
+			aCposExt[2][06] := cVld
+			cVld := LocX3VALID('F2_GRPDEP')
+			If !Empty(cVld)
+				cVld := "(" + cVld + ") .AND. "
+			EndIf
+			cVld += "NFVldDep()"
+			AAdd(aCposNF,{,"F2_GRPDEP",,,,cVld})
+			If !cPaisLoc $ "ANG|ARG|AUS|BOL|BRA|CHI|COL|COS|DOM|EQU|EUA|HAI|MEX|PAD|PAN|PAR|PER|POR|PTG|SAL|URU|VEN"
+				AAdd(aCposNF,{STR0172,"F2_TIPORET",,1,,"Pertence('1|2| ')",,"C",,,,,.T.,,,,"cTipoRet=='3'",,,.T.,{' ',STR0170,STR0171},,{|| IIf(cTipoRet=='3',' ',cTipoRet) } } ) //
+			Else
+				cVld := LocX3VALID("F2_TIPORET")
+				If !Empty(cVld)
+					cVld := "Pertence('1|2| ')"
+				EndIf
+				AAdd(aCposNF,{,"F2_TIPORET",,,,cVld,,,,,,,,,,,})
+			EndIf
+		Endif
+		AAdd(aCposNF,{,"F2_ESPECIE",,,,,,,,,IIf(lInclui,"aCfgNf[" + AllTrim(Str(ScEspecie)) + "]",),,,,,"",".F."})
+		cVld:= "(SetVar('F2_EMISSAO')"+" .And. !aCfgNf["+AllTrim(Str(SlFormProp)+ "] .Or. M->F2_EMISSAO == dDataBase)")
+		cVld+=" .And. "+"LocXVal('F2_EMISSAO')" + IIf(cPaisLoc == "ARG"," .and. LocEmisPro() ","")
+		AAdd(aCposNF,{,"F2_EMISSAO",,,,cVld,,,,,,,,,,,IIf(aCfgNf[SlFormProp]== .T.,'.F.','.T.')})
+		If  cPaisloc $ "ANG|ARG|AUS|BOL|CHI|COL|COS|DOM|EQU|EUA|HAI|MEX|PAD|PAN|PAR|PER|POR|PTG|SAL|URU|VEN" .AND. ( Type("cFunName") == "C" ) .AND. ( cFunName == "MATA467N" )
+			AAdd(aCposNF,{,"F2_TABELA",,,,,,,,,,,,,,"DA0",".T."})
+		EndIf
+		If cPaisLoc <> "RUS" .And. (!lInclui .Or. lUsaCor) .And. ! aCfgNf[SlFormProp]
+			AAdd(aCposNF,{,"F2_DTDIGIT",,,,,,,,,If(lInclui,"dDatabase",),,,,,"",".F."})
+		EndIf
+		//Vendedores soh em faturam.
+		If aCfgNf[ScCliFor]=="SA1"
+			For nX := 1 to Fa440CntVen()
+				cVld := LocX3VALID("F2_VEND"+AllTrim(Str(nX)))
+				If !Empty(cVld)
+					cVld := "(" + cVld + ") .AND. "
+				EndIf
+				cVld += "NFComisTot(" + AllTrim(Str(nX)) + ")"
+				AAdd(aCposNF,{,"F2_VEND"+AllTrim(Str(nX)),,,,cVld})
+			Next nX
+		Endif
+		SX3->(MsSeek("F2_MOEDA"))
+		cWhen	:=	SX3->X3_WHEN
+		If cPaisLoc == "RUS"
+		    SX3->(MsSeek("F2_DTSAIDA"))
+		    cVld	:=	LocX3Valid("F2_DTSAIDA")
+		    cVld	+= Iif(Empty(cVld),"LocXVal('F2_DTSAIDA')","")
+		    AAdd(aCposNF,{,"F2_DTSAIDA",,SX3->X3_TAMANHO,,cVld,,,,,,,,,"LocXVal('F2_DTSAIDA')"})
+	        SX3->(MsSeek("F2_MOEDA"))
+		    cWhen := AllTrim(SX3->X3_WHEN)
+			cWhen += IIF(!Empty(cWhen)," .AND. ","") + " RUXXTS05() .AND. EMPTY(M->F2_CNTID) "
+			AAdd(aCposNF,{X3Titulo(),"F2_MOEDA",SX3->X3_PICTURE,SX3->X3_TAMANHO+2,SX3->X3_DECIMAL,"LocXVal('F2_MOEDA')",SX3->X3_USADO,SX3->X3_TIPO,"SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,cWhen})
+         	SX3->(MsSeek("F2_TXMOEDA"))
+			cWhen	:=	AllTrim(SX3->X3_WHEN)
+			/* This function should be here, because it is in the x3_when of the F2_MOEDA field, but we cannot completely inherit the contents of the x3_when of the F2_MOEDA field. */
+			cWhen 	+= Iif("RUXXTS05()" $ cWhen,"",Iif(!EMPTY(AllTrim(cWhen)),".AND.RUXXTS05()","RUXXTS05()"))
+		    cVld	:=	LocX3Valid("F2_TXMOEDA")
+		    cVld	+=	IIf(!Empty(cVld)," .AND. "," ") + "LocXVal('F2_TXMOEDA')"
+	        AAdd(aCposNF,{,"F2_TXMOEDA",,,,cVld,,,,,,,,,,,cWhen})
+			cVld	:=	LocX3Valid("F2_REFTAXA")
+	        cVld	+=	IIf(!Empty(cVld)," .AND. "," ") + "LocXVal('F2_REFTAXA')"
+	        AAdd(aCposNF,{,"F2_REFTAXA",,,,cVld})
+		    SX3->(MsSeek("CTO_SIMB"))
+	  	    AAdd(aCposNF,{X3Titulo(),"CTO_SIMB",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,"Posicione('CTO', 1, xFilial('CTO')+StrZero(SF2->F2_MOEDA, TamSX3('CTO_MOEDA')[1]),'CTO_SIMB')",SX3->X3_USADO,SX3->X3_TIPO, SX3->X3_ARQUIVO, SX3->X3_CONTEXT,"Posicione('CTO', 1, xFilial('CTO')+StrZero(M->F2_MOEDA, TamSX3('CTO_MOEDA')[1]),'CTO_SIMB')",,,,,,".F."})
+			SX3->(MsSeek("F2_CONUNI"))
+			AAdd(aCposNF,{,"F2_CONUNI",,SX3->X3_TAMANHO,,,,,,,,,,,"Pertence('12')",,"RUXXTS05().AND.EMPTY(M->F2_CNTID)",,,.T.,{STR0135,STR0136},    ,{|| M->F2_CONUNI := '2' } } ) //'1=Sim'###'2=Nao'
+            AAdd(aCposNF,{,"F2_CNORVEN",,,,,,,,,,,,,"Pertence('12')",,,,,.T.,{STR0399,STR0398},    ,{|| M->F2_CNORVEN := '1' } } ) //'1=Vendor'###'2=Other'
+            AAdd(aCposNF,{,"F2_CNEECLI",,,,,,,,,,,,,"Pertence('12')",,,,,.T.,{STR0397,STR0398},    ,{|| M->F2_CNEECLI := '1' } } ) //'1=Buyer'###'2=Other'
+            SX3->(MsSeek("F2_CNORCOD"))
+			cVld	:=	LocX3Valid("F2_CNORCOD")
+			cWhen	:=	SX3->X3_WHEN
+            AAdd(aCposNF,{,"F2_CNORCOD",,,,cVld,,,,,,,,,,SX3->X3_F3,cWhen})
+			SX3->(MsSeek("F2_CNEECOD"))
+			cVld	:=	LocX3Valid("F2_CNEECOD")
+			cWhen	:=	SX3->X3_WHEN
+            AAdd(aCposNF,{,"F2_CNEECOD",,,,cVld,,,,,,,,,,SX3->X3_F3,cWhen})
+			SX3->(MsSeek("F2_CNORBR"))
+         	cVld	:=	LocX3Valid("F2_CNORBR")
+			cWhen	:=	SX3->X3_WHEN
+         	AAdd(aCposNF,{,"F2_CNORBR",,SX3->X3_TAMANHO,,cVld,,,,,,,,,,,cWhen})//when cant be false, execauto at UCLD cant fill the field
+			SX3->(MsSeek("F2_CNEEBR"))
+            cVld	:=	LocX3Valid("F2_CNEEBR")
+			cWhen	:=	SX3->X3_WHEN
+         	AAdd(aCposNF,{,"F2_CNEEBR",,SX3->X3_TAMANHO,,cVld,,,,,,,,,,,cWhen})//when cant be false, execauto at UCLD cant fill the field
+			SX3->(MsSeek("F2_CNTID"))
+	        AAdd(aCposNF,{X3Titulo(),"F2_CNTID",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,,SX3->X3_USADO,SX3->X3_TIPO,"SF2",SX3->X3_CONTEXT,,,,,"LocXVal('F2_CNTID')",SX3->X3_F3,"RUXXTS05()"})
+			SX3->(MsSeek("F2_F5QUID"))
+	        AAdd(aCposNF,{X3Titulo(),"F2_F5QUID",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,,,SX3->X3_TIPO,"SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,"RUXXTS05()"})
+			SX3->(MsSeek("F2_F5QDESC"))
+	        AAdd(aCposNF,{X3Titulo(),"F2_F5QDESC",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,,SX3->X3_USADO,SX3->X3_TIPO,"SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,"RUXXTS05()"})
+		Else
+			If cPaisLoc  $ "MEX|PER" .AND. lLxWhen
+				cWhen	:=	"LxWhenAdt()"+IIf(Empty(cWhen),cWhen,".AND."+cWhen)
+			EndIf
+			AAdd(aCposNF,{,"F2_MOEDA"  ,,,,"LocXVal('F2_MOEDA')",,,,,,,,,"LocXVal('F2_MOEDA')",,cWhen,,,.T.,aMoedas,{|x| x:nAt}})
+			SX3->(MsSeek("F2_TXMOEDA"))
+			cVld	:=	LocX3Valid("F2_TXMOEDA")
+			cVld	+=	IIf(!Empty(cVld)," .AND. "," ") + "LocXVal('F2_TXMOEDA')"
+			cWhen	:=	SX3->X3_WHEN
+			If cPaisLoc  $ "MEX|PER" .AND. lLxWhen
+				cWhen	:=	"LxWhenAdt()"+IIf(Empty(cWhen),cWhen,".AND."+cWhen)
+			EndIf
+			AAdd(aCposNF,{,"F2_TXMOEDA",,,,cVld,,,,,,,,,,,cWhen})
+		EndIf
+		If lUsaCor  //numero correlativo
+			AAdd(aCposNF,{,"F2_NUMCOR",,,,"CORR_VERIF(M->F2_DTDIGIT,M->F2_NUMCOR,.T.,'2',M->F2_ESPECIE)",,,,,})
+		EndIf
+		If cPaisLoc == "ARG" .AND. SubStr(cAgente,6,1) == "S" .AND. aCfgNF[SnTipo] == 7 .And. SF2->(ColumnPos("F2_VALSUSS")) > 0
+			cVld := LocX3Valid("F2_VALSUSS")
+			AAdd(aCposNF,{X3Titulo(), "F2_VALSUSS", SX3->X3_PICTURE, SX3->X3_TAMANHO, SX3->X3_DECIMAL, cVld, SX3->X3_USADO, SX3->X3_TIPO, "SF2", SX3->X3_CONTEXT, , , , , , SX3->X3_F3})
+		EndIf
+		//Inclui os campos que sao exclusivos do remito.
+		If aCfgNf[SlRemito] .AND. aCfgNf[ScTipoDoc] == "N"
+			AAdd(aCposNF,{,"F2_TIPOREM"} )
+			cAuxPaisL := "ARG|AUS|BOL|CHI|COL|COS|DOM|EQU|HAI|MEX|PAD|PAN|PAR|PER|POR|SAL|TRI|URU|VEN"
+			If cPaisLoc $ cAuxPaisL
+				AAdd(aCposNF,{,"F2_LIQPROD"} )
+			EndIf
+			If SF2->(ColumnPos("F2_VEHICL")) > 0
+				AAdd(aCposNF, {, "F2_VEHICL", , , , "F2VerVehi(M->F2_VEHICL, F2_ACOPLA, ReadVar())"})
+			EndIf
+			If SF2->(ColumnPos("F2_ACOPLA")) > 0
+				AAdd(aCposNF, {, "F2_ACOPLA", , , , "F2VerVehi(M->F2_VEHICL, F2_ACOPLA, ReadVar())", , , , , })
+			EndIf
+		Endif
+
+		If cPaisLoc == "PAR" .and.  ( cEspecie$"RFN|RTS")
+			IF SF2->(ColumnPos("F2_TRANSP")) > 0
+                AAdd(aCposNF,{,"F2_TRANSP"} )
+            EndIf
+			IF SF2->(ColumnPos("F2_VEICULO")) > 0
+                AAdd(aCposNF,{,"F2_VEICULO"} )
+            EndIf
+			IF SF2->(ColumnPos("F2_FECDSE")) > 0
+				AAdd(aCposNF,{,"F2_FECDSE"} )
+			ENDIF
+			IF SF2->(ColumnPos("F2_FECHSE")) > 0
+				AAdd(aCposNF,{,"F2_FECHSE"} )
+			ENDIF
+
+			IF SF2->(ColumnPos("F2_INCOTER")) > 0
+				AAdd(aCposNF,{,"F2_INCOTER"} )
+			ENDIF
+
+			IF SF2->(ColumnPos("F2_TPRESFL")) > 0
+				AAdd(aCposNF,{,"F2_TPRESFL"} )
+			ENDIF
+			IF SF2->(ColumnPos("F2_KM")) > 0
+				AAdd(aCposNF,{,"F2_KM"} )
+			ENDIF
+		ENDIF
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. !aCfgNF[SlFormProp]
+			SX3->(MsSeek("F2_VENCAI"))
+			cWhen:=	Iif(lCodBar,"Empty(M->F2_CODBAR)"+IIf(Empty(SX3->X3_WHEN),"",".AND."+SX3->X3_WHEN),"")
+			cVld :=	LocX3Valid("F2_VENCAI")
+			If aCfgNf[ScCliFor]=="SA2"
+				cVld+=IIf(!Empty(cVld)," .AND. "," ") + "VenctoCAI(M->F2_EMISSAO,M->F2_VENCAI)"
+			EndIf
+			AAdd(aCposNF,{X3Titulo(),"F2_VENCAI",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,cWhen})
+
+			SX3->(MsSeek("F2_CAI"))
+			cWhen:=	Iif(lCodBar,"Empty(M->F2_CODBAR)"+IIf(Empty(SX3->X3_WHEN),"",".AND."+SX3->X3_WHEN),"")
+			cVld :=	LocX3Valid("F2_CAI")
+			If aCfgNf[ScCliFor]=="SA2" .And. TamSX3("F2_CAI")[1] == 15
+				nTipDc:=Iif(aCfgNF[SnTipo]=10,1,Iif(aCfgNF[SnTipo]=7,3,2))
+				cVld+=IIf(!Empty(cVld)," .AND. "," ") + " VldCAIE(alltrim(SA2->A2_CGC),Alltrim(M->F2_SERIE),nTipDc, Subs(Alltrim(M->F2_DOC),1,4),M->F2_CAI,M->F2_VENCAI)"  // (cCGC,ctipo,cPtVenda,cNum,dVencto)
+			EndIf
+			AAdd(aCposNF,{X3Titulo(),"F2_CAI",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,cWhen})
+			cVld :=	LocX3Valid("F2_QTDEFOL")
+			AAdd(aCposNF,{X3Titulo(),"F2_QTDEFOL",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO,"SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+  		EndIf
+		If cPaisLoc == "EUA" .And. FindFunction("fCposNFEua")
+			fCposNFEua(@aCposNF, cFunName, aCfgNF[SAliasHead], Trim(aCfgNf[ScEspecie]))
+		EndIf
+		IIf(cPaisLoc == "BOL" .And. aCfgNF[SAliasHead] =="SF2", LxCposBol(@aCposNF,aCfgNf[SAliasHead]),)
+		//Exibe o campo p/que seja informada Provincia de entrega ou prest. do servico
+		If cPaisLoc == "ARG" .And. aCfgNF[SAliasHead] =="SF2"
+			SX3->(MsSeek("F2_PROVENT"))
+			cVld := LocX3Valid("F2_PROVENT")
+			cVld := 'LocProvEnt()' + If(Empty(cVld),""," .And. " + cVld)
+			AAdd(aCposNF,{X3Titulo(),"F2_PROVENT",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO,"SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+		Endif
+		If  cPaisLoc == "ARG" .AND. aCfgNF[SnTipo] >= 6 .AND. aCfgNF[SnTipo] <= 10
+			SX3->(MsSeek("F2_ZONGEO"))
+			If Found() .AND. X3Uso(SX3->X3_USADO)
+				cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+				AAdd(aCposNF,{X3Titulo(),"F2_ZONGEO",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			Endif
+			SX3->(MsSeek("F2_CONCOBR"))
+			If Found() .AND. X3Uso(SX3->X3_USADO)
+				cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+				AAdd(aCposNF,{X3Titulo(),"F2_CONCOBR",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			Endif
+			SX3->(MsSeek("F2_TPNFEXP"))
+			If Found() .And. X3Uso(SX3->X3_USADO)
+				cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .And. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+				AAdd(aCposNF,{X3Titulo(),"F2_TPNFEXP",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld, X3_USADO,X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			EndIf
+			SX3->(MsSeek("F2_IMPNOCF"))
+			If Found() .AND. X3Uso(SX3->X3_USADO)
+				cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+				AAdd(aCposNF,{X3Titulo(),"F2_IMPNOCF",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			Endif
+			SX3->(MsSeek("F2_CAE"))  // CAEE
+			AAdd(aCposNF,{X3Titulo(),"F2_CAE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,LocX3Valid("F2_CAE"),SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+			SX3->(MsSeek("F2_VCTOCAE"))
+			AAdd(aCposNF,{X3Titulo(),"F2_VCTOCAE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,LocX3Valid("F2_VCTOCAE"),SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3,SX3->X3_WHEN})
+		Endif
+		If  cPaisLoc == "ARG" .AND. aCfgNF[SnTipo] == 2
+			SX3->(MsSeek("F2_FEFIDDE"))
+				If Found() .AND. X3Uso(SX3->X3_USADO)
+					cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+					AAdd(aCposNF,{X3Titulo(),"F2_FEFIDDE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				Endif
+
+				SX3->(MsSeek("F2_FEFIHTA"))
+				If Found() .AND. X3Uso(SX3->X3_USADO)
+					cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+					AAdd(aCposNF,{X3Titulo(),"F2_FEFIHTA",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				Endif
+		Endif
+
+		// Campos referentes ao correlativo
+		If ( UsaSeqCor() ) .AND. SX3->(MsSeek("F2_DIACTB")) .AND. X3Uso(SX3->X3_USADO)
+			cVld := Iif(!Empty(SX3->X3_VALID),SX3->X3_VALID,"")+Iif(!Empty(SX3->X3_VLDUSER),Iif(!Empty(SX3->X3_VALID)," .AND. "+SX3->X3_VLDUSER,SX3->X3_VLDUSER),"")
+			AAdd(aCposNF,{X3Titulo(),"F2_DIACTB",SX3->X3_PICTURE,SX3->X3_TAMANHO,	SX3->X3_DECIMAL, cVld, SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+		EndIf
+		//Campo para informar NF eletronica (Somente Argentina)
+		If cPaisLoc == "ARG"
+	    	SX3->(MsSeek("F2_TPVENT"))
+			cVld :=	LocX3Valid("F2_TPVENT")
+			AAdd(aCposNF,{X3Titulo(),"F2_TPVENT",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			SX3->(MsSeek("F2_FECDSE"))
+			cVld :=	LocX3Valid("F2_FECDSE")
+			AAdd(aCposNF,{X3Titulo(),"F2_FECDSE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			SX3->(MsSeek("F2_FECHSE"))
+			cVld :=	LocX3Valid("F2_FECHSE")
+			AAdd(aCposNF,{X3Titulo(),"F2_FECHSE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			SX3->(MsSeek("F2_TRANSP"))
+			cVld :=	LocX3Valid("F2_TRANSP")
+			AAdd(aCposNF,{X3Titulo(),"F2_TRANSP",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+		EndIf
+		If cPaisLoc <> "RUS"
+			AAdd(aCposNF,{,"F2_REFMOED"  ,,,,"LocXVal('F2_REFMOED')",,,,,,,,,"LocXVal('F2_REFMOED')",,,,,.T.,aMoedas,{|x| x:nAt}})
+			cVld	:=	LocX3Valid("F2_REFTAXA")
+			cVld	+=	IIf(!Empty(cVld)," .AND. "," ") + "LocXVal('F2_REFTAXA')"
+			AAdd(aCposNF,{,"F2_REFTAXA",,,,cVld})
+		EndIf
+		If cPaisLoc == "PAR" .And. StrZero(aCfgNf[SnTipo],2) == "01" .And. SF2->(ColumnPos("F2_TIPNOTA")) > 0
+			SX3->(MsSeek("F2_TIPNOTA"))
+			cVld := IIF(FindFunction("ValTpDocPer"),"ValTpDocPer()",LocX3Valid("F2_TIPNOTA"))
+			AAdd(aCposNF,{,"F2_TIPNOTA"})
+		Endif
+		If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. aCfgNF[SlFormProp]
+			SX3->(MsSeek("F2_EMCAEE"))
+			AAdd(aCposNF,{X3Titulo(),"F2_EMCAEE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,".F."})
+		    SX3->(MsSeek("F2_CAEE"))
+			AAdd(aCposNF,{X3Titulo(),"F2_CAEE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,".F."})
+		EndIf
+		If cPaisLoc == "EQU"
+			If FindFunction("LxCposEqu")
+				LxCposEqu(@aCposNF, cFunName, aCfgNf)
+			EndIf
+		EndIF
+		If cPaisLoc=="PAR" .and. StrZero(aCfgNf[SnTipo],2)=="54" //Remision entre sucursales RTS
+		  lRTSPAR:=.T.
+		ENDIF
+		If cPaisLoc $ "CHI|PER|COL|EQU|PAR" .and. StrZero(aCfgNf[SnTipo],2)$"10|02|04|01|50|19" .OR. lRTSPAR 	//Campos para transferencia electronica a signature
+			If cPaisLoc $ "PER|COL|PAR|"
+				If 	StrZero(aCfgNf[SnTipo],2)$"02|01|50|" .OR. lRTSPAR .Or. (cPaisLoc == "PER" .And. StrZero(aCfgNf[SnTipo],2) == "19")
+					SX3->(MsSeek("F2_SERIE2"))
+					AAdd(aCposNF,{X3Titulo(),"F2_SERIE2",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+				EndIF
+				If cPaisLoc $ "COL|PER|PAR" .And. StrZero(aCfgNf[SnTipo],2)$"02"
+					SX3->(MsSeek("F2_TIPREF"))
+					AAdd(aCposNF,{X3Titulo(),"F2_TIPREF",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+				EndIF
+				If cPaisLoc $ "PER|PAR" .and. StrZero(aCfgNf[SnTipo],2)$"01|50|19" .OR. lRTSPAR
+					If cPaisLoc == "PER" .And. StrZero(aCfgNf[SnTipo],2) <> "19"
+						SX3->(MsSeek("F2_NUMORC"))
+						AAdd(aCposNF,{X3Titulo(),"F2_NUMORC",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+					EndIf
+					SX3->(MsSeek("F2_TIPONF"))
+					AAdd(aCposNF,{X3Titulo(),"F2_TIPONF",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+				EndIF
+				If cPaisLoc == "COL" .and. StrZero(aCfgNf[SnTipo],2) == "01"
+					If SF2->(ColumnPos( "F2_UUIDREL" )) > 0 .And. !Empty(GetMV("MV_PROVFE",,""))
+						SX3->(MsSeek("F2_UUIDREL"))
+						AAdd(aCposNF,{X3Titulo(),"F2_UUIDREL",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,LocX3VALID(),SX3->X3_USADO,SX3->X3_TIPO,"SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+					EndIf
+				EndIf
+			EndIf
+			If StrZero(aCfgNf[SnTipo],2)$"01" .and. cPaisLoc $ "CHI"
+				SX3->(MsSeek("F2_MODVEN"))
+				AAdd(aCposNF,{X3Titulo(),"F2_MODVEN",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+			EndIf
+			If 	StrZero(aCfgNf[SnTipo],2)$"02"
+				If cPaisLoc == "CHI"
+					SX3->(MsSeek("F2_TIPREF"))
+					AAdd(aCposNF,{X3Titulo(),"F2_TIPREF",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+					SX3->(MsSeek("F2_ESPREF"))
+					AAdd(aCposNF,{X3Titulo(),"F2_ESPREF",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+				EndIF
+				SX3->(MsSeek("F2_NFREF"))
+				AAdd(aCposNF,{X3Titulo(),"F2_NFREF",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+				SX3->(MsSeek("F2_SERREF"))
+				AAdd(aCposNF,{X3Titulo(),"F2_SERREF",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+			EndIf
+			If StrZero(aCfgNf[SnTipo],2)$"02|04"
+				SX3->(MsSeek("F2_MOTIVO"))
+				AAdd(aCposNF,{X3Titulo(),"F2_MOTIVO",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+			EndIF
+			If cPaisLoc == "PAR"
+				If StrZero(aCfgNf[SnTipo],2)$"50|54"
+					SX3->(MsSeek("F2_MOTEMIR"))
+					AAdd(aCposNF,{X3Titulo(),"F2_MOTEMIR",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+				EndIf
+				If StrZero(aCfgNf[SnTipo],2)$"01"
+					SX3->(MsSeek("F2_TPTRANS"))
+					AAdd(aCposNF,{X3Titulo(),"F2_TPTRANS",	X3_PICTURE,	X3_TAMANHO,	X3_DECIMAL, LocX3VALID(), X3_USADO,X3_TIPO, X3_ARQUIVO, X3_CONTEXT,,,,,,,})
+				EndIf
+			EndIF
+		EndIf
+		If cPaisLoc == "VEN" .and. StrZero(aCfgNf[SnTipo],2) $ "03|07"
+			SX3->(MsSeek("F2_NUMAUT"))
+			AAdd(aCposNF,{X3Titulo(),"F2_NUMAUT",X3_PICTURE,X3_TAMANHO,X3_DECIMAL,LocX3VALID(),X3_USADO,X3_TIPO,X3_ARQUIVO,X3_CONTEXT,,,,,,,})
+		EndIf
+		// Campo Observacao Rep. Dom. e Australia
+		If cPaisLoc $ "DOM|AUS" .AND. StrZero(aCfgNf[SnTipo],2) $ "02|03"
+			AAdd(aCposNF,{,"F2_OBS",,,,,,"M",,,,,,,,,})
+		EndIf
+		If cPaisLoc == "COS"
+			AAdd(aCposNF,{,"F2_OBS",,,,,,"M",,,,,,,,,})
+		EndIf
+			If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND.  aCfgNF[SlFormProp]
+				SX3->(MsSeek("F2_IDIOMA"))
+				cVld := LocX3Valid("F2_IDIOMA")
+				AAdd(aCposNF,{X3Titulo(),"F2_IDIOMA",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld, X3_USADO,X3_TIPO, "SF2", X3_CONTEXT,,,,,,X3_F3})
+			Endif
+			If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND.  aCfgNF[SlFormProp]
+				SX3->(MsSeek("F2_INCOTER"))
+				cVld := LocX3Valid("F2_INCOTER")
+				AAdd(aCposNF,{X3Titulo(),"F2_INCOTER",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld, X3_USADO,X3_TIPO, "SF2", X3_CONTEXT,,,,,,X3_F3})
+			Endif
+			If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. aCfgNF[SlFormProp] .And. !Strzero(aCfgNF[SnTipo],2)$"02|04"
+				SX3->(MsSeek("F2_PERMISS"))
+				cVld := LocX3Valid("F2_PERMISS")
+				AAdd(aCposNF,{X3Titulo(),"F2_PERMISS",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld, X3_USADO,X3_TIPO, "SF2", X3_CONTEXT,,,,,,X3_F3})
+			Endif
+			If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. aCfgNF[SlFormProp]
+				SX3->(MsSeek("F2_PAISENT"))
+				cVld := LocX3Valid("F2_PAISENT")
+				AAdd(aCposNF,{X3Titulo(),"F2_PAISENT",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld, X3_USADO,X3_TIPO, "SF2", X3_CONTEXT,,,,,,X3_F3})
+			Endif
+			If cPaisLoc == "ARG" .AND. !aCfgNf[SlRemito] .AND. aCfgNF[SlFormProp] .AND. SF2->(FieldPos('F2_NFEXPOR')) >0
+				SX3->(MsSeek("F2_NFEXPOR"))
+				cVld := LocX3Valid("F2_NFEXPOR")
+				AAdd(aCposNF,{X3Titulo(),"F2_NFEXPOR",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld, X3_USADO,X3_TIPO, "SF2", X3_CONTEXT,,,,,,X3_F3})
+			Endif
+			If cPaisLoc == "ARG"
+				SX3->(MsSeek("F2_ADIC5"))
+				cVld :=	LocX3Valid("F2_ADIC5")
+				AAdd(aCposNF,{X3Titulo(),"F2_ADIC5",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				SX3->(MsSeek("F2_ADIC61"))
+				cVld :=	LocX3Valid("F2_ADIC61")
+				AAdd(aCposNF,{X3Titulo(),"F2_ADIC61",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				SX3->(MsSeek("F2_ADIC62"))
+				cVld :=	LocX3Valid("F2_ADIC62")
+				AAdd(aCposNF,{X3Titulo(),"F2_ADIC62",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				SX3->(MsSeek("F2_ADIC7"))
+				cVld :=	LocX3Valid("F2_ADIC7")
+				AAdd(aCposNF,{X3Titulo(),"F2_ADIC7",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				If SF2->(ColumnPos( "F2_CANJE" )) > 0
+					SX3->(MsSeek("F2_CANJE"))
+					cVld :=	LocX3Valid("F2_CANJE")
+					AAdd(aCposNF,{X3Titulo(),"F2_CANJE",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				EndIf
+			EndIf
+			If cPaisLoc == "ARG" .AND. SF2->(ColumnPos('F2_MODCONS')) > 0 .AND. SF2->(ColumnPos('F2_CODAUT')) > 0 .And. SF2->(ColumnPos('F2_VALCONS')) > 0 .and. aCfgNf[SAliasHead] == "SF2" .And. (Alltrim(aCfgNf[ScEspecie]) $ "NCP")
+				SX3->(MsSeek("F2_MODCONS"))
+				cVld :=	LocX3Valid("F2_MODCONS")
+				aAdd(aCposNF,{X3Titulo(),"F2_MODCONS",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				SX3->(MsSeek("F2_CODAUT"))
+				cVld :=	LocX3Valid("F2_CODAUT")
+				AAdd(aCposNF,{X3Titulo(),"F2_CODAUT",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+				SX3->(MsSeek("F2_VALCONS"))
+				cVld :=	"Afipcons()"
+				AAdd(aCposNF,{X3Titulo(),"F2_VALCONS",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			Endif
+			If cPaisLoc == "ARG" .And. aCfgNf[SAliasHead] == "SF2" .And. SF2->(ColumnPos("F2_TPAJUS")) >0 .And. (Alltrim(aCfgNf[ScEspecie]) $ "NDC|NCP|NDI")
+				SX3->(MsSeek("F2_TPAJUS"))
+				cVld := LocX3Valid("F2_TPAJUS")
+				AAdd(aCposNF,{X3Titulo(),"F2_TPAJUS",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			Endif
+			If cPaisLoc == "ARG" .And. aCfgNf[SAliasHead] == "SF2" .And. SF2->(ColumnPos("F2_RECPOS")) >0 .And. (Alltrim(aCfgNf[ScEspecie]) $ "NDC")
+				SX3->(MsSeek("F2_RECPOS"))
+				cVld := LocX3Valid("F2_RECPOS")
+				AAdd(aCposNF,{X3Titulo(),"F2_RECPOS",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			Endif
+			If cPaisLoc == "ARG" .And. aCfgNf[SAliasHead] == "SF2" .And. SF2->(ColumnPos("F2_IVAPOS")) >0 .And. (Alltrim(aCfgNf[ScEspecie]) $ "NDC")
+				SX3->(MsSeek("F2_IVAPOS"))
+				cVld := LocX3Valid("F2_IVAPOS")
+				AAdd(aCposNF,{X3Titulo(),"F2_IVAPOS",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL, cVld,SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,,,,,,SX3->X3_F3})
+			Endif
+			If cPaisLoc == "PAR" .And. aCfgNf[SAliasHead] == "SF2" .AND. (AllTrim(FunName())=="MATA466N" .OR. IsBlind())
+				If SF2->(FieldPos("F2_DOCEL"))>0
+					If  (Alltrim(aCfgNf[ScEspecie]) == "NCP")
+						SX3->(MsSeek("F2_DOCEL"))
+						AAdd(aCposNF,{X3Titulo(),"F2_DOCEL",SX3->X3_PICTURE,SX3->X3_TAMANHO,SX3->X3_DECIMAL,LocX3Valid("F2_DOCEL"),SX3->X3_USADO,SX3->X3_TIPO, "SF2",SX3->X3_CONTEXT,IIF(__nOpcx==3,"2",SF2->F2_DOCEL),,,,,SX3->X3_F3,".T."})
+					ENDIF
+				ENDIF
+			ENDIF
+			If !(lInclui)
+				cNFiscal	:=	SF2->F2_DOC
+				cSerie 		:=	SF2->F2_SERIE
+				nTaxa		:=	SF2->F2_TXMOEDA
+				nMoedaNF	:=	SF2->F2_MOEDA
+			Endif
 	OtherWise
 		aCfgNF	:=	aClone(aBKPCfgNF)
 		NFSetPrv(aCfgNF)
@@ -1856,6 +3083,9 @@ EndIf
 If cPaisLoc == "COL" .and. !lEstruc //Agrega campos a encabezado para NF Colombia
 	LxCposCol(@aCposNF, cFunName, aCfgNF[SAliasHead])
 EndIf
+If cPaisLoc == "PAR".And. !lEstruc .and. FindFunction("fCposPAR")//Modifica campos F1_NUM ó F2_NUM
+	fCposPAR(@aCposNF, aCfgNF, cFunName, lAutoFact)
+EndIf
 //Pto de Entrada para adicionar campo
 cPe	:=	LocxPE(33)
 If !Empty(cPE)
@@ -2091,9 +3321,6 @@ If FindFunction('LoadMdData') .and. !Empty(LxSelecMod(aCfgNf[SnTipo]))
 		MdFillNat(@oModel, "SEV_DETAIL", aHeadSEV, aColsSEV)
 	EndIf
 	MdFillAFN(@oModel, "AFN_DETAIL", Iif(ValType(aHdrAFN)== "A",aHdrAFN,{}), Iif(ValType(aRatAFN)== "A",@aRatAFN,{}), aCols)
-	If FindFunction('MFillCaixa') .and. Type("cCxBenef") == "C" .and. Type("nCxValor") == "N" .and. Type("cCxCaixa") == "C" .and. Type("cCxAdian") == "C" .and. Type("cCxHistor") == "C"
-		MFillCaixa(oModel, cCxBenef, nCxValor, cCxCaixa, cCxAdian, cCxHistor, Iif(Type("cCxRendic") == "C",cCxRendic,"") )
-	EndIf
 	lRet := vldModel(oModel)
 	If lRet
 		ModUpdDoc(oModel, @aCposTela, @aGetsTela) //Actualización de numeración en caso de haber sido reemplazada. (Modxfun.tlpp)
@@ -2305,8 +3532,8 @@ nMoedaCor := Iif(Type("nMoedaCor") == "N", nMoedaCor, 1)
 //Carregando os campos que possuem conteudos padrao com os campos que ja estavam declarados no aHeader³e armazenados no aCols
 aAux := CposAutoNf(aCfgNf[SAliasCols],aCfgNf[ScCliFor],aCfgNf[SlFormProp],HeaderCpos(),aCols,aCfgNf[ScTipoDoc],n)
 If FindFunction('LoadMdData') .and. !Empty(LxSelecMod(aCfgNf[SnTipo]))
-	
-	aCposTela[1] :={}	
+
+	aCposTela[1] :={}
 	aCposTela[2] :={}
 	cP3 := Iif(aCfgNf[SAliasHead] == "SF2","F2_", "F1_")
 	//Carrega campos e conteudos dos objetos da tela para o array aCposTela desconsiderando os campos que nao fazem parte do cabecalho da NF
@@ -2356,9 +3583,8 @@ aRecsSF1 - Parametro com os registros das notas de entrada originais (usado nas 
 aDupl - Detalhe dos dados que devem ser gerados no financeiro
 cNota - ?
 aGetsTela - Vetor com todos os campos DIGITAVEIS da tela da Factura, utilizado para acessar informacoes complementares das folders da tela
-lModelGrav - Indica si el grabado es llamado desde las nuevas rutinas de MVC
 */
-Function GravaNfGeral(aCabNotaOri,aCitensOri,aCpItensOri,nTipo,aPergs,aRatCC,lTela,aFin,aRecsSF1,aDupl,cNota,aGetsTela,lModelGrav)
+Function GravaNfGeral(aCabNotaOri,aCitensOri,aCpItensOri,nTipo,aPergs,aRatCC,lTela,aFin,aRecsSF1,aDupl,cNota,aGetsTela)
 Local cAproFol	:= ""
 Local cCertFol	:= ""
 Local nI,nX     //flag's para loop's
@@ -2536,7 +3762,6 @@ EndIf
 Private laRatEvEz := (Type ("aRatEvEz") <> "U" .AND. aRatEvEz <> Nil)//contenido para multi naturaleza
 Private lMultNat  := SuperGetMv("MV_MULNATP") // multiples modalidades Ctas/Pagar
 Private lProrrCC  := SuperGetMv("MV_MULNATS") //porrateo CC
-Default lModelGrav	:= .F.
 /*³Verificacao/definicao das variaveis utilizadas para distinguir NF de import.a das das demais.                                    ³*/
 lFacImport	:=	If(Type("lFacImport")	<>"L",.F.	,lFacImport)
 l103Class	:=	If(Type("l103Class")	<>"L",.F.	,l103Class)
@@ -2709,7 +3934,7 @@ begin transaction
 		//³A rotina de consistencia adiciona formulas para campos que devem ser gravados, nao foram passados mas possuem   ³
 		//³um conteudo padrao. Isso faz com as posicoes incluidas com uma formula nos array's de conteudos sejam um array  ³
 		//³de duas posicoes. A primeira e a formula e a segunda e o indicador de que e uma formula						       ³
-		If aCfgNf[SaAtualiza][SlConsist] .and. !lModelGrav
+		If aCfgNf[SaAtualiza][SlConsist]
 			If !ConsisteNf(aCfgNf,@aCabNota,@aCitens,aCpItens,lTela)
 				Alert(STR0034)
 				lRet := .F.
@@ -3377,13 +4602,9 @@ begin transaction
 		If cPaisLoc == "EUA"
 			LxGrvNfEUA(aCfgNf, aCitens, cEspecie, cFunName)
 		EndIf
-		// Caixinha deve ser a ultima validacao
-		If lRet .And. Type("cCxCaixa")!="U" .And. Type("nCxValor")!="U" .And. !Empty(cCxCaixa) .and. !Empty(nCxValor)
-			lRet := NFVldCxa(3,cCxBenef,nCxValor,cCxCaixa,cCxAdian,cCxHistor,If(Type("cCxRendic")!="U",cCxRendic,""))
-		EndIf
 		//Acerta a numeracao da NF
 		If lRet
-			If aCfgNf[SlFormProp] .OR. (cPaisLoc == "COL" .AND. (lDocSp .OR. aCfgNF[SnTipo] == 22 .OR. aCfgNF[SnTipo] == 23 ) .AND. cFunName $ "MATA101N|COMA222|MATA466N|COMA223"  )
+			If aCfgNf[SlFormProp] .OR. (cPaisLoc == "COL" .AND. (lDocSp .OR. aCfgNF[SnTipo] == 22 .OR. aCfgNF[SnTipo] == 23 ) .AND. cFunName $ "MATA101N|MATA466N"  )
 				If cPaisLoc <> "EUA"
 					lRet := AtuNumNF(&(cPrefC+"_DOC"),&(cPrefC+"_SERIE"),aCfgNf[ScTipoDoc],aCfgNf[ScCliFor])
 				EndIf
@@ -5272,9 +6493,9 @@ If lRet //(1)
 							MsUnlock()
 						Endif
 					EndIf
-					If  FunName() $ "MATA102DN" 
+					If  FunName() $ "MATA102DN"
 						ArgActSB2(SD2->D2_COD,SD2->D2_QUANT,SD1->D1_COD,SD1->D1_LOCAL,SD1->D1_TES)
-					EndIf 
+					EndIf
 					RestArea(aAreaSC7)
 				EndIf
 				RestArea(aAreaSD1)
@@ -6219,7 +7440,7 @@ Do Case
 		Endif
 		If ExisteCampo("F1_HORA",.T.)[1]
 			AADD(aCpAuto, "F1_HORA")
-			If ExistBlock( "LXHORANFIS" ) .and. Iif(lLxModPE,LxModPE(, "LXHORANFIS"),.T.)
+			If ExistBlock( "LXHORANFIS" )
 				AADD(aCpad	, { "ExecBlock('LXHORANFIS',.F.,.F.)",.T. })
 			Else
 				AADD(aCpad	, {"Substr(GetRmtTime(),1,8)",.T.})
@@ -7093,6 +8314,13 @@ Endif
 //Validação da integração do ativo fixo com as notas de crédito e débito, para ajuste no valor do bem.
 If lRet .And. lIntNtCRDB .And. cEspecie $ "NDP|NCI|NCP|NDI"
 	lRet := A103VLNCD( cAliasI, aCpItens, aCItens )
+EndIf
+
+// Caixinha deve ser a ultima validacao
+If lRet .And. Type("cCxCaixa")!="U" .And. Type("nCxValor")!="U" .And. !Empty(cCxCaixa)
+	If !Empty(nCxValor)
+		lRet := NFVldCxa(3,cCxBenef,nCxValor,cCxCaixa,cCxAdian,cCxHistor,If(Type("cCxRendic")!="U",cCxRendic,""))
+	Endif
 EndIf
 
 If lRet
@@ -8880,7 +10108,7 @@ If lRet //(1)
 		If lConoSur .And. AllTrim(SD2->D2_ESPECIE) $ "NCP|NDI" .And. (QtdComp(SD2->D2_QUANT) == QtdComp(0) .Or. (Empty(SD2->D2_NFORI) .Or. Empty(SD2->D2_SERIORI)))
 			lCalcCusto := .T.
 		EndIf
-		
+
 		If (SD2->D2_TIPO == "D" .And. AllTrim(SD2->D2_ESPECIE) $ "NCP|NDI" .And. QtdComp(SD2->D2_QUANT) == QtdComp(0)) .Or. lCalcCusto
 			If lCalcCusto .And. lCustoNC
 				aCusto := LxCustoNC(nItem, aEnvCus)
@@ -9473,9 +10701,8 @@ Return(lRet)
 
 ±±ºDesc.     ³ Mostra os remitos que sera amarrados ao documento sendo di-º±±
 ±±º          ³gitado (devolucao ou NF de entrada)                         º±±
-lActBrow - logico - Indica si deben realizarse las actualizaciones del browse. por default se realizan.
 */
-Function SCMToNF(lActBrow)
+Function SCMToNF()
 Local aRecs    := {}
 Local aRecCols := {}
 Local aRecHeader:={}
@@ -9574,8 +10801,6 @@ Local cMVDescSai := SuperGetMV("MV_DESCSAI",.T.,'1')
 
 Private aColsSD1 	:= aCols
 
-Default lActBrow	:= .T.
-
 If Type("cCondicao") <> "U"
 	lCondicao := .T.
 EndIf
@@ -9590,7 +10815,7 @@ If !Empty(cPe)
 EndIf
 If Empty(cCliFor) .OR. Empty(cLoja)
 	Aviso(cCadastro,STR0094,{STR0021}) //"Llene los datos del encabezado."###"OK"
-	Return .F.
+	Return
 EndIf
 If nModulo == 12 .AND. !nModulo == 72
 	Aviso(cCadastro,STR0238,{STR0021})  //"Esta funcionalidade nao esta habilitada para o modulo SigaLoja."
@@ -9712,7 +10937,6 @@ If nRemito * nSeriRem * nItemRem > 0
 	//³[n,2] = Formula para o conteudo do campo                 ³
 	//³[n,3] = Coluna em que o campo sera visualizado           ³
 	aCpoExt   := {}
-	Aadd(aCpoExt,{AllTrim(FwX3Titulo("B1_DESC")),"D1_CODDESC",AllTrim(GetSx3Cache("B1_DESC", "X3_PICTURE")),GetSx3Cache("B1_DESC", "X3_TAMANHO"),,,,"C",,,'AllTrim(Posicione("SB1", 1, xFilial("SB1") + SD1->D1_COD, "B1_DESC"))',})
 	aCpoExtra := {}
 	cPe	:=	LocxPE(46)
 	If !Empty(cPe)
@@ -9730,9 +10954,7 @@ If nRemito * nSeriRem * nItemRem > 0
 	Else
 		aRet := LocxF4("SD1",10,cWhile,cSeek,aCposF4,,DESCREM,cCondicao2,.T.,,aCpoExt,,"LockSCM(Agrid[6,oLBCli:nAt])",.F.,,.T.)  // Retorna os Recnos das linhas selecionadas
 	EndIf
-	If lActBrow
-		Eval( bFilBrw )
-	EndIf
+	Eval( bFilBrw )
 EndIf
 If ValType(aRet)=="A" .AND. Len(aRet)==3
 	aRecs	  := aRet[3]
@@ -9740,7 +10962,7 @@ If ValType(aRet)=="A" .AND. Len(aRet)==3
 	aRecHeader:= aRet[1]
 EndIf
 If ValType(aRecs)!="A" .OR. (ValType(aRecs)=="A" .AND. Len(aRecs)==0)
-	Return .F.
+	Return
 EndIf
 //check currency in selected recocds
 If cPaisLoc == "RUS"
@@ -9953,24 +11175,20 @@ If lCheckMoed
 				EndIf
 			Endif
 		Endif
-		If lActBrow
-			oGetDados:lNewLine:=.F.
-		EndIf
+		oGetDados:lNewLine:=.F.
 		cPe	:=	LocxPE(35)
 		If !Empty(cPe)
 			Execblock(cPE,.F.,.F.,)
 		EndIf
-		AEval(aHeader,{|x,y| If( !(x[10] == "V") .and. aCols[Len(aCols)][y]==NIL,aCols[Len(aCols)][y]:=CriaVar(x[2]),) })
+		AEval(aHeader,{|x,y| If(aCols[Len(aCols)][y]==NIL,aCols[Len(aCols)][y]:=CriaVar(x[2]),) })
 		If cPaisLoc == "COL" .And. nCF>0
 			MaFisAlt("IT_CF", aCols[Len(aCols)][nCF], Len(aCols))
 		EndIf
-		If lActBrow
-			MaColsToFis(aHeader,aCols,Len(aCols),"MT100",.T.)
-			MafisAlt('IT_FRETE'		,SD1->D1_VALFRE		,Len(aCols))
-			MafisAlt('IT_DESPESA'	,SD1->D1_DESPESA	,Len(aCols))
-			MafisAlt('IT_DESCONTO'	,SD1->D1_VALDESC	,Len(aCols))
-			MafisAlt('IT_SEGURO'	,SD1->D1_SEGURO		,Len(aCols))
-		EndIf
+		MaColsToFis(aHeader,aCols,Len(aCols),"MT100",.T.)
+		MafisAlt('IT_FRETE'		,SD1->D1_VALFRE		,Len(aCols))
+		MafisAlt('IT_DESPESA'	,SD1->D1_DESPESA	,Len(aCols))
+		MafisAlt('IT_DESCONTO'	,SD1->D1_VALDESC	,Len(aCols))
+		MafisAlt('IT_SEGURO'	,SD1->D1_SEGURO		,Len(aCols))
 		nFrete   += SD1->D1_VALFRE
 		nDespesa += SD1->D1_DESPESA
 		nDescont += SD1->D1_VALDESC
@@ -10001,17 +11219,15 @@ If lCheckMoed
 	If nDescont > 0 .And. ValType(F1_DESCONT) == "N"
 		M->F1_DESCONT := SF1->F1_DESCONT + nDescont
 	EndIf
-	If lActBrow
-		Eval(bDoRefresh)
-		oGetDados:obrowse:refresh()
-	EndIf
+	Eval(bDoRefresh)
+	oGetDados:obrowse:refresh()
 	/*ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 	³Atualiza o browse de qtde de produtos.³
 	ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ*/
 	AtuLoadQt(.T.)
 EndIf
 RestArea(aAreaSD1)
-Return .T.
+Return
 
 //ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
 Function AtuDadosFin(cAliasFin,cAliasHead)
@@ -10512,7 +11728,7 @@ If Type("aCfgNf") == "A" .AND. Type("aCols") == "A" .AND. Type("aHeader") == "A"
 	lCliFor 	:= nPosCliFor > 0 .AND. Type(IIf(aCfgNf[SAliasHead]=="SF2","M->F2_CLIENTE","M->F1_FORNECE")) 	!= "U"
 	lLoja		:= nPosLoja   > 0 .AND. Type(IIf(aCfgNf[SAliasHead]=="SF2","M->F2_LOJA","M->F1_LOJA")) 		!= "U"
 
-	If cPaisLoc == "COL"  .And. (AllTrim(FunName()) $ "MATA101N|COMA222")
+	If cPaisLoc == "COL"  .And. (AllTrim(FunName()) $ "MATA101N")
 		cForSc7	:= aCols[nI][nPosCliFor]    //#RES pos. do campo fornecedor no Acols após importação pedido
 	EndIf
 
@@ -10593,14 +11809,12 @@ If cPaisLoc == "PAR"
 	xCliForPAR()
 EndIf
 
+
 Return(.T.)
 /*
 ±±ºPrograma  ³LocXVal º±±
-cVar - caracter - campo a ser validado.
-lExResh - logico - Indica si debe ser realizado el refresh del objeto visual.
-lModel - logico - Indica si la función está siendo llamada desde una rutina de mvc.
 */
-Function LocXVal(cVar,lExResh, lModel)
+Function LocXVal(cVar,lExResh)
 Local cAux,lRet,aNF,lAltNota, dDataFec
 Local lSeqEspecie := SuperGetMV("MV_SEQESPE",,.F.)
 Local cChaveSX5   := ""
@@ -10634,7 +11848,6 @@ IF Type("cLocxNFPV") == "U"
 EndIf
 
 Default cVar=ReadVar()
-Default lModel := .F.
 dDataFec := MVUlmes() // Verificar data do ultimo fechamento
 
 // Controle de Folios - Bolivia
@@ -10644,7 +11857,7 @@ If cPaisLoc == "DOM" .AND. (cVar == Substr(cVar,1,3)+"DOC" .OR. cVar == Substr(c
 		MsgAlert(STR0285)
 	EndIf
 ElseIf cPaisloc == "ARG"
-	lContrFol     :=	aCfgNf[SlFormProp] .and. AllTrim(FunName())$"MATA466N|MATA101N|MATA465N|MATA467N|MATA468N|LOJA701|LOJA720|MATA462N|MATA462DN|MATA462R|LOCXNCE|COMA224" .And. GetNewPar("MV_CTRLFOL",.F.)
+	lContrFol     :=	aCfgNf[SlFormProp] .and. AllTrim(FunName())$"MATA466N|MATA101N|MATA465N|MATA467N|MATA468N|LOJA701|LOJA720|MATA462N|MATA462DN|MATA462R" .And. GetNewPar("MV_CTRLFOL",.F.)
 ElseIf cPaisloc $ "EQU|VEN|PAR"
 	lContrFol:=	AllTrim(FunName())$"MATA468N|MATA467N|MATA462N|MATA465N|MATA466N|MATA101N" .And. GetNewPar("MV_CTRLFOL",.F.)
 Else
@@ -10848,14 +12061,14 @@ Do Case
 		EndIf
 	Case cVar=="F1_SERIE"
     	cNFiscal:=M->F1_DOC
-		If cPaisLoc=="ARG"   .and. aCfgNf[SlFormProp]  .and. Type("M->F1_PV")=="C" .and. !Empty(M->F1_PV) .and. !lModel
+		If cPaisLoc=="ARG"   .and. aCfgNf[SlFormProp]  .and. Type("M->F1_PV")=="C" .and. !Empty(M->F1_PV)
 			cSerieAlt:=Subs(Alltrim(SX5->X5_CHAVE),1,Len(Alltrim(SX5->X5_CHAVE))- (TAMSX3("CFH_IDPV")[1]) )
 		   If !Empty(cSerieAlt)
 		   	M->F1_SERIE  :=cSerieAlt
 		   EndIf
 		EndIf
 		cSerie  :=M->F1_SERIE
-		If aCfgNf[SlFormProp] .OR. (cPaisLoc == "COL" .AND. (lDocSp .OR. aCfgNF[SnTipo] == 23) .AND. cFunName $ "MATA101N|MATA466N|COMA222|COMA223"  )
+		If aCfgNf[SlFormProp] .OR. (cPaisLoc == "COL" .AND. (lDocSp .OR. aCfgNF[SnTipo] == 23) .AND. cFunName $ "MATA101N|MATA466N"  )
 			If lGerarCFD .and. cPaisLoc <> "PAR"
 				lRet:=(CFDChkFol(cFilAnt,cSerie,cNFiscal,@aCFD,.T.,.F.,M->F1_ESPECIE) < 2)
 				M->F1_APROFOL := aCFD[1]
@@ -10886,17 +12099,7 @@ Do Case
 					If lChkNumNF
 						cNFiscal := LxChkNumNF(cSerie, cNFiscal, "SF1")
 					EndIf
-					If lModel .and. lGerarCFD .and. cPaisLoc <> "PAR"
-						lRet := (CFDChkFol(cFilAnt,cSerie,cNFiscal,@aCFD,.T.,.F.,M->F1_ESPECIE) < 2)
-						If lRet
-							M->F1_APROFOL := aCFD[1]
-							M->F1_CERTFOL := aCFD[2]
-							M->F1_DOC:=	cNFiscal
-						Endif
-					Else
-						M->F1_DOC:=	cNFiscal
-					Endif
-					
+					M->F1_DOC:=	cNFiscal
 					//Controle de Folios da Rep. Dom utiliza F1_DOC na geracao do NCF
 					If lContrFol .And. cPaisloc=="DOM"
 						If (Trim(M->F1_ESPECIE) $ "NCC")
@@ -10922,9 +12125,7 @@ Do Case
 			lRet:=CtrFolAutPAR(cFilAnt,M->F1_SERIE,"1",M->F1_DOC)
 		ENDIF
 		LocxAtuFis(.F.,cNFiscal)
-		If lExResh
-			Eval(bRefresh)
-		EndIf
+		Eval(bRefresh)
 	Case Right(cVar,6)=="_MOEDA"
 		If cPaisLoc == "MEX" .And. (AllTrim(FunName()) $ "MATA101N|MATA102N")
 			If nMoedaNF	<> &cVar.
@@ -10972,9 +12173,7 @@ Do Case
 					LocxAtuMoeda(aHeader,@aCols)
 				EndIf
 			EndIf
-			If lExResh
-				Eval(bRefresh)
-			EndIf
+			Eval(bRefresh)
 		EndIf
 	Case Right(cVar,8)=="_TXMOEDA"
 		If  cPaisLoc != "RUS" .or. nTaxa != &cVar
@@ -10986,9 +12185,7 @@ Do Case
 			If cPaisLoc=="RUS".and. AllTrim(FunName()) == "MATA467N"
 				ExcRt467N()
 			EndIf
-			If lExResh
-				Eval(bRefresh)
-			EndIf
+			Eval(bRefresh)
 		EndIf
 	Case cVar=="F2_LOJA"  .AND. aCfgNf[SlFormProp]
 		If cPaisLoc == "ARG" .AND. IIf(Type("lFiscal")#"U",lFiscal,.F.)
@@ -11025,7 +12222,7 @@ Do Case
 		cSerie:= LocXTipSer(aCfgNf[ScCliFor],aCfgNf[ScEspecie]) // Trazer a serie automat.  para o documento
 		MaFisAlt("NF_SERIENF",cSerie)
 		M->F2_SERIE	:=	cSerie
-	Case cVar=="F1_LOJA" .AND. aCfgNf[SlFormProp] .and. !lModel
+	Case cVar=="F1_LOJA" .AND. aCfgNf[SlFormProp]
 		If cPaisLoc == "ARG" .AND. IIf(Type("lFiscal")#"U",lFiscal,.F.)
 			If M->F1_ECF <> "1"
 				aNF:=LocXFatAut()
@@ -11053,9 +12250,7 @@ Do Case
 					M->F1_CERTFOL := aNF[4]
 				Endif
 				MaFisAlt('NF_SERIENF',cSerie)
-				If lExResh
-					Eval(bRefresh)
-				EndIf
+				Eval(bRefresh)
 			Endif
 		Endif
 	Case cVar=="F1_LOJA"  .AND. !aCfgNf[SlFormProp]	.AND. cPaisLoc =="ARG"
@@ -11285,11 +12480,11 @@ Local nPosRec
 Local aTiposOrig := { {01,"MATA467N/MATA468A/MATA468N/MATA460/MATA461/MATA460B/ATFA036" },;
                        {02,"MATA465N"},{03,"MATA465N"},{04,"MATA465N"},;
                        {05,"MATA465N"},{06,"MATA466N"},{07,"MATA466N"},;
-                       {08,"MATA466N/LOCXNCE/COMA224"},{09,"MATA466N/LOCXNDE/COMA223"},{10,"MATA101N/MATA100/MATA447/MATA143/LOCXNFE/COMA222"},;
+                       {08,"MATA466N"},{09,"MATA466N"},{10,"MATA101N/MATA100/MATA447/MATA143"},;
                        {11,"MATA101N/MATA100"},{12,"MATA101N/MATA100"},;
                        {13,"MATA101N/MATA100/MATA119N/MATA447/MATA143"},{14,"MATA101N/MATA100/MATA116N/MATA447/MATA143"},;
                        {15,"MATA463N"},{17,"MATA467N"},{18,"MATA467N"},{19,"MATA467N"},;
-                       {20,"MATA101N/MATA100/COMA222"},{22,"MATA466N"},{23,"MATA466N/COMA223"}}
+                       {20,"MATA101N/MATA100"},{22,"MATA466N"},{23,"MATA466N"}}
 Local cFilOrig   := ""
 Local cOrigFin   := ""
 Local cCondIf    := ""
@@ -11434,12 +12629,6 @@ If cPaisLoc == "MEX" .And. cFunName $ "MATA467N|MATA465N" .And. SuperGetmv( "MV_
 		( cAlias == "SF1" .And. SF1->(FieldPos("F1_UUID")) > 0 .And. !Empty(SF1->F1_UUID) )
 		MsgAlert( STR0404 + CRLF + STR0405 ) //"Está habilitado el Nuevo Esquema de Cancelación de CFDI (parámetro MV_CFDICAN)," # "para borrar/anular documentos timbrados utilice la rutina Cancelación de CFDI."
 		Return .F.
-	EndIf
-EndIf
-
-If cPaisLoc == "EQU" .And. FindFunction("LxCertEQU") .And. cFunName == "MATA101N"
-	If LxCertEQU(SF1->F1_FORNECE, SF1->F1_LOJA, SF1->F1_PREFIXO, SF1->F1_SERIE, SF1->F1_DOC)
-		Return .F. //"Esta factura no puede ser borrada debido a que tiene un Certificado de Retención vigente. Primero, debe borrar el Certificado de Retención, a través de la rutina Certif. Retenc. (FISA015)."
 	EndIf
 EndIf
 
@@ -11683,7 +12872,7 @@ If lRet .And. (IIf(lPerg == .T. , MsgYesNo(OemToAnsi(STR0096),OemToAnsi(STR0097)
 					RestArea(aAreaItem)
 					RestArea(aArea)
 				EndIf
-				
+
 				//Executar somente se tipo de documento diferente de transferencia e Devolução fornecedor.
 				If cPaisLoc == "ARG" .and. cTipo $ "N|D|B" .And. !(AllTrim(cEspecie) $ "RTS|RCD|NCP") .And. FindFunction("WmsEsIntM2")
 					WmsEsIntM2()
@@ -11781,9 +12970,6 @@ If lRet .And. (IIf(lPerg == .T. , MsgYesNo(OemToAnsi(STR0096),OemToAnsi(STR0097)
 				If cPaisLoc <> "MEX" .And. lGerarCFD .And. cFunName <> "MATA466N"
 					CFDExcXML(SF2->F2_ESPECIE,SF2->F2_CLIENTE,SF2->F2_LOJA,SF2->F2_DOC,SF2->F2_SERIE,lAnulaSF3)
 				Endif
-				If cPaisLoc == "MEX" .And. FindFunction("LXDELEMEX")
-					LXDELEMEX(SF2->F2_DOC,SF2->F2_SERIE,aCfgNf)
-				EndIf
 			EndIf
 			MsUnLockAll()
 			// Libera los registros bloqueados por la funcion FtMultLock-MATA521 DMICNS-13915/DSERFAT-21116
@@ -12201,7 +13387,7 @@ If lRet .And. (IIf(lPerg == .T. , MsgYesNo(OemToAnsi(STR0096),OemToAnsi(STR0097)
 	      		EndIf
 				//Atualiza o arquivo de rateios por C.C.  ³
 				aAux := BuscaSDE()
-				Lxa103SD1AtuSDE(2,aClone(aAux[3]),aClone(aAux[2]),aClone(aAux[1]),LxA103Custo(nx,IsRemito(1,'SF1->F1_TIPODOC')))
+				Lxa103SD1AtuSDE(2,aClone(aAux[3]),aClone(aAux[2]),aClone(aAux[1]),LxA103Custo(nx))
 
 				dbSelectArea('SD1')
 				MsGoto(aRecSD1[nx])
@@ -12248,7 +13434,7 @@ If lRet .And. (IIf(lPerg == .T. , MsgYesNo(OemToAnsi(STR0096),OemToAnsi(STR0097)
 
 				//Gera lanç contabil 655-691-697-698 Exclusao - Itens   ³
 
-					If cFunName$"MATA101N|MATA447|MATA462DN|LOCXNFE|COMA222" .or. (cPaisLoc == "ARG" .AND. cFunName == "FINA100") //Nota de Entrada | Pedimentos
+					If cFunName$"MATA101N|MATA447|MATA462DN" .or. (cPaisLoc == "ARG" .AND. cFunName == "FINA100") //Nota de Entrada | Pedimentos
 						If lVerPad695
 							If !Empty(SF1->F1_DTLANC)
 								nTotalLcto	+= DetProva(nHdlPrv,'695','MATA103',cLoteCom)
@@ -12259,7 +13445,7 @@ If lRet .And. (IIf(lPerg == .T. , MsgYesNo(OemToAnsi(STR0096),OemToAnsi(STR0097)
 							EndIf
 						EndIf
 					EndIf
-					If cFunName$"MATA466N|LOCXNDE|LOCXNCE|COMA223|COMA224" //Nota de Debito
+					If cFunName$"MATA466N" //Nota de Debito
 						If lVerPad697
 							If !Empty(SF1->F1_DTLANC)
 								nTotalLcto	+= DetProva(nHdlPrv,'697','MATA103',cLoteCom)
@@ -12288,7 +13474,7 @@ If lRet .And. (IIf(lPerg == .T. , MsgYesNo(OemToAnsi(STR0096),OemToAnsi(STR0097)
 							EndIf
 						EndIf
 					EndIf
-					If cFunName$"MATA102N|LOCXREN|COMA221" //Remito de Entrada
+					If cFunName$"MATA102N" //Remito de Entrada
 						If lVerPad698
 							If !Empty(SF1->F1_DTLANC)
 								nTotalLcto	+= DetProva(nHdlPrv,'698','MATA103',cLoteCom)
@@ -12385,7 +13571,7 @@ If lRet .And. (IIf(lPerg == .T. , MsgYesNo(OemToAnsi(STR0096),OemToAnsi(STR0097)
 			Endif
 			//Gera lanç contabil 665-687-689-690 Exclusao - Total ³
 			If Type("cFunName")<>"U"
-				If cFunName$"MATA101N|MATA447|MATA462DN|LOCXNFE|COMA222" .or. (cPaisLoc == "ARG" .AND. cFunName == "FINA100") //Nota de Entrada | Pedimentos
+				If cFunName$"MATA101N|MATA447|MATA462DN" .or. (cPaisLoc == "ARG" .AND. cFunName == "FINA100") //Nota de Entrada | Pedimentos
 					If lVerPad687
 						If !Empty(SF1->F1_DTLANC)
 							nTotalLcto	+= DetProva(nHdlPrv,'687','MATA103',cLoteCom)
@@ -12396,7 +13582,7 @@ If lRet .And. (IIf(lPerg == .T. , MsgYesNo(OemToAnsi(STR0096),OemToAnsi(STR0097)
 						EndIf
 					EndIf
 				EndIf
-				If cFunName$"MATA466N|LOCXNDE|LOCXNCE|COMA223|COMA224" //Nota de Debito
+				If cFunName$"MATA466N" //Nota de Debito
 					If lVerPad689
 						If !Empty(SF1->F1_DTLANC)
 							nTotalLcto	+= DetProva(nHdlPrv,'689','MATA103',cLoteCom)
@@ -12425,7 +13611,7 @@ If lRet .And. (IIf(lPerg == .T. , MsgYesNo(OemToAnsi(STR0096),OemToAnsi(STR0097)
 						EndIf
 					EndIf
 				EndIf
-				If cFunName$"MATA102N|LOCXREN|COMA221" //Remito de Entrada
+				If cFunName$"MATA102N" //Remito de Entrada
 					If lVerPad690
 						If !Empty(SF1->F1_DTLANC)
 							nTotalLcto	+= DetProva(nHdlPrv,'690','MATA103',cLoteCom)
@@ -12822,7 +14008,6 @@ DEFAULT lNumNCC  := .F.
 // Parametro utilizado para tranferencia de material
 DEFAULT lTransf := .F.
 Default cFunName := Funname()
-Default oDlgPae := oMainWnd
 
 cPrefC := IIf(lTransf,"",PrefixoCpo(aCfgNF[SAliasHead]))
 
@@ -12849,7 +14034,7 @@ EndIf
 aSerNF := {}
 
 // Leandro Prado - 24/02/2014 - Controle de Ponto de Venda p/ Argentina.
-If (cPaisLoc =="ARG") .And. (cFunName $ "MATA465N|MATA466N|MATA467N|MATA468N|MATA101N|MATA462N|MATA462DN|MATA462TN|MATA102DN||MATA462R|OMSA320|LOCXNCE|COMA224")
+If (cPaisLoc =="ARG") .And. (cFunName $ "MATA465N|MATA466N|MATA467N|MATA468N|MATA101N|MATA462N|MATA462DN|MATA462TN|MATA102DN||MATA462R|OMSA320")
 	If AllTrim(cEspecie) == "NF"
 		cSFPEsp := "1"
 	ElseIf AllTrim(cEspecie) == "NCI"
@@ -13582,7 +14767,6 @@ Return lRet
 /*/
 Function GetDescRem(nAbrev)
 Local cDescRem	:=	""
-Local lExecPe	:= Iif(lLxModPE,LxModPE(,"LOCXDREM"),.T.)
 Local lLocxDRem := Existblock("LOCXDREM")	// Retorna descricao do Remito
 Default nAbrev  := 0
 
@@ -13610,7 +14794,7 @@ Do Case
 		EndIf
 EndCase
 
-If lLocxDRem .and. lExecPe
+If lLocxDRem
 	cDescRem :=	ExecBlock("LOCXDREM",.F.,.F.)
 EndIf
 Return cDescRem
@@ -13833,7 +15017,7 @@ Return(lTrava)
 ±±³Fun‡…o    ³ NFVldCxa  ³ ±±
 ±±³Descri‡…o ³ Valida o OK dos dados de integracao com caixinha.          ³±±
 /*/
-Function NFVldCxa(nOpca,cBenef,nValor,cCaixa,cAdia,cHistor,cNrRend)
+Static Function NFVldCxa(nOpca,cBenef,nValor,cCaixa,cAdia,cHistor,cNrRend)
 Local lRet			:= .T.
 Local lAdia			:= .F.
 Local nRecAdia		:= 0
@@ -14121,9 +15305,8 @@ Return  lRet
 ±±³Fun‡…o    ³LocxNfDesp ³ ±±
 ±±³Descri‡…o ³ Monta uma tela com as nota fiscais originais.              ³±±
 ±±³Uso       ³ LOCXNF	                                                  ³±±
-lActBrow - logico - Indica si debe realizar la actualización de los valores en el browse.
 /*/
-Function LocxNFDesp(nTipNota, lActBrow)
+Function LocxNFDesp(nTipNota)
 Local aRecs		:= {}
 Local aRet		:= {}
 Local aAreaSA2	:= SA2->(GetArea())
@@ -14151,8 +15334,6 @@ Local cFilSF4		:= xFilial("SF4")
 
 Private oProcess
 
-Default lActBrow	:= .T.
-
 //³Verifica se os campos de cabeçalho obrigatorios  ³
 //³para o calculo de impostos  estão preenchidos.   ³
 
@@ -14172,7 +15353,7 @@ EndIf
 //³   07 -  Aglutina produtos    mv_par07 Sim x Nao  ³
 
 If !Pergunte(cPerg,.T.)
-	Return .F.
+	Return
 Endif
 
 RestArea(aAreaSA2)
@@ -14181,7 +15362,7 @@ AFN->(dbSetOrder(2))
 /**/
 If mv_par01==0   //total igual a zero, abre tela para digitacao das despesas
 	If !LocxGastos()
-		Return .F.
+		Return
 	Endif
 Else
 	aCGastos:={{mv_par01,mv_par04,.F.}}
@@ -14264,22 +15445,21 @@ If ValType(aRet)=="A" .AND. Len(aRet)==3
 EndIf
 
 If ValType(aRecs)=="A" .AND. ValType(aRecs)=="A" .AND. Len(aRecs) > 0
-	oProcess:=	MsNewProcess():New({|lEnd| CarregaDesp(nTipNota,aRecs,oProcess,aCGastos,@lEnd, lActBrow)},STR0239,,.T.)//"Carregando as notas selecionadas..."
+	oProcess:=	MsNewProcess():New({|lEnd| CarregaDesp(nTipNota,aRecs,oProcess,aCGastos,@lEnd)},STR0239,,.T.)//"Carregando as notas selecionadas..."
 	oProcess:Activate()
 Endif
 
 AtuLoadQt()
 RestArea(aAreaSF1)
 RestArea(aAreaSD1)
-Return .T.
+Return
 
 /*
 ±±ºPrograma  ³CarregaDespºº±±
 ±±ºDesc.     ³Rotina para ser utilizada pela processa na carga de items   º±±
 ±±º          ³ nas notas de despesas e de frete                           º±±
-lActBrow - logico - Indica si debe realizar la actualización de los valores en el browse.
 */
-Static Function CarregaDesp(nTipNota,aRecs,oProcess,aCGastos,lEnd, lActBrow)
+Static Function CarregaDesp(nTipNota,aRecs,oProcess,aCGastos,lEnd)
 Local nPItem    :=	Ascan(aHeader,{|x| Alltrim(x[2]) == 'D1_ITEM'})
 Local nPProduto :=	Ascan(aHeader,{|x| Alltrim(x[2]) == 'D1_COD'})
 Local nPLocal	:=	Ascan(aHeader,{|x| Alltrim(x[2]) == 'D1_LOCAL'})
@@ -14325,8 +15505,6 @@ Local lFifoOnLine:= IsFifoOnLine()
 
 Local cQuery	:=	""
 Local cQueryPE	:=	""
-
-Default lActBrow	:= .T.
 lQuery	:=	TcSrvType()<>"AS/400"
 
 oProcess:SetRegua1(2)
@@ -14413,9 +15591,7 @@ For nSF1:=1 To Len(aRecs)
 				Aadd(aAmarrAFN,{})
 				nX	:= Len(aCols)
 				For nY := 1 to Len(aHeader)
-					If !Empty(GetSx3Cache(aHeader[nY][2], "X3_CAMPO"))
-						aCols[nX][nY] := CriaVar(aHeader[nY][2])
-					EndIf
+					aCols[nX][nY] := CriaVar(aHeader[nY][2])
 				Next nY
 				aCols[nX][nUsado+1] := .F.
 				If nPItem > 0
@@ -14631,25 +15807,23 @@ Else
 	aSize(aCols,nX)
 Endif
 
-If lActBrow
-	Eval(bDoRefresh) //Atualiza o folder financeiro.
-	oGetDados:obrowse:refresh()
-	/*
-	³Atualiza o browse de qtde de produtos.³
-	*/
-	lDel := Iif(Len(oBSomaItens:AARRAY)>0,.T.,.F.)
-	While lDel
-		nLin:= Len(oBSomaItens:AARRAY)
-		If Len(oBSomaItens:AARRAY) == 1
-			oBSomaItens:AARRAY[nLin,1] := ''
-			oBSomaItens:AARRAY[nLin,2] := 0
-			lDel:=.F.
-		Else
-			Adel(oBSomaItens:AARRAY,nLin)
-			ASize(oBSomaItens:AARRAY,Len(oBSomaItens:AARRAY)-1)
-		EndIf
-	EndDo
-EndIf
+Eval(bDoRefresh) //Atualiza o folder financeiro.
+oGetDados:obrowse:refresh()
+/*
+³Atualiza o browse de qtde de produtos.³
+*/
+lDel := Iif(Len(oBSomaItens:AARRAY)>0,.T.,.F.)
+While lDel
+	nLin:= Len(oBSomaItens:AARRAY)
+	If Len(oBSomaItens:AARRAY) == 1
+		oBSomaItens:AARRAY[nLin,1] := ''
+		oBSomaItens:AARRAY[nLin,2] := 0
+		lDel:=.F.
+	Else
+		Adel(oBSomaItens:AARRAY,nLin)
+		ASize(oBSomaItens:AARRAY,Len(oBSomaItens:AARRAY)-1)
+	EndIf
+EndDo
 Return
 /*
 ±±³Fun‡…o    ³Locxgastos ³³±±
@@ -17060,7 +18234,7 @@ Else
 		EndIf
 	Endif
 
-	If lRet .and. Type("__aCodLocs") == "A"
+	If lRet
 		Aadd(__aCodLocs,"SF1"+xFilial("SF1")+cMayUse)
 		Aadd(__aCodLocs,"SF2"+xFilial("SF2")+cMayUse)
 	Endif
@@ -19047,7 +20221,7 @@ Local lUsaNewKey:= TamSX3("F1_SERIE")[1] == 14
 Local nTamSer	:= TamSX3(SerieNfId("SF1",3,"F1_SERIE"))[1]
 Local lDocSop	:= .F.
 
-If cPaisLoc == "COL" .And. ( (Type("lDocSp") == "L" .And. lDocSp) .Or. aCfgNF[1] == 22 .Or. aCfgNF[1] == 23) .And. cFunName $ "MATA101N|COMA222|MATA466N"
+If cPaisLoc == "COL" .And. ( (Type("lDocSp") == "L" .And. lDocSp) .Or. aCfgNF[1] == 22 .Or. aCfgNF[1] == 23) .And. cFunName $ "MATA101N|MATA466N"
 	// COL: Documento soporte (NF Entrada) y Notas de ajuste (NDP/NCP) tienen asignación de consecutivo por el sistema
 	lDocSop := .T.
 EndIf
@@ -21095,9 +22269,8 @@ Return lValido
 /*
 Programa  ³SCMToREM Fecha ³  09/02/05
 Desc.     ³Selecao de remitos para NF de entrada
-lActBrow - logico - Indica si deben realizarse las actualizaciones del browse. por default se realizan.
 */
-Function SCMToREM(lActBrow)
+Function SCMToREM()
 Local aCposF4		:= {}
 Local aRecs    		:= {}
 Local aRet     		:= {}
@@ -21197,11 +22370,9 @@ Private aFiltro		:= {}
 Private aColsSD1	:= aCols
 Private oTmpRemito	:= Nil
 
-Default lActBrow	:= .T.
-
 If Empty(cCliFor) .OR. Empty(cLoja)
 	Aviso(cCadastro,STR0094,{STR0021}) //"Llene encabezado."###"OK"
-	Return .F.
+	Return
 EndIf
 If FindFunction("LxCpRemito") .And. !LxCpRemito()//Valida campos usados
 	Return
@@ -21373,7 +22544,7 @@ If nRemito * nSeriRem * nItemRem > 0
 		Endif
 	Else
 		Help(" ",1,"A103F4")
-		Return .F.
+		Return
 	EndIf
 EndIf
 If ValType(aRet)=="A" .AND. Len(aRet)==3
@@ -21381,7 +22552,7 @@ If ValType(aRet)=="A" .AND. Len(aRet)==3
 EndIf
 
 If ValType(aRecs)!="A" .OR. (ValType(aRecs)=="A" .AND. Len(aRecs)==0)
-	Return .F.
+	Return
 EndIf
 If cPaisLoc == "RUS"
 	If Len(aRecs) > 1
@@ -21644,22 +22815,20 @@ If lCheckMoed
 					If !Empty(cPe)
 						Execblock(cPE,.F.,.F.,)
 					EndIf
-					AEval(aHeader,{|x,y| If(!(x[10] == "V") .and. aCols[nValAcols][y]==NIL,aCols[nValAcols][y]:=CriaVar(x[2]),) })	//OPTIMIZA...
+					AEval(aHeader,{|x,y| If(aCols[nValAcols][y]==NIL,aCols[nValAcols][y]:=CriaVar(x[2]),) })	//OPTIMIZA...
 					If cPaisLoc == "MEX"
 						aAdd( aRecSD1 , SD1->(RecNo()) )
 						lOtros := lOtros .Or. SD1->(D1_VALFRE + D1_DESPESA + D1_VALDESC + D1_SEGURO) <> 0
 					Else		//...OPTIMIZA
-						If lActBrow
-							IIf(cPaisLoc == "COL" .And. nCF>0, cCFO := aCols[Len(aCols)][nCF],)
-							MaColsToFis(aHeader,aCols,Len(aCols),"MT100",.T.)
-							If cPaisLoc == "COL"
-								LxVldCFCol(aCols, cCFO, Len(aCols), nCF)
-							EndIf
-							MafisAlt('IT_FRETE'		,SD1->D1_VALFRE		,Len(aCols))
-							MafisAlt('IT_DESPESA'	,SD1->D1_DESPESA	,Len(aCols))
-							MafisAlt('IT_DESCONTO'	,IIf(nDesc > 0,aCols[Len(aCols)][nDesc], SD1->D1_VALDESC)	,Len(aCols))
-							MafisAlt('IT_SEGURO'	,SD1->D1_SEGURO		,Len(aCols))
+						IIf(cPaisLoc == "COL" .And. nCF>0, cCFO := aCols[Len(aCols)][nCF],)
+						MaColsToFis(aHeader,aCols,Len(aCols),"MT100",.T.)
+						If cPaisLoc == "COL"
+							LxVldCFCol(aCols, cCFO, Len(aCols), nCF)
 						EndIf
+						MafisAlt('IT_FRETE'		,SD1->D1_VALFRE		,Len(aCols))
+						MafisAlt('IT_DESPESA'	,SD1->D1_DESPESA	,Len(aCols))
+						MafisAlt('IT_DESCONTO'	,IIf(nDesc > 0,aCols[Len(aCols)][nDesc], SD1->D1_VALDESC)	,Len(aCols))
+						MafisAlt('IT_SEGURO'	,SD1->D1_SEGURO		,Len(aCols))
 					EndIf
 					nFrete   += SD1->D1_VALFRE
 					nDespesa += SD1->D1_DESPESA
@@ -21682,7 +22851,7 @@ If lCheckMoed
 			MaFisRef("NF_TPACTIV", "MT100", M->F1_TPACTIV)
 		EndIf
 
-		If MaFisFound() .and. Len(aRecSD1) > 0		//OPTIMIZA...
+		If Len(aRecSD1) > 0		//OPTIMIZA...
 			MaColsToFis(aHeader,aCols,,"MT100",.T.)
 			If lOtros
 				For nI := 1 To Len(aRecSD1)
@@ -21696,7 +22865,7 @@ If lCheckMoed
 		EndIf
 		CursorArrow()			//...OPTIMIZA
 	EndIf
-	If cPaisLoc == "ARG" .and. lActBrow
+	If cPaisLoc == "ARG"
 		MaFisReprocess(2)
 	EndIf
 	// Atualizar pasta Gastos com base nos itens do Remito
@@ -21713,10 +22882,8 @@ If lCheckMoed
 		M->F1_DESCONT := SF1->F1_DESCONT + nDescont
 	EndIf
 
-	If lActBrow
-		Eval(bDoRefresh)
-		oGetDados:obrowse:refresh()
-	EndIf
+	Eval(bDoRefresh)
+	oGetDados:obrowse:refresh()
 	AtuLoadQt()
 EndIf
 If oTmpRemito <> Nil
@@ -21725,7 +22892,7 @@ If oTmpRemito <> Nil
 	oTmpRemito := Nil
 EndIf
 RestArea(aArea)
-Return .T.
+Return
 /*
 Programa  ³PcoLancto Data ³  11/07/05
 Desc.     ³rotina para contabilizacao no modulo sigapco
@@ -22398,7 +23565,7 @@ For nI := 1 To Len(aRecs)
 				If (nCanaduD1 > 0  ,  aCOLS[nLenAcols][nCanaduD1]:= SD2->D2_CANADU,)
 				If (nFraccaD1 > 0  ,  aCOLS[nLenAcols][nFraccaD1]:= SD2->D2_FRACCA,)
 				If (nNICOD1 > 0    ,  aCOLS[nLenAcols][nNICOD1]	 := SD2->D2_NICO,)
-				
+
 				//WMS - Gatilha os campos D1_SERVIC e D1_ENDER
 				If nCod > 0 .And. FindFunction("WMSMT462DN") .And. IntWMS(aCols[nLenAcols][nCod])
 					WMSMT462DN(aHeader, aCols, nLenAcols)
@@ -23971,5 +25138,4 @@ Local aCliente	:= {}
 		Help("",1,"Locx2SELCLI",,STR0430 + "Locx2SELCLI()",1,0) //"Rutina desatualizada, solicite paquete con actualizaciones:"
 	Endif
 Return aCliente
-
 

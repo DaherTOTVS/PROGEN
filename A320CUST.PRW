@@ -4,13 +4,10 @@
 
 USER FUNCTION A320CUST()
     
-    
-     
       Local cProc := ParamIXB[3] // Define qual processamento sera realizado de acordo com a funcao
       Local cQry:=''
       Local cSD1:="cAliasSD1"
       Local nCosto:=ParamIXB[2]
-     
       Local cCod:=SB1->B1_COD //ParamIXB[1]
       
       IF cProc <> "MA320LCust"
@@ -18,9 +15,10 @@ USER FUNCTION A320CUST()
       endif
       cQry += "SELECT D1_TIPO, D1_COD,D1_TES, D1_LOCAL,D1_DTDIGIT,  D1_QUANT,D1_NUMSEQ,D1_CUSTO, D1_CUSTO2,D1_CUSTO3,D1_CUSTO4,D1_CUSTO5, D1_DOC, D1_SERIE, D1_ITEM, F4_ESTOQUE,F4_UPRC,F4_CODIGO "
 	cQRy += " FROM " + RetSqlName("SD1") + "  SD1, "+ RetSqlName("SF4") + "  SF4 "
-      cQry += " WHERE SD1.D1_FILIAL= '" + xFilial("SD1") + "' AND  SF4.F4_FILIAL= '" + xFilial("SF4") + "' AND  SD1.D_E_L_E_T_=' ' AND SD1.D1_COD = 'PR01C_3W-1700' " 
+      cQry += " WHERE SD1.D1_FILIAL= '" + xFilial("SD1") + "' AND  SF4.F4_FILIAL= '" + xFilial("SF4") + "' AND  SD1.D_E_L_E_T_=' ' AND SD1.D1_COD = '"+cCod+"' " 
       cQry += " AND SD1.D1_TES = SF4.F4_CODIGO AND SD1.D1_TIPO = 'N' "
-      cQry += " ORDER BY SD1.D1_DTDIGIT DESC" 
+      cQry += " ORDER BY SD1.R_E_C_N_O_ DESC " 
+      //cQry += " ORDER BY SD1.D1_DTDIGIT DESC" 
       cQry := ChangeQuery(cQry)
 
       dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQry),cSD1,.T.,.F.)

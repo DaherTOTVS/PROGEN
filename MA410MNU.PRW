@@ -159,19 +159,31 @@ Static Function fCarAcols(cPedido,ldatos)
     cQry := " SELECT        "             + CRLF
     cQry += "  C9_ITEM,       "           + CRLF
     cQry += "  C9_PRODUTO,    "           + CRLF
-    cQry += "  (SELECT B1_DESC FROM " + RetSQLName('SB1') + " SB1 WHERE SB1.D_E_L_E_T_ <> '*' AND B1_COD =   C9_PRODUTO  ) AS B1_DESC,     "              + CRLF
+    cQry += "  B1_DESC,     "             + CRLF
     cQry += "  C9_DATALIB,	    "         + CRLF
-    cQry += "  C9_NFISCAL,	    "         + CRLF
-    cQry += "  C9_SERIENF,      "         + CRLF
+    cQry += "  D2_DOC C9_NFISCAL,	    "         + CRLF
+    cQry += "  D2_SERIE C9_SERIENF,      "         + CRLF
     cQry += "  C9_BLEST,	  "	          + CRLF
     cQry += "  C9_BLCRED,	      "	      + CRLF
     cQry += "  C9_REMITO,	  "	          + CRLF
     cQry += "  C9_SERIREM,	     "	      + CRLF
     cQry += "  C9_ORDSEP,	  "           + CRLF
     cQry += "  C9_PEDIDO,	  "           + CRLF
-	cQry += "  C9_QTDLIB	  "           + CRLF
+    cQry += "  CASE  WHEN D2_QUANT IS NULL OR D2_QUANT = 0 THEN C9_QTDLIB ELSE D2_QUANT END AS C9_QTDLIB "           + CRLF
+
     cQry += "  FROM   " + RetSQLName('SC9') + " SC9 "      + CRLF
-    cQry += "  WHERE D_E_L_E_T_ <> '*'              "      + CRLF
+
+    cQry += "  INNER JOIN " + RetSQLName('SB1') + " SB1      "           + CRLF    
+    cQry += "  ON  B1_COD =   C9_PRODUTO "           + CRLF
+    cQry += "  LEFT JOIN " + RetSQLName('SD2') + " SD2 "           + CRLF
+    cQry += "  ON D2_PEDIDO=C9_PEDIDO "           + CRLF
+    cQry += "  AND D2_ITEMPV=C9_ITEM "           + CRLF
+    cQry += "  AND D2_SERIE='FVE' "           + CRLF
+    cQry += "  AND C9_REMITO=D2_REMITO "           + CRLF
+    cQry += "  AND SD2.D_E_L_E_T_ <> '*'   "           + CRLF    
+
+    cQry += "  WHERE SC9.D_E_L_E_T_ <> '*'              "      + CRLF
+    cQry += "  AND   SB1.D_E_L_E_T_ <> '*'              "      + CRLF
     cQry += "  AND C9_PEDIDO = '"+cPedido+"' 		"      + CRLF
  
    TCQuery cQry New Alias "QRY_SBM"

@@ -1,0 +1,208 @@
+#include "protheus.ch"
+#include "fwlibversion.ch"
+#include "totvs.ch"
+#include "msobject.ch"
+#include "totvs.framework.treports.integratedprovider.th"
+#include "tlpp-rest.th"
+#include "tlpp-core.th"
+// #include "backoffice.sv.fat.customerlist.ch"
+
+Static __LookUp	  := FwLibVersion() >= "20231121" as logical
+
+namespace totvs.protheus.customer.client.treportsintegratedprovider
+using namespace totvs.framework.treports.integratedprovider
+
+totvsFrameworkTReportsIntegratedProvider(active=.T., team="SIGAFAT", tables="SA1", name="Customizado", country="ALL", customTables="SA1")
+
+//-------------------------------------------------------------------
+/*/{Protheus.doc} customerlistSmartViewBusinessObject
+Classe para criação do Objeto de Negócio para Relação de Clientes 
+
+@author FAT/CRM
+@since 20/06/2023
+@version 1.0
+*/
+//-------------------------------------------------------------------  
+class customerlistSmartViewBusinessObject from IntegratedProvider
+
+    public method new() as object
+    public method getData() as object
+    public method getSchema() as object
+
+    protected data aFields      as array
+    protected data aStruct      as array
+    protected data cSelectLoc   as character
+    protected data cWhereLoc    as character
+	protected data cAliasTmpLoc as character
+    protected data ojItems      as json
+
+endclass
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} new
+Método de instância da classe
+ 
+@return object: self
+ 
+@author FAT/CRM
+@since 21/06/2023
+@version 1.0
+*/
+//-------------------------------------------------------------------   
+method new() class customerlistSmartViewBusinessObject 
+
+	_Super:new()
+    self:appendArea("Faturamento") 		//"Faturamento"
+    self:setDisplayName("Clientes new email")	//"Clientes"
+    self:setDescription("Relação de Clientes new")	//"Relação de Clientes"
+    self:setIsLookUp(.T.)  
+	self:cAliasTmpLoc 	:= ""
+	self:aFields        := {}
+
+return self
+ 
+//-------------------------------------------------------------------
+/*{Protheus.doc} getData
+Retorna os dados do objeto de negócio
+ 
+@param nPage, numérico, indica a página atual do relatório
+@param oFilter, objeto, contém o filtro do TReports
+ 
+@return object: self:oData
+ 
+@author FAT/CRM
+@since 12/04/2023
+@version 1.0
+*/
+//-------------------------------------------------------------------   
+method getData(nPage as numeric, oFilter as object) as object class customerlistSmartViewBusinessObject
+    
+    Local ojParams 	    := Nil  as json
+    Local oQuery 	    := Nil  as object
+    Local cQuery        := ""   as character
+    Local cAlias        := ""   as character
+    Local cFieldsQry	:= ""   as character
+    Local cRealName		:= ""   as character		
+    Local nX            := 0    as numeric
+    Local nParam        := 0    as numeric
+    Local nScan         := 0    as numeric
+    Local aPDFields     := {}   as array
+    Local lObfuscated   := .F.  as logical
+
+    Private FILIALDE	:= ""   as character
+    Private FILIALATE	:= ""   as character
+    Private CODDE		:= ""   as character
+    Private CODATE		:= ""   as character
+    Private LOJADE		:= ""   as character
+    Private LOJAATE		:= ""   as character
+
+    ojParams := oFilter:GetParameters()
+    FatSetValueMVPAR(ojParams,"") //metodo para retorno do json dos parametros
+    FreeObj(ojParams)//Elimina da memória a instância do objeto informado como parâmetro.
+
+    //Verifica se precisa fazer o tratamento para LGPD   
+    aPDFields   := FatGetfieldsLGPD(self:aFields, self:getCustomFields() )
+    lObfuscated := len( aPDFields ) > 0
+
+    cFieldsQry  := " SA1.A1_FILIAL, SA1.A1_COD, SA1.A1_LOJA, SA1.A1_NOME, SA1.A1_NREDUZ, SA1.A1_EST, SA1.A1_TIPO, SA1.A1_CGC, SA1.A1_DTCAD " + self:cSelectLoc
+
+	//Adiciona campos customizados (no array da estrutura)
+	FatInjCposPerson({}, @self:aStruct, @cFieldsQry, self:getCustomFields(), .T., .T., .T.)
+
+    cQuery  += "SELECT ? "
+    cQuery  += "FROM " + RetSqlName("SA1") + " SA1 WHERE "
+    cQuery  += "SA1.A1_FILIAL   >= ? AND SA1.A1_FILIAL <= ? "
+    cQuery  += "AND SA1.A1_COD  >= ? AND SA1.A1_COD    <= ? "
+    cQuery  += "AND SA1.A1_LOJA >= ? AND SA1.A1_LOJA   <= ? "
+    cQuery  += IIf( !Empty(self:cWhereLoc) , self:cWhereLoc, '')
+    cQuery  += "AND SA1.D_E_L_E_T_ = ' ' "
+    cQuery  += "ORDER BY SA1.A1_FILIAL, SA1.A1_COD, SA1.A1_LOJA "
+
+	nParam := 1
+
+	oQuery := FwExecStatement():New(cQuery)
+	oQuery:SetUnsafe(nParam++ , cFieldsQry)
+    oQuery:SetString(nParam++ , FILIALDE)
+    oQuery:SetString(nParam++ , FILIALATE)
+    oQuery:SetString(nParam++ , CODDE)
+    oQuery:SetString(nParam++ , CODATE)
+    oQuery:SetString(nParam++ , LOJADE)
+    oQuery:SetString(nParam++ , LOJAATE)
+
+	cAlias := oQuery:OpenAlias()
+	self:cAliasTmpLoc := cAlias
+	DbSelectArea(cAlias)
+
+    //Posiciona no registro inicial 
+    (cAlias)->(dbGoTop()) 
+
+    While !(cAlias)->(Eof())
+
+        self:ojItems := JsonObject():new()
+    
+			For nX := 1 To Len(self:aStruct)
+
+                cRealName := self:aStruct[nX][5]
+
+                If lObfuscated .And. (nScan := aScan(aPDFields, {|x| x[1] == self:aStruct[nX][5]})) > 0
+                    self:ojItems[self:aStruct[nX][1]] := aPDFields[nScan][2]
+                ElseIf UPPER(self:aStruct[nX][3]) == "DATE"
+                    self:ojItems[self:aStruct[nX][1]] := IIf(ValType((cAlias)->&(self:aStruct[nX][5])) == "C", totvs.framework.treports.date.stringToTimeStamp(&(cRealName)), totvs.framework.treports.date.dateToTimeStamp(&(cRealName)))
+                Else
+                    self:ojItems[self:aStruct[nX][1]] := &(cRealName)
+                EndIf
+
+			Next
+
+        self:processData(1) //Tratamento para commit localizado
+        self:oData:appendData(self:ojItems)
+    
+        (cAlias)->(DBSkip())
+
+    EndDo 
+
+    //Fechamento de tabelas e limpeza do objeto/variável
+    (cAlias)->(DBCloseArea())
+
+    aSize(aPDFields,    0)
+
+	oQuery:Destroy()
+	oQuery:= Nil
+	FreeObj(oQuery)
+
+return self:oData
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} getSchema
+Retorna a estrutura dos campos
+ 
+@return object: self:oSchema
+ 
+@author FAT/CRM
+@since 12/04/2023
+@version 1.0
+*/
+//-------------------------------------------------------------------   
+method getSchema() as object class customerlistSmartViewBusinessObject
+    Local nX := 0 as numeric
+
+    self:aFields := {"A1_FILIAL", "A1_COD", "A1_LOJA", "A1_NOME", "A1_NREDUZ", "A1_EST", "A1_TIPO", "A1_CGC", "A1_DTCAD", "A1_EMAIL"}
+    self:aStruct := FatTrGetStruct(self:aFields)
+
+    For nX := 1 To Len(self:aStruct)
+        self:addProperty(self:aStruct[nX][1], self:aStruct[nX][2], self:aStruct[nX][3], self:aStruct[nX][4], self:aStruct[nX][5])
+    Next nX
+
+    self:oSchema:addParameter("FILIALDE",   "Filial de:", "string", .F.) //Filial de:
+    self:oSchema:addParameter("FILIALATE",  "Filial até:", "string", .F.) //Filial até:
+    self:oSchema:addParameter("CODDE",      "Código de:", "string", .F.) //Código de:
+    self:oSchema:addParameter("CODATE",     "Código até:", "string", .F.) //Código até:
+    self:oSchema:addParameter("LOJADE",     "/Loja de:", "string", .F.) //Loja de:
+    self:oSchema:addParameter("LOJAATE",    "Loja até:", "string", .F.) //Loja até:
+
+    If __LookUp	//Validação para versão da Lib
+		self:setCustomURL("CODDE",  "/api/framework/v1/genericLookupService/smartview/SA1", 2)
+		self:setCustomURL("CODATE", "/api/framework/v1/genericLookupService/smartview/SA1", 2)
+	EndIf
+
+return self:oSchema
