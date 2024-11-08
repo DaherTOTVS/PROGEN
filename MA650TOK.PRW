@@ -1,4 +1,5 @@
 #Include "Totvs.Ch"
+#Include "TopConn.ch"
 
 /*/{Protheus.doc} MA650TOK
 VALIDA EL SALDOS DE LA ESTRCUTURA DE PRODUCTO DE LA ORDENE DE PRODUCTION
@@ -14,10 +15,9 @@ User Function MA650TOK()
 Local oDlg
 Local oLbx1
 Local oLbx2
-Local oVerd	   := LoadBitmap( GetResoufrces(), "ENABLE"  )
-Local oVerm	   := LoadBitmap( GetResources(), "DISABLE" )
-Local oAzul	   := LoadBitmap( GetResources(), "BR_AZUL" )
-
+Local oVerd	   := LoadBitmap( GetResources(), "ENABLE"  )
+Local oVerm	   := LoadBitmap( GetResources() , "DISABLE" )
+Local oAzul	   := LoadBitmap( GetResources() , "BR_AZUL" )
 Local aAreaAnt := GetArea()
 Local aSaldos  := {}
 Local aSldPrd  := {}
@@ -28,6 +28,21 @@ Local nBase    := 0         // Modificado Juan Pablo 07.03.2024
 Local aRetorOpc:= {}        // Juan Pablo 31.03.2023
 Local lRet     := .T.
 Local nX
+Local _calias  :="Qry11"    // Juan Pablo Astorga 18.09.2024
+Local _cQuery  := ""
+Local lMod     := .F.
+
+_cQuery	:= " SELECT * FROM "+RetSqlname("SG2")+ " Where "
+_cQuery	+= " D_E_L_E_T_ <>'*' AND G2_CODIGO = '"+M->C2_ROTEIRO+"' AND G2_PRODUTO = '"+M->C2_PRODUTO+"' "
+_cQuery += " AND G2_DTFIM <>'' "
+dbUseArea( .T., 'TOPCONN', TCGENQRY(,,_cQuery), _calias, .F., .T.)
+if (_calias)->(!EOF())
+	MsgAlert("El procedimiento tiene fecha de vencimiento ", "Orden de Produccion")
+    lRet:=.F.
+Else
+    lRet:=.T.
+EndIF
+(_calias)->(DbcloseArea())
 
 // Modificado 12.06.2024 Juan Pablo Astorga
 IF ValType(aSav650[01])=="C"               
@@ -39,6 +54,7 @@ SG1->(dbSetOrder(6))        // Juan Pablo 31.03.2023
 //SG1->(dbSetOrder(1))
 If SG1->(MsSeek(FWxFilial("SG1")+M->C2_PRODUTO+M->C2_REVISAO))
     While !SG1->(Eof()) .And. FWxFilial("SG1")+M->C2_PRODUTO+M->C2_REVISAO == SG1->(G1_FILIAL+G1_COD+G1_REVINI)
+        
         // Modificado Juan Pablo 07.03.2024
         if Posicione("SB1",1,xFilial("SB1")+M->C2_PRODUTO,"B1_QB") = 0
             nBase   := 1
@@ -47,6 +63,7 @@ If SG1->(MsSeek(FWxFilial("SG1")+M->C2_PRODUTO+M->C2_REVISAO))
         EndIf
         // Modificado Juan Pablo 07.03.2024
         If Left(SG1->G1_COMP,3) <> "MOD"
+            lMod := .T.
             SB1->(dbSeek(FWxFilial("SB1")+SG1->G1_COMP))
             If Empty(SG1->G1_GROPC)
                aAdd( aSG1, { 1, SG1->G1_COMP, AllTrim(SB1->B1_DESC),SB1->B1_UM,If(!Empty(SG1->G1_XBODEGA),SG1->G1_XBODEGA,SB1->B1_LOCPAD), (SG1->G1_QUANT/nBase)*M->C2_QUANT, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }  )
@@ -63,95 +80,94 @@ If SG1->(MsSeek(FWxFilial("SG1")+M->C2_PRODUTO+M->C2_REVISAO))
         EndIf
         SG1->(dbSkip())
     EndDo
-//EndIf
 
-If Len(aSG1) > 0
-    For nX := 1 To Len(aSG1)
-        // mv_par02 - Considera saldo apenas Local Padrao ? 1-sim  2-nao   
-        If  aSav650[02] == 1   // Modificado 30.04.2024 Juan Pablo Astorga - mv_par02 == 1
-            nSaldo := RetSaldo(aSG1[nX,2],M->C2_LOCAL,M->C2_LOCAL,@aSG1[nX],@aSaldos)
-        Else
-	        // mv_par03 - Almoxarifado De (Usado p/compor o estoque atual)
-	        // mv_par04 - Almoxarifado Ate 
-            nSaldo := RetSaldo(aSG1[nX,2],aSav650[03],aSav650[04],@aSG1[nX],@aSaldos)  // Modificado 30.04.2024 Juan Pablo Astorga - nSaldo := RetSaldo(aSG1[nX,2],mv_par03,mv_par04,@aSG1[nX],@aSaldos)
-        EndIf
-        If aScan( aRetorOpc , { |x| Left(x[1],nTamPrd) == M->C2_PRODUTO+aSG1[nX,2] }) > 0
-            aSG1[nX,1] := If(nSaldo >= aSG1[nX,6], 1, 2)
-            If lRet .And. nSaldo < aSG1[nX,6]
-                lRet := .F.
+    If Len(aSG1) > 0
+        For nX := 1 To Len(aSG1)
+            // mv_par02 - Considera saldo apenas Local Padrao ? 1-sim  2-nao   
+            If  aSav650[02] == 1   // Modificado 30.04.2024 Juan Pablo Astorga - mv_par02 == 1
+                nSaldo := RetSaldo(aSG1[nX,2],M->C2_LOCAL,M->C2_LOCAL,@aSG1[nX],@aSaldos)
+            Else
+                // mv_par03 - Almoxarifado De (Usado p/compor o estoque atual)
+                // mv_par04 - Almoxarifado Ate 
+                nSaldo := RetSaldo(aSG1[nX,2],aSav650[03],aSav650[04],@aSG1[nX],@aSaldos)  // Modificado 30.04.2024 Juan Pablo Astorga - nSaldo := RetSaldo(aSG1[nX,2],mv_par03,mv_par04,@aSG1[nX],@aSaldos)
             EndIf
-        Else
-            aSG1[nX,1] := If(nSaldo >= aSG1[nX,6], 1, 2)
-        EndIf
-    Next nX
-EndIf
-
-If lRet
-    // Carrega a ListBox 2 com os saldos do primeiro produto posicionado
-    For nX := 1 To Len(aSaldos)
-        If aSaldos[nX,1] == aSG1[1,2]
-            aAdd( aSldPrd , aSaldos[nX] )
-        EndIf
-    Next nX
-    If Len(aSldPrd) == 0
-        aAdd( aSldPrd, { " ", " ", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } )
+            If aScan( aRetorOpc , { |x| Left(x[1],nTamPrd) == M->C2_PRODUTO+aSG1[nX,2] }) > 0
+                aSG1[nX,1] := If(nSaldo >= aSG1[nX,6], 1, 2)
+                If lRet .And. nSaldo < aSG1[nX,6]
+                    lRet := .F.
+                EndIf
+            Else
+                aSG1[nX,1] := If(nSaldo >= aSG1[nX,6], 1, 2)
+            EndIf
+        Next nX
     EndIf
 
-    cCadastro := "Saldos Indisponible"
-    Define MsDialog oDlg Title cCadastro Pixel From 0,0 To 500,1000
+    If lRet .AND. lMod
+        // Carrega a ListBox 2 com os saldos do primeiro produto posicionado
+        For nX := 1 To Len(aSaldos)
+            If aSaldos[nX,1] == aSG1[1,2]
+                aAdd( aSldPrd , aSaldos[nX] )
+            EndIf
+        Next nX
+        If Len(aSldPrd) == 0
+            aAdd( aSldPrd, { " ", " ", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } )
+        EndIf
 
-	@  33,1  ListBox oLbx1 Fields Header "",SG1->(RetTiTle("G1_COMP")),SB1->(RetTitle("B1_DESC")),SB1->(RetTitle("B1_UM")), SG1->(RetTitle("G1_LOCCONS")) ,"Qtd. OP","Sld Dispon.", SB2->(RetTitle("B2_QATU")) ,SB2->(RetTitle("B2_RESERVA")),;
-    SB2->(RetTitle("B2_QEMP")),SB2->(RetTitle("B2_QACLASS")),SB2->(RetTitle("B2_QEMPSA")),SB2->(RetTitle("B2_QEMPPRJ")),SB2->(RetTitle("B2_SALPEDI")),SB2->(RetTitle("B2_QTNP")),SB2->(RetTitle("B2_QNPT")),SB2->(RetTitle("B2_QEMPPRE")) ;
-    Size 500,100 Of oDlg Pixel 
+        cCadastro := "Saldos Indisponible"
+        Define MsDialog oDlg Title cCadastro Pixel From 0,0 To 500,1000
 
-    oLbx1:SetArray(aSG1)
-	oLbx1:aColSizes := { 5,15,40,5,10,10,10,10,10,10,10,10,10,10,10,10 }
-    oLbx1:bChange   := { || RetArmaz(aSG1[oLbx1:nAt,02],aSaldos,@oLbx2,aSG1[oLbx1:nAt,05])  }
-	oLbx1:bLine     := { || {	If(aSG1[oLbx1:nAt,01]==1,oVerd,If(aSG1[oLbx1:nAt,01]==2,oVerm,oAzul))    ,;
-                                aSG1[oLbx1:nAt,02]										        ,;
-                                aSG1[oLbx1:nAt,03]												,;
-                                aSG1[oLbx1:nAt,04]												,;
-                                aSG1[oLbx1:nAt,05]												,;
-                                Transform( aSG1[oLbx1:nAt,06],AllTrim(X3Picture("B2_QATU")) )	,;
-                                Transform( Posicione("SB2",1,xFilial("SB2")+aSG1[oLbx1:nAt,02]+aSG1[oLbx1:nAt,05],"B2_QATU")-Posicione("SB2",1,xFilial("SB2")+aSG1[oLbx1:nAt,02]+aSG1[oLbx1:nAt,05],"B2_QEMP"),AllTrim(X3Picture("B2_QATU")) )	,;  // 2 Juan Pablo Astorga 31.03.2023 - B2_FILIAL+B2_COD+B2_LOCAL                                                                                                                                       
-                                Transform( Posicione("SB2",1,xFilial("SB2")+aSG1[oLbx1:nAt,02]+aSG1[oLbx1:nAt,05],"B2_QATU"),AllTrim(X3Picture("B2_QATU")) )	,;  // 3 Juan Pablo Astorga 31.03.2023 - B2_FILIAL+B2_COD+B2_LOCAL                                                                                                                                       
-                                Transform( Posicione("SB2",1,xFilial("SB2")+aSG1[oLbx1:nAt,02]+aSG1[oLbx1:nAt,05],"B2_RESERVA"),AllTrim(X3Picture("B2_RESERVA")))	,;  // 4 Juan Pablo Astorga 31.03.2023 - B2_FILIAL+B2_COD+B2_LOCAL                                                                                                                                       
-                                Transform( Posicione("SB2",1,xFilial("SB2")+aSG1[oLbx1:nAt,02]+aSG1[oLbx1:nAt,05],"B2_QEMP"),AllTrim(X3Picture("B2_QEMP")) )   ,;          // Juan Pablo Astorga 03.04.2023
-                                Transform( aSG1[oLbx1:nAt,10],AllTrim(X3Picture("B2_QACLASS")))	,;
-                                Transform( aSG1[oLbx1:nAt,11],AllTrim(X3Picture("B2_QEMPSA")) )	,;
-                                Transform( aSG1[oLbx1:nAt,12],AllTrim(X3Picture("B2_QEMPPRJ")))	,;
-                                Transform( aSG1[oLbx1:nAt,13],AllTrim(X3Picture("B2_SALPEDI")))	,;
-                                Transform( aSG1[oLbx1:nAt,14],AllTrim(X3Picture("B2_QTNP")) )	,;
-                                Transform( aSG1[oLbx1:nAt,15],AllTrim(X3Picture("B2_QNPT")) )	,;
-                                Transform( aSG1[oLbx1:nAt,16],AllTrim(X3Picture("B2_QEMPPRE")))	}}
-                                //  Transform( aSG1[oLbx1:nAt,07],AllTrim(X3Picture("B2_QATU")) )	,; // 2
-                                //  Transform( aSG1[oLbx1:nAt,17],AllTrim(X3Picture("B2_QATU")) )	,; // 3
-                                //  Transform( aSG1[oLbx1:nAt,08],AllTrim(X3Picture("B2_RESERVA")))	,; // 4
-                                //  Transform( aSG1[oLbx1:nAt,09],AllTrim(X3Picture("B2_QEMP")) )   ,; // 5
+        @  33,1  ListBox oLbx1 Fields Header "",SG1->(RetTiTle("G1_COMP")),SB1->(RetTitle("B1_DESC")),SB1->(RetTitle("B1_UM")), SG1->(RetTitle("G1_LOCCONS")) ,"Qtd. OP","Sld Dispon.", SB2->(RetTitle("B2_QATU")) ,SB2->(RetTitle("B2_RESERVA")),;
+        SB2->(RetTitle("B2_QEMP")),SB2->(RetTitle("B2_QACLASS")),SB2->(RetTitle("B2_QEMPSA")),SB2->(RetTitle("B2_QEMPPRJ")),SB2->(RetTitle("B2_SALPEDI")),SB2->(RetTitle("B2_QTNP")),SB2->(RetTitle("B2_QNPT")),SB2->(RetTitle("B2_QEMPPRE")) ;
+        Size 500,100 Of oDlg Pixel 
 
-	@  140,1  ListBox oLbx2 Fields Header SB2->(RetTitle("B2_LOCAL")), "Sld Dispon.",SB2->(RetTitle("B2_QATU")),SB2->(RetTitle("B2_RESERVA")),;
-    SB2->(RetTitle("B2_QEMP")),SB2->(RetTitle("B2_QACLASS")),SB2->(RetTitle("B2_QEMPSA")),SB2->(RetTitle("B2_QEMPPRJ")),SB2->(RetTitle("B2_SALPEDI")),SB2->(RetTitle("B2_QTNP")),SB2->(RetTitle("B2_QNPT")),SB2->(RetTitle("B2_QEMPPRE")) ;
-    Size 500,100 Of oDlg Pixel 
+        oLbx1:SetArray(aSG1)
+        oLbx1:aColSizes := { 5,15,40,5,10,10,10,10,10,10,10,10,10,10,10,10 }
+        oLbx1:bChange   := { || RetArmaz(aSG1[oLbx1:nAt,02],aSaldos,@oLbx2,aSG1[oLbx1:nAt,05])  }
+        oLbx1:bLine     := { || {	If(aSG1[oLbx1:nAt,01]==1,oVerd,If(aSG1[oLbx1:nAt,01]==2,oVerm,oAzul))    ,;
+                                    aSG1[oLbx1:nAt,02]										        ,;
+                                    aSG1[oLbx1:nAt,03]												,;
+                                    aSG1[oLbx1:nAt,04]												,;
+                                    aSG1[oLbx1:nAt,05]												,;
+                                    Transform( aSG1[oLbx1:nAt,06],AllTrim(X3Picture("B2_QATU")) )	,;
+                                    Transform( Posicione("SB2",1,xFilial("SB2")+aSG1[oLbx1:nAt,02]+aSG1[oLbx1:nAt,05],"B2_QATU")-Posicione("SB2",1,xFilial("SB2")+aSG1[oLbx1:nAt,02]+aSG1[oLbx1:nAt,05],"B2_QEMP"),AllTrim(X3Picture("B2_QATU")) )	,;  // 2 Juan Pablo Astorga 31.03.2023 - B2_FILIAL+B2_COD+B2_LOCAL                                                                                                                                       
+                                    Transform( Posicione("SB2",1,xFilial("SB2")+aSG1[oLbx1:nAt,02]+aSG1[oLbx1:nAt,05],"B2_QATU"),AllTrim(X3Picture("B2_QATU")) )	,;  // 3 Juan Pablo Astorga 31.03.2023 - B2_FILIAL+B2_COD+B2_LOCAL                                                                                                                                       
+                                    Transform( Posicione("SB2",1,xFilial("SB2")+aSG1[oLbx1:nAt,02]+aSG1[oLbx1:nAt,05],"B2_RESERVA"),AllTrim(X3Picture("B2_RESERVA")))	,;  // 4 Juan Pablo Astorga 31.03.2023 - B2_FILIAL+B2_COD+B2_LOCAL                                                                                                                                       
+                                    Transform( Posicione("SB2",1,xFilial("SB2")+aSG1[oLbx1:nAt,02]+aSG1[oLbx1:nAt,05],"B2_QEMP"),AllTrim(X3Picture("B2_QEMP")) )   ,;          // Juan Pablo Astorga 03.04.2023
+                                    Transform( aSG1[oLbx1:nAt,10],AllTrim(X3Picture("B2_QACLASS")))	,;
+                                    Transform( aSG1[oLbx1:nAt,11],AllTrim(X3Picture("B2_QEMPSA")) )	,;
+                                    Transform( aSG1[oLbx1:nAt,12],AllTrim(X3Picture("B2_QEMPPRJ")))	,;
+                                    Transform( aSG1[oLbx1:nAt,13],AllTrim(X3Picture("B2_SALPEDI")))	,;
+                                    Transform( aSG1[oLbx1:nAt,14],AllTrim(X3Picture("B2_QTNP")) )	,;
+                                    Transform( aSG1[oLbx1:nAt,15],AllTrim(X3Picture("B2_QNPT")) )	,;
+                                    Transform( aSG1[oLbx1:nAt,16],AllTrim(X3Picture("B2_QEMPPRE")))	}}
+                                    //  Transform( aSG1[oLbx1:nAt,07],AllTrim(X3Picture("B2_QATU")) )	,; // 2
+                                    //  Transform( aSG1[oLbx1:nAt,17],AllTrim(X3Picture("B2_QATU")) )	,; // 3
+                                    //  Transform( aSG1[oLbx1:nAt,08],AllTrim(X3Picture("B2_RESERVA")))	,; // 4
+                                    //  Transform( aSG1[oLbx1:nAt,09],AllTrim(X3Picture("B2_QEMP")) )   ,; // 5
 
-    oLbx2:SetArray(aSldPrd)
-	oLbx2:aColSizes := { 15,15,15,15,15,15,15,15,15,15,15,15,15,15,15 }
-	oLbx2:bLine   := { || {	aSldPrd[oLbx2:nAt,02]										        ,;
-                            Transform( aSldPrd[oLbx2:nAt,13],AllTrim(X3Picture("B2_QATU")) )	,;
-							Transform( aSldPrd[oLbx2:nAt,03],AllTrim(X3Picture("B2_QATU")) )	,;
-							Transform( aSldPrd[oLbx2:nAt,04],AllTrim(X3Picture("B2_RESERVA")))	,;
-							Transform( aSldPrd[oLbx2:nAt,05],AllTrim(X3Picture("B2_QEMP")) )    ,;
-							Transform( aSldPrd[oLbx2:nAt,06],AllTrim(X3Picture("B2_QACLASS")))	,;
-							Transform( aSldPrd[oLbx2:nAt,07],AllTrim(X3Picture("B2_QEMPSA")) )	,;
-							Transform( aSldPrd[oLbx2:nAt,08],AllTrim(X3Picture("B2_QEMPPRJ")))	,;
-							Transform( aSldPrd[oLbx2:nAt,09],AllTrim(X3Picture("B2_SALPEDI")))	,;
-							Transform( aSldPrd[oLbx2:nAt,10],AllTrim(X3Picture("B2_QTNP")) )	,;
-							Transform( aSldPrd[oLbx2:nAt,11],AllTrim(X3Picture("B2_QNPT")) )	,;
-							Transform( aSldPrd[oLbx2:nAt,12],AllTrim(X3Picture("B2_QEMPPRE")))	}}
+        @  140,1  ListBox oLbx2 Fields Header SB2->(RetTitle("B2_LOCAL")), "Sld Dispon.",SB2->(RetTitle("B2_QATU")),SB2->(RetTitle("B2_RESERVA")),;
+        SB2->(RetTitle("B2_QEMP")),SB2->(RetTitle("B2_QACLASS")),SB2->(RetTitle("B2_QEMPSA")),SB2->(RetTitle("B2_QEMPPRJ")),SB2->(RetTitle("B2_SALPEDI")),SB2->(RetTitle("B2_QTNP")),SB2->(RetTitle("B2_QNPT")),SB2->(RetTitle("B2_QEMPPRE")) ;
+        Size 500,100 Of oDlg Pixel 
 
-    Activate MsDialog oDlg Center On Init EnchoiceBar(oDlg,{||oDlg:End()},{||oDlg:End()})
+        oLbx2:SetArray(aSldPrd)
+        oLbx2:aColSizes := { 15,15,15,15,15,15,15,15,15,15,15,15,15,15,15 }
+        oLbx2:bLine   := { || {	aSldPrd[oLbx2:nAt,02]										        ,;
+                                Transform( aSldPrd[oLbx2:nAt,13],AllTrim(X3Picture("B2_QATU")) )	,;
+                                Transform( aSldPrd[oLbx2:nAt,03],AllTrim(X3Picture("B2_QATU")) )	,;
+                                Transform( aSldPrd[oLbx2:nAt,04],AllTrim(X3Picture("B2_RESERVA")))	,;
+                                Transform( aSldPrd[oLbx2:nAt,05],AllTrim(X3Picture("B2_QEMP")) )    ,;
+                                Transform( aSldPrd[oLbx2:nAt,06],AllTrim(X3Picture("B2_QACLASS")))	,;
+                                Transform( aSldPrd[oLbx2:nAt,07],AllTrim(X3Picture("B2_QEMPSA")) )	,;
+                                Transform( aSldPrd[oLbx2:nAt,08],AllTrim(X3Picture("B2_QEMPPRJ")))	,;
+                                Transform( aSldPrd[oLbx2:nAt,09],AllTrim(X3Picture("B2_SALPEDI")))	,;
+                                Transform( aSldPrd[oLbx2:nAt,10],AllTrim(X3Picture("B2_QTNP")) )	,;
+                                Transform( aSldPrd[oLbx2:nAt,11],AllTrim(X3Picture("B2_QNPT")) )	,;
+                                Transform( aSldPrd[oLbx2:nAt,12],AllTrim(X3Picture("B2_QEMPPRE")))	}}
 
-    lRet := FWAlertNoYes("¿Desea generar la orden de producción de todos modos?","Aviso")
-  EndIf
+        Activate MsDialog oDlg Center On Init EnchoiceBar(oDlg,{||oDlg:End()},{||oDlg:End()})
+
+        lRet := FWAlertNoYes("¿Desea generar la orden de producción de todos modos?","Aviso")
+    EndIf
 EndIf
 
 cCadastro := cCadAnt

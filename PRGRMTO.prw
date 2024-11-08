@@ -568,13 +568,22 @@ Static Function AcmDtaiPR()
 	if MV_PAR01 == 1 .AND. MV_PAR02==1
 		While (!((cQueryx)->(EOF())) .and. MV_PAR01 == 1)
 
-			condPedido		= (cQueryx)->D2_PEDIDO
-			condProduto		= (cQueryx)->D2_COD
-			Cremito			= (cQueryx)->D2_DOC
-			Ctienda 		= (cQueryx)->D2_LOJA
-			Cclientex 		= (cQueryx)->C6_CLI
-			cRemision 		= (cQueryx)->D2_DOC
-			cNumseq 		= (cQueryx)->D2_NUMSEQ
+			condPedido		:= (cQueryx)->D2_PEDIDO
+			condProduto		:= (cQueryx)->D2_COD
+			Cremito			:= (cQueryx)->D2_DOC
+			Ctienda 		:= (cQueryx)->D2_LOJA
+			Cclientex 		:= (cQueryx)->C6_CLI
+			cRemision 		:= (cQueryx)->D2_DOC
+			cNumseq 		:= (cQueryx)->D2_NUMSEQ
+			cItem 			:= (cQueryx)->D2_ITEM
+
+
+			aRet := validRDV(Cremito,'R',cItem,Cclientex,Ctienda,(cQueryx)->D2_QUANT)
+			cCant := aRet[2]
+			If !aRet[1]
+				(cQueryx)->(dbSkip())
+				Loop
+			EndIf
 
 			LokforQry(condPedido,condProduto)
 			Cresultlook = lokforQ->C6_NUMOP
@@ -582,7 +591,7 @@ Static Function AcmDtaiPR()
 
 			//Si el resultado es vacio, es decir que no hay op, el codigo muestra los productos normales o sin estructura
 			if Empty(Cresultlook)  
-				cCanIMP	:= cValToChar((cQueryx)->D2_QUANT)  //change
+				cCanIMP	:= cValToChar(cCant)  //change
 				cSeqRem	:= cValToChar((cQueryx)->D2_NUMSEQ)  //change
 				nLinea += 0.5;
 
@@ -790,13 +799,21 @@ Static Function AcmDtaiPR()
 		// Cuando la opcion seleccionada, en los parámetros o preguntas iniciales, es 2; (Remision con valores) se ejecuta este código 
 		While (!((cQueryx)->(EOF())) .and. MV_PAR01 == 2)
 
-			condPedido		= (cQueryx)->D2_PEDIDO
-			condProduto		= (cQueryx)->D2_COD
-			Cremito			= (cQueryx)->D2_DOC
-			Ctienda 		= (cQueryx)->D2_LOJA
-			Cclientex 		= (cQueryx)->C6_CLI
-			cRemision 		= (cQueryx)->D2_DOC
-			cNumseq 		= (cQueryx)->D2_NUMSEQ
+			condPedido		:= (cQueryx)->D2_PEDIDO
+			condProduto		:= (cQueryx)->D2_COD
+			Cremito			:= (cQueryx)->D2_DOC
+			Ctienda 		:= (cQueryx)->D2_LOJA
+			Cclientex 		:= (cQueryx)->C6_CLI
+			cRemision 		:= (cQueryx)->D2_DOC
+			cNumseq 		:= (cQueryx)->D2_NUMSEQ
+			cItem 			:= (cQueryx)->D2_ITEM
+
+			aRet := validRDV(Cremito,'R',cItem,Cclientex,Ctienda,(cQueryx)->D2_QUANT)
+			cCant := aRet[2]
+			If !aRet[1]
+				(cQueryx)->(dbSkip())
+				Loop
+			EndIf
 
 			LokforQry(condPedido,condProduto)
 			Cresultlook = lokforQ->C6_NUMOP
@@ -804,7 +821,7 @@ Static Function AcmDtaiPR()
 
 			//Si el resultado es vacio, es decir que no hay op, el codigo muestra los productos normales o sin estructura
 			if Empty(Cresultlook)  
-				cCanIMP	:= cValToChar((cQueryx)->D2_QUANT)
+				cCanIMP	:= cValToChar(cCant)
 				cSeqRem	:= cValToChar((cQueryx)->D2_NUMSEQ)  //change
 				nPrecioTotal = nPrecioTotal + (cQueryx)->D2_TOTAL
 				nLinea += 0.5;
@@ -1037,10 +1054,17 @@ Static Function AcmDtaiPR()
 			Ctienda 		= (cQueryx)->D2_LOJA
 			Cclientex 		= (cQueryx)->C6_CLI
 			cRemision 		= (cQueryx)->D2_DOC
+			cItem 			= (cQueryx)->D2_ITEM
 
+			aRet := validRDV(Cremito,'R',cItem,Cclientex,Ctienda,(cQueryx)->D2_QUANT)
+			cCant := aRet[2]
+			If !aRet[1]
+				(cQueryx)->(dbSkip())
+				Loop
+			EndIf
 			//Si el resultado es vacio, es decir que no hay op, el codigo muestra los productos normales o sin estructura
 			// if Empty(Cresultlook)  
-			cCanIMP	:= cValToChar((cQueryx)->D2_QUANT)
+			cCanIMP	:= cValToChar(cCant)
 			cSeqRem	:= cValToChar((cQueryx)->D2_NUMSEQ)  //change
 			nLinea += 0.5;
 
@@ -1143,9 +1167,17 @@ Static Function AcmDtaiPR()
 			Ctienda 		= (cQueryx)->D2_LOJA
 			Cclientex 		= (cQueryx)->C6_CLI
 			cRemision 		= (cQueryx)->D2_DOC
+			cItem 			= (cQueryx)->D2_ITEM
+
+			aRet := validRDV(Cremito,'R',cItem,Cclientex,Ctienda,(cQueryx)->D2_QUANT)
+			cCant := aRet[2]
+			If !aRet[1]
+				(cQueryx)->(dbSkip())
+				Loop
+			EndIf
 
  
-				cCanIMP	:= cValToChar((cQueryx)->D2_QUANT)
+				cCanIMP	:= cValToChar(cCant)
 				cSeqRem	:= cValToChar((cQueryx)->D2_NUMSEQ)  //change
 				nPrecioTotal = nPrecioTotal + (cQueryx)->D2_TOTAL
 				nLinea += 0.5;
@@ -1425,7 +1457,7 @@ Local cQrylotser := ""
 	Endif
 
 		cQrylotser:=" SELECT  " + CRLF
-		cQrylotser+=" D2_PEDIDO, D2_COD, B1_DESC, D2_QUANT, D2_SERIE, D2_LOTECTL, D2_DOC, C6_SERIE, C6_LOCAL, C6_CLI, C6_NUMSERI, D2_LOTECTL, D2_NUMLOTE, D2_NUMSERI, D2_LOJA, " + CRLF
+		cQrylotser+=" D2_PEDIDO, D2_COD, D2_ITEM, B1_DESC, D2_QUANT, D2_SERIE, D2_LOTECTL, D2_DOC, C6_SERIE, C6_LOCAL, C6_CLI, C6_NUMSERI, D2_LOTECTL, D2_NUMLOTE, D2_NUMSERI, D2_LOJA, " + CRLF
 		cQrylotser+=" ISNULL(CAST(CAST(B1_XDESCRI AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS XDESCRI, C6_CODINF, D2_TOTAL, C6_DESCRI, " + CRLF
 		cQrylotser+=" ISNULL(CAST(CAST(C6_VDOBS AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS C6VDOBS , D2_NUMSEQ" + CRLF
 		//cQrylotser+=" ISNULL(CAST(CAST(B.C6_INFAD AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS INFAD " + CRLF
@@ -1454,7 +1486,7 @@ Local cQestructura	:= ""
 	Endif
 
 		cQestructura:=" SELECT  " + CRLF
-		cQestructura+=" A.D2_SERIE, D2_DOC, D2_COD, B.C6_NUMOP, B.C6_ITEMOP,C2_TPOP, C2_NUM, C2_ITEM, B.C6_SERIE, B.C6_NUMSERI, A.D2_LOTECTL, B.C6_LOCAL, B.C6_VALOR, B.C6_DESCRI, " + CRLF
+		cQestructura+=" A.D2_SERIE, D2_DOC, D2_COD, D2_ITEM, B.C6_NUMOP, B.C6_ITEMOP,C2_TPOP, C2_NUM, C2_ITEM, B.C6_SERIE, B.C6_NUMSERI, A.D2_LOTECTL, B.C6_LOCAL, B.C6_VALOR, B.C6_DESCRI, " + CRLF
 		cQestructura+=" C2_SEQUEN, C2_PRODUTO, D.D4_COD, (D4_QTDEORI- D4_QUANT) QTD_ANTERIOR, E.B1_DESC, D.D4_LOTECTL, D.D4_OP, B.C6_CODINF, A.D2_QUANT, B.C6_PRCVEN, A.D2_TOTAL,  " + CRLF
 		cQestructura+=" G.BH_CODCOMP, G.BH_QUANT, (A.D2_QUANT*G.BH_QUANT)  QTD_PROD,  " + CRLF
 		cQestructura+=" ISNULL(CAST(CAST(E.B1_XDESCRI AS VARBINARY(8000)) AS VARCHAR(8000)),'') AS XDESCRI, " + CRLF
@@ -1833,3 +1865,39 @@ Static Function ImpMemo(oPrinter,aTexto, nLinMemo, nColumna, nAncho, nAlto, oFon
     	oPrinter:SayAlign(nLinTmp, nColumna, aTexto[nActual], oFont1, nAncho, nAlto,CLR_BLACK, nAlinV, nAlinH )
     Next
 Return nLinLoc
+
+
+static function validRDV(cDoc,cSerie,CItem,cCliente,cLoja,cQuant)
+
+	Local aArea := getArea()
+	Local lRet  := .T.
+	Local _cAQuery := ""
+
+	If ALLTRIM(cSerie) == 'R'
+		_cAQuery := " SELECT D1_DOC,D1_SERIE,D1_QUANT FROM  "+RetSQLName('SD1')+"  SD1 "
+		_cAQuery += " WHERE D_E_L_E_T_ <> '*' "
+		_cAQuery += " AND D1_FILIAL =  '"+xFilial("SD1")+"' "
+		
+		_cAQuery += " AND D1_NFORI =  '"+cDoc+"' "
+		_cAQuery += " AND D1_SERIORI =  '"+cSerie+"' "
+		_cAQuery += " AND D1_ITEMORI =  '"+CItem+"' "
+		_cAQuery += " AND D1_FORNECE =  '"+cCliente+"' "
+		_cAQuery += " AND D1_LOJA =  '"+cLoja+"' "
+		_cAQuery += " AND D1_SERIE =  'RDV' "
+		TcQuery _cAQuery New Alias "_aQRY"
+		dbSelectArea("_aQRY")
+		If !_aQRY->(EOF())
+
+			If _aQRY->D1_QUANT >= cQuant
+				lRet := .F.
+			ElseIf _aQRY->D1_QUANT < cQuant
+				cQuant := cQuant - _aQRY->D1_QUANT
+			EndIf
+		EndIf
+		_aQRY->(dbCloseArea())
+	EndIf
+
+
+
+	RestArea( aArea )
+Return ({lRet,cQuant})

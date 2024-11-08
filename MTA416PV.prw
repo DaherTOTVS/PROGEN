@@ -22,7 +22,9 @@ User Function MTA416PV()
 	Local nAux			:= PARAMIXB
 	Local nPosCusto	:= aScan(_aHeader,{|x| AllTrim(x[2])=="C6_CC" 	   })    // Juan Pablo 14.02.2024
 	Local nPosItemC	:= aScan(_aHeader,{|x| AllTrim(x[2])=="C6_ITEMCTA" })    // Juan Pablo 14.02.2024
-	
+	Local nPosProd	:= aScan(_aHeader,{|x| AllTrim(x[2])=="C6_PRODUTO" 	   })    // Juan Pablo 14.02.2024
+	Local nCC   := ""
+
     M->C5_XNOME		:= Posicione("SA1",1,xFilial("SA1")+M->C5_CLIENTE+M->C5_LOJACLI,"A1_NOME")
 	M->C5_XNCLIEN	:= Posicione("SA1",1,xFilial("SA1")+M->C5_CLIENT+M->C5_LOJAENT,"A1_NOME")   
 	M->C5_XEMAIL	:= Posicione("SA1",1,xFilial("SA1")+M->C5_CLIENTE+M->C5_LOJACLI,"A1_EMAIL")
@@ -42,6 +44,16 @@ User Function MTA416PV()
 	M->C5_NATUREZ	:= SCJ->CJ_XNATURE
 	// _aCols[nAux][nPosCusto] := SCK->CK_XCUSTO 	 // Juan Pablo 14.02.2024
 	// _aCols[nAux][nPosItemC] := SCK->CK_XITEMC    // Juan Pablo 14.02.2024
-	//("SFP")->(DBCloseArea())	
+	//("SFP")->(DBCloseArea())
+
+	IF alltrim(M->C5_NATUREZ)$"0300102/0300113/0300114"
+		nCC := Posicione("SA1",1,xFilial("SA1")+M->C5_CLIENTE+M->C5_LOJACLI ,"A1_XCC")
+		_aCols[nAux][nPosCusto] := nCC              
+	elseif  alltrim(M->C5_NATUREZ)$"0300103"
+		nCC := "VT17"
+		_aCols[nAux][nPosCusto] := nCC 
+	EndIf
+
+	                                                                                                                                                                                           
 
 Return Nil

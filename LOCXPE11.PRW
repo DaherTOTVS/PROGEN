@@ -25,6 +25,7 @@ Local updateSE1	:= ""
 Local cVlCruz
 Local cQuery		
 Local cAliasSE2 	:= GetNextAlias()
+Local cPaisCl
 	
 If FunName()$"MATA143"  // Rutina Importación - Despachos
 	 if Alltrim(DBA->DBA_HAWB)<>''  
@@ -77,5 +78,20 @@ If FunName()$"MATA101N"
 
 EndIF
 
+If Funname() == "MATA465N" .And. SF1->F1_ESPECIE == "NCC"					// Modificado 24.07.2024 Juan P. Astorga
+	cPaisCl:=Posicione("SA1",1,xFilial("SA1")+SF1->F1_FORNECE+SF1->F1_LOJA,"A1_PAIS")
+	if Alltrim(cPaisCl)=='169' .and. SF1->F1_MOEDA==2						// Modificado 24.07.2024 Juan P. Astorga
+		RecLock("SE1",.F.)
+		SE1->E1_MOEDA 	:= 1												// Modificado 24.07.2024 Juan P. Astorga
+		SE1->E1_TXMOEDA := 1												// Modificado 24.07.2024 Juan P. Astorga
+		SE1->E1_VALOR 	:= Round(SF1->F1_VALBRUT*SF1->F1_TXMOEDA,2)			// Modificado 24.07.2024 Juan P. Astorga
+		SE1->E1_SALDO 	:= Round(SF1->F1_VALBRUT*SF1->F1_TXMOEDA,2)			// Modificado 24.07.2024 Juan P. Astorga
+		SE1->E1_VLCRUZ	:= Round(SF1->F1_VALBRUT*SF1->F1_TXMOEDA,2)			// Modificado 24.07.2024 Juan P. Astorga
+		SE1->E1_HIST  	:= "VALOR DOLAR " + Alltrim(Str(SF1->F1_VALBRUT)) 	// Modificado 24.07.2024 Juan P. Astorga
+		MsUnLock()
+	EndIf
+EndIf
+
 RestArea( _aArea )
+
 Return()

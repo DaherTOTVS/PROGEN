@@ -1,6 +1,8 @@
 #INCLUDE "MATR681.CH"
 #INCLUDE "Protheus.ch"
-
+#include "protheus.ch"
+#Include "Rwmake.ch"
+#Include "Topconn.ch"
 /*ÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜÜ
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ±±ÚÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÂÄÄÄÄÄÄÂÄÄÄÄÄÄÄÄÄÄ¿±±
@@ -273,6 +275,7 @@ Local cDoc		:= ""
 Local cItem		:= ""
 Local dEmissao	:= CTOD("  /  /  ")
 Local nQuant	:= 0
+Local aRet		:= {}
 
 
 oReport:Section(1):Cell("DOC" 		):SetBlock({|| cDoc		})
@@ -383,202 +386,211 @@ While !oReport:Cancel() .And. !(cAliasQry)->(Eof())
 				If DbSeek(cChRem)
 					While !Eof() .and. D2_FILIAL+D2_PEDIDO+D2_ITEMPV==cChRem  //impressao das remisiones
 						If D2_ITEMPV==SC6->C6_ITEM  .and. IsRemito(1,"SD2->D2_TIPODOC") .and. D2_COD==SC6->C6_PRODUTO
+
+							aRet := validRDV(SD2->D2_DOC,SD2->D2_SERIE,SD2->D2_ITEM,SD2->D2_CLIENTE,SD2->D2_LOJA,SD2->D2_QUANT)
+							cCant := aRet[2]
 							
-							cChFat		:= xFilial("SD2")+SD2->D2_CLIENTE+SD2->D2_LOJA+SD2->D2_SERIE+SD2->D2_DOC+SD2->D2_ITEM
-							nReg 		:= Recno()
-							cDoc 		:= ""
-							cItem 		:= ""
-							dEmissao 	:= CTOD("  /  /  ")
-							nQuant		:= 0
-							cDoc 		:= D2_DOC
-							cItem 		:= D2_ITEM
-							dEmissao 	:= D2_EMISSAO
-							nQuant		:= D2_QUANT
+							If aRet[1]
 							
-							// Pesquisa Fatura (SD2) a partir do Remito (SD2)
-							DbSelectArea("SD2")			// Itens da Nota de Saida
-							DbSetOrder(9) //D2_FILIAL+D2_CLIENTE+D2_LOJA+D2_SERIREM+D2_REMITO+D2_ITEMREM
-							If DbSeek(cChFat)
+								cChFat		:= xFilial("SD2")+SD2->D2_CLIENTE+SD2->D2_LOJA+SD2->D2_SERIE+SD2->D2_DOC+SD2->D2_ITEM
+								nReg 		:= Recno()
+								cDoc 		:= ""
+								cItem 		:= ""
+								dEmissao 	:= CTOD("  /  /  ")
+								nQuant		:= 0
+								cDoc 		:= SD2->D2_DOC
+								cItem 		:= SD2->D2_ITEM
+								dEmissao 	:= SD2->D2_EMISSAO
+								nQuant		:= cCant
+
+
+
 								
-								// Informacoes do Pedido
-								// If oReport:Section(1):GetOrder() == 1			// Ordem: por Emissao
-								// 	If dEmiss <> (cAliasQry)->C5_EMISSAO
-								// 		oReport:Section(1):Cell("C5_EMISSAOE"	):Show()
-								// 	Else
-								// 		oReport:Section(1):Cell("C5_EMISSAOE"	):Hide()
-								// 	EndIf
-								// 	If  cCli == (cAliasQry)->C5_CLIENTE .And. cLojaCli == (cAliasQry)->C5_LOJACLI;
-								// 		.And. cPedido == SC6->C6_NUM
-								// 		oReport:Section(1):Cell("C5_CLIENTEE"	):Hide()
-								// 		oReport:Section(1):Cell("C5_LOJACLIE"	):Hide()
-								// 		oReport:Section(1):Cell("C6_NUM"		):Hide()
-								// 	Else
-								// 		oReport:Section(1):Cell("C5_CLIENTEE"	):Show()
-								// 		oReport:Section(1):Cell("C5_LOJACLIE"	):Show()
-								// 		oReport:Section(1):Cell("C6_NUM"		):Show()
-								// 	EndIf
-								// Else        									// Ordem: por Cliente
-								// 	If cCli == (cAliasQry)->C5_CLIENTE .And. cLojaCli == (cAliasQry)->C5_LOJACLI
-								// 		oReport:Section(1):Cell("C5_CLIENTEC"	):Hide()
-								// 		oReport:Section(1):Cell("C5_LOJACLIC"	):Hide()
-								// 	Else
-								// 		oReport:Section(1):Cell("C5_CLIENTEC"	):Show()
-								// 		oReport:Section(1):Cell("C5_LOJACLIC"	):Show()
-								// 	EndIf
-								// 	If dEmiss == (cAliasQry)->C5_EMISSAO .And. cPedido == SC6->C6_NUM
-								// 		oReport:Section(1):Cell("C6_NUM"		):Hide()
-								// 		oReport:Section(1):Cell("C5_EMISSAOC"	):Hide()
-								// 	Else
-								// 		oReport:Section(1):Cell("C6_NUM"		):Show()
-								// 		oReport:Section(1):Cell("C5_EMISSAOC"	):Show()
-								// 	EndIf
-								// EndIf
-								
-								oReport:Section(1):Cell("C6_ITEM"		):Show()
-								oReport:Section(1):Cell("C6_PRODUTO"	):Show()
-								oReport:Section(1):Cell("C6_UM"	   		):Show()
-								oReport:Section(1):Cell("B1_GRUPO"		):Show()
-								oReport:Section(1):Cell("C6_QTDVEN"		):Show()
-								oReport:Section(1):Cell("C6_VALOR"		):Show()
-								oReport:Section(1):Cell("C6_ENTREG"		):Show()
-								// Informacoes do remito
-								oReport:Section(1):Cell("DOC" 			):Show()
-								oReport:Section(1):Cell("ITEM"			):Show()
-								oReport:Section(1):Cell("EMISSAO"		):Show()
-								oReport:Section(1):Cell("QUANT"			):Show()
-								// Informacoes da Fatura
-								oReport:Section(1):Cell(SerieNfId("SD2",3,"D2_SERIE")):Show()
-								oReport:Section(1):Cell("D2_DOC"		):Show()
-								oReport:Section(1):Cell("D2_ITEM"		):Show()
-								oReport:Section(1):Cell("D2_EMISSAO"	):Show()
-								oReport:Section(1):Cell("D2_QUANT"		):Show()
-								oReport:Section(1):Cell("D2_TOTAL"		):Show()
-								
-								lFirst := .T.
-								While !Eof() .and. (D2_FILIAL+D2_CLIENTE+D2_LOJA+D2_SERIREM+D2_REMITO+D2_ITEMREM)==cChFat
-									If !IsRemito(1,"SD2->D2_TIPODOC")
-										
-										// Imprime Pedido/Remite/Fatura
-										If !lFirst
-										
-											// Informacoes do Pedido
-											// If oReport:Section(1):GetOrder() == 1			// Ordem: por Emissao
-											
-											// 	If dEmiss <> (cAliasQry)->C5_EMISSAO
-											// 		oReport:Section(1):Cell("C5_EMISSAOE"	):Show()
-											// 	Else
-											// 		oReport:Section(1):Cell("C5_EMISSAOE"	):Hide()
-											// 	EndIf
-											// 	If  cCli == (cAliasQry)->C5_CLIENTE .And. cLojaCli == (cAliasQry)->C5_LOJACLI;
-											// 		.And. cPedido == SC6->C6_NUM
-											// 		oReport:Section(1):Cell("C5_CLIENTEE"	):Hide()
-											// 		oReport:Section(1):Cell("C5_LOJACLIE"	):Hide()
-											// 		oReport:Section(1):Cell("C6_NUM"		):Hide()
-											// 	Else
-											// 		oReport:Section(1):Cell("C5_CLIENTEE"	):Show()
-											// 		oReport:Section(1):Cell("C5_LOJACLIE"	):Show()
-											// 		oReport:Section(1):Cell("C6_NUM"		):Show()
-											// 	EndIf
-											// Else											// Ordem: por Cliente
-											// 	If cCli == (cAliasQry)->C5_CLIENTE .And. cLojaCli == (cAliasQry)->C5_LOJACLI
-											// 		oReport:Section(1):Cell("C5_CLIENTEC"	):Hide()
-											// 		oReport:Section(1):Cell("C5_LOJACLIC"	):Hide()
-											// 	Else
-											// 		oReport:Section(1):Cell("C5_CLIENTEC"	):Show()
-											// 		oReport:Section(1):Cell("C5_LOJACLIC"	):Show()
-											// 	EndIf
-											// 	If dEmiss == (cAliasQry)->C5_EMISSAO .And. cPedido == SC6->C6_NUM
-											// 		oReport:Section(1):Cell("C6_NUM"		):Hide()
-											// 		oReport:Section(1):Cell("C5_EMISSAOC"	):Hide()
-											// 	Else
-											// 		oReport:Section(1):Cell("C6_NUM"		):Show()
-											// 		oReport:Section(1):Cell("C5_EMISSAOC"	):Show()
-											// 	EndIf
-											// EndIf
-											
-											// // Informacoes do Pedido
-											// oReport:Section(1):Cell("C6_ITEM"		):Hide()
-											// oReport:Section(1):Cell("C6_PRODUTO"	):Hide()
-											// oReport:Section(1):Cell("C6_UM"	   		):Hide()
-											// oReport:Section(1):Cell("B1_GRUPO"		):Hide()
-											// oReport:Section(1):Cell("C6_QTDVEN"		):Hide()
-											// oReport:Section(1):Cell("C6_VALOR"		):Hide()
-											// oReport:Section(1):Cell("C6_ENTREG"		):Hide()
-											// // Informacoes do remito
-											// oReport:Section(1):Cell("DOC" 			):Hide()
-											// oReport:Section(1):Cell("ITEM"			):Hide()
-											// oReport:Section(1):Cell("EMISSAO"		):Hide()
-											// oReport:Section(1):Cell("QUANT"			):Hide()
-										EndIf
-										
-										oReport:Section(1):PrintLine()
-										lFirst := .F.
-										
-									Endif
-									DbSkip()
-								Enddo
-							Else
-								// Imprime Pedido e Remite (Fatura nao encontrada a partir do Remito)
-								// If oReport:Section(1):GetOrder() == 1			// Ordem: por Emissao
-								// 	// Informacoes do Pedido
-								// 	If dEmiss <> (cAliasQry)->C5_EMISSAO
-								// 		oReport:Section(1):Cell("C5_EMISSAOE"	):Show()
-								// 	Else
-								// 		oReport:Section(1):Cell("C5_EMISSAOE"	):Hide()
-								// 	EndIf
+								// Pesquisa Fatura (SD2) a partir do Remito (SD2)
+								DbSelectArea("SD2")			// Itens da Nota de Saida
+								DbSetOrder(9) //D2_FILIAL+D2_CLIENTE+D2_LOJA+D2_SERIREM+D2_REMITO+D2_ITEMREM
+								If DbSeek(cChFat)
 									
-								// 	If  cCli == (cAliasQry)->C5_CLIENTE .And. cLojaCli == (cAliasQry)->C5_LOJACLI;
-								// 		.And. cPedido == SC6->C6_NUM
-								// 		oReport:Section(1):Cell("C5_CLIENTEE"	):Hide()
-								// 		oReport:Section(1):Cell("C5_LOJACLIE"	):Hide()
-								// 		oReport:Section(1):Cell("C6_NUM"		):Hide()
-								// 	Else
-								// 		oReport:Section(1):Cell("C5_CLIENTEE"	):Show()
-								// 		oReport:Section(1):Cell("C5_LOJACLIE"	):Show()
-								// 		oReport:Section(1):Cell("C6_NUM"		):Show()
-								// 	EndIf
-								// Else        									// Ordem: por Cliente
-								// 	If cCli == (cAliasQry)->C5_CLIENTE .And. cLojaCli == (cAliasQry)->C5_LOJACLI
-								// 		oReport:Section(1):Cell("C5_CLIENTEC"	):Hide()
-								// 		oReport:Section(1):Cell("C5_LOJACLIC"	):Hide()
-								// 	Else
-								// 		oReport:Section(1):Cell("C5_CLIENTEC"	):Show()
-								// 		oReport:Section(1):Cell("C5_LOJACLIC"	):Show()
-								// 	EndIf
-								// 	If dEmiss == (cAliasQry)->C5_EMISSAO .And. cPedido == SC6->C6_NUM
-								// 		oReport:Section(1):Cell("C6_NUM"		):Hide()
-								// 		oReport:Section(1):Cell("C5_EMISSAOC"	):Hide()
-								// 	Else
-								// 		oReport:Section(1):Cell("C6_NUM"		):Show()
-								// 		oReport:Section(1):Cell("C5_EMISSAOC"	):Show()
-								// 	EndIf
-								// EndIf
-								
-								oReport:Section(1):Cell("C6_ITEM"	 	):Show()
-								oReport:Section(1):Cell("C6_PRODUTO"	):Show()
-								oReport:Section(1):Cell("C6_UM"	   		):Show()
-								oReport:Section(1):Cell("B1_GRUPO"		):Show()
-								oReport:Section(1):Cell("C6_QTDVEN"		):Show()
-								oReport:Section(1):Cell("C6_VALOR"		):Show()
-								oReport:Section(1):Cell("C6_ENTREG"		):Show()
-								// Informacoes do remito
-								oReport:Section(1):Cell("DOC"			):Show()
-								oReport:Section(1):Cell("ITEM"			):Show()
-								oReport:Section(1):Cell("EMISSAO"		):Show()
-								oReport:Section(1):Cell("QUANT"			):Show()
-								// Informacoes da Fatura
-								// oReport:Section(1):Cell(SerieNfId("SD2",3,"D2_SERIE")):Hide()
-								// oReport:Section(1):Cell("D2_DOC"		):Hide()
-								// oReport:Section(1):Cell("D2_ITEM"		):Hide()
-								// oReport:Section(1):Cell("D2_EMISSAO"	):Hide()
-								// oReport:Section(1):Cell("D2_QUANT"		):Hide()
-								// oReport:Section(1):Cell("D2_TOTAL"		):Hide()
-								
-								oReport:Section(1):PrintLine()
+									// Informacoes do Pedido
+									// If oReport:Section(1):GetOrder() == 1			// Ordem: por Emissao
+									// 	If dEmiss <> (cAliasQry)->C5_EMISSAO
+									// 		oReport:Section(1):Cell("C5_EMISSAOE"	):Show()
+									// 	Else
+									// 		oReport:Section(1):Cell("C5_EMISSAOE"	):Hide()
+									// 	EndIf
+									// 	If  cCli == (cAliasQry)->C5_CLIENTE .And. cLojaCli == (cAliasQry)->C5_LOJACLI;
+									// 		.And. cPedido == SC6->C6_NUM
+									// 		oReport:Section(1):Cell("C5_CLIENTEE"	):Hide()
+									// 		oReport:Section(1):Cell("C5_LOJACLIE"	):Hide()
+									// 		oReport:Section(1):Cell("C6_NUM"		):Hide()
+									// 	Else
+									// 		oReport:Section(1):Cell("C5_CLIENTEE"	):Show()
+									// 		oReport:Section(1):Cell("C5_LOJACLIE"	):Show()
+									// 		oReport:Section(1):Cell("C6_NUM"		):Show()
+									// 	EndIf
+									// Else        									// Ordem: por Cliente
+									// 	If cCli == (cAliasQry)->C5_CLIENTE .And. cLojaCli == (cAliasQry)->C5_LOJACLI
+									// 		oReport:Section(1):Cell("C5_CLIENTEC"	):Hide()
+									// 		oReport:Section(1):Cell("C5_LOJACLIC"	):Hide()
+									// 	Else
+									// 		oReport:Section(1):Cell("C5_CLIENTEC"	):Show()
+									// 		oReport:Section(1):Cell("C5_LOJACLIC"	):Show()
+									// 	EndIf
+									// 	If dEmiss == (cAliasQry)->C5_EMISSAO .And. cPedido == SC6->C6_NUM
+									// 		oReport:Section(1):Cell("C6_NUM"		):Hide()
+									// 		oReport:Section(1):Cell("C5_EMISSAOC"	):Hide()
+									// 	Else
+									// 		oReport:Section(1):Cell("C6_NUM"		):Show()
+									// 		oReport:Section(1):Cell("C5_EMISSAOC"	):Show()
+									// 	EndIf
+									// EndIf
+									
+									oReport:Section(1):Cell("C6_ITEM"		):Show()
+									oReport:Section(1):Cell("C6_PRODUTO"	):Show()
+									oReport:Section(1):Cell("C6_UM"	   		):Show()
+									oReport:Section(1):Cell("B1_GRUPO"		):Show()
+									oReport:Section(1):Cell("C6_QTDVEN"		):Show()
+									oReport:Section(1):Cell("C6_VALOR"		):Show()
+									oReport:Section(1):Cell("C6_ENTREG"		):Show()
+									// Informacoes do remito
+									oReport:Section(1):Cell("DOC" 			):Show()
+									oReport:Section(1):Cell("ITEM"			):Show()
+									oReport:Section(1):Cell("EMISSAO"		):Show()
+									oReport:Section(1):Cell("QUANT"			):Show()
+									// Informacoes da Fatura
+									oReport:Section(1):Cell(SerieNfId("SD2",3,"D2_SERIE")):Show()
+									oReport:Section(1):Cell("D2_DOC"		):Show()
+									oReport:Section(1):Cell("D2_ITEM"		):Show()
+									oReport:Section(1):Cell("D2_EMISSAO"	):Show()
+									oReport:Section(1):Cell("D2_QUANT"		):Show()
+									oReport:Section(1):Cell("D2_TOTAL"		):Show()
+									
+									lFirst := .T.
+									While !Eof() .and. (D2_FILIAL+D2_CLIENTE+D2_LOJA+D2_SERIREM+D2_REMITO+D2_ITEMREM)==cChFat
+										If !IsRemito(1,"SD2->D2_TIPODOC")
+											
+											// Imprime Pedido/Remite/Fatura
+											If !lFirst
+											
+												// Informacoes do Pedido
+												// If oReport:Section(1):GetOrder() == 1			// Ordem: por Emissao
+												
+												// 	If dEmiss <> (cAliasQry)->C5_EMISSAO
+												// 		oReport:Section(1):Cell("C5_EMISSAOE"	):Show()
+												// 	Else
+												// 		oReport:Section(1):Cell("C5_EMISSAOE"	):Hide()
+												// 	EndIf
+												// 	If  cCli == (cAliasQry)->C5_CLIENTE .And. cLojaCli == (cAliasQry)->C5_LOJACLI;
+												// 		.And. cPedido == SC6->C6_NUM
+												// 		oReport:Section(1):Cell("C5_CLIENTEE"	):Hide()
+												// 		oReport:Section(1):Cell("C5_LOJACLIE"	):Hide()
+												// 		oReport:Section(1):Cell("C6_NUM"		):Hide()
+												// 	Else
+												// 		oReport:Section(1):Cell("C5_CLIENTEE"	):Show()
+												// 		oReport:Section(1):Cell("C5_LOJACLIE"	):Show()
+												// 		oReport:Section(1):Cell("C6_NUM"		):Show()
+												// 	EndIf
+												// Else											// Ordem: por Cliente
+												// 	If cCli == (cAliasQry)->C5_CLIENTE .And. cLojaCli == (cAliasQry)->C5_LOJACLI
+												// 		oReport:Section(1):Cell("C5_CLIENTEC"	):Hide()
+												// 		oReport:Section(1):Cell("C5_LOJACLIC"	):Hide()
+												// 	Else
+												// 		oReport:Section(1):Cell("C5_CLIENTEC"	):Show()
+												// 		oReport:Section(1):Cell("C5_LOJACLIC"	):Show()
+												// 	EndIf
+												// 	If dEmiss == (cAliasQry)->C5_EMISSAO .And. cPedido == SC6->C6_NUM
+												// 		oReport:Section(1):Cell("C6_NUM"		):Hide()
+												// 		oReport:Section(1):Cell("C5_EMISSAOC"	):Hide()
+												// 	Else
+												// 		oReport:Section(1):Cell("C6_NUM"		):Show()
+												// 		oReport:Section(1):Cell("C5_EMISSAOC"	):Show()
+												// 	EndIf
+												// EndIf
+												
+												// // Informacoes do Pedido
+												// oReport:Section(1):Cell("C6_ITEM"		):Hide()
+												// oReport:Section(1):Cell("C6_PRODUTO"	):Hide()
+												// oReport:Section(1):Cell("C6_UM"	   		):Hide()
+												// oReport:Section(1):Cell("B1_GRUPO"		):Hide()
+												// oReport:Section(1):Cell("C6_QTDVEN"		):Hide()
+												// oReport:Section(1):Cell("C6_VALOR"		):Hide()
+												// oReport:Section(1):Cell("C6_ENTREG"		):Hide()
+												// // Informacoes do remito
+												// oReport:Section(1):Cell("DOC" 			):Hide()
+												// oReport:Section(1):Cell("ITEM"			):Hide()
+												// oReport:Section(1):Cell("EMISSAO"		):Hide()
+												// oReport:Section(1):Cell("QUANT"			):Hide()
+											EndIf
+											
+											oReport:Section(1):PrintLine()
+											lFirst := .F.
+											
+										Endif
+										DbSkip()
+									Enddo
+								Else
+									// Imprime Pedido e Remite (Fatura nao encontrada a partir do Remito)
+									// If oReport:Section(1):GetOrder() == 1			// Ordem: por Emissao
+									// 	// Informacoes do Pedido
+									// 	If dEmiss <> (cAliasQry)->C5_EMISSAO
+									// 		oReport:Section(1):Cell("C5_EMISSAOE"	):Show()
+									// 	Else
+									// 		oReport:Section(1):Cell("C5_EMISSAOE"	):Hide()
+									// 	EndIf
+										
+									// 	If  cCli == (cAliasQry)->C5_CLIENTE .And. cLojaCli == (cAliasQry)->C5_LOJACLI;
+									// 		.And. cPedido == SC6->C6_NUM
+									// 		oReport:Section(1):Cell("C5_CLIENTEE"	):Hide()
+									// 		oReport:Section(1):Cell("C5_LOJACLIE"	):Hide()
+									// 		oReport:Section(1):Cell("C6_NUM"		):Hide()
+									// 	Else
+									// 		oReport:Section(1):Cell("C5_CLIENTEE"	):Show()
+									// 		oReport:Section(1):Cell("C5_LOJACLIE"	):Show()
+									// 		oReport:Section(1):Cell("C6_NUM"		):Show()
+									// 	EndIf
+									// Else        									// Ordem: por Cliente
+									// 	If cCli == (cAliasQry)->C5_CLIENTE .And. cLojaCli == (cAliasQry)->C5_LOJACLI
+									// 		oReport:Section(1):Cell("C5_CLIENTEC"	):Hide()
+									// 		oReport:Section(1):Cell("C5_LOJACLIC"	):Hide()
+									// 	Else
+									// 		oReport:Section(1):Cell("C5_CLIENTEC"	):Show()
+									// 		oReport:Section(1):Cell("C5_LOJACLIC"	):Show()
+									// 	EndIf
+									// 	If dEmiss == (cAliasQry)->C5_EMISSAO .And. cPedido == SC6->C6_NUM
+									// 		oReport:Section(1):Cell("C6_NUM"		):Hide()
+									// 		oReport:Section(1):Cell("C5_EMISSAOC"	):Hide()
+									// 	Else
+									// 		oReport:Section(1):Cell("C6_NUM"		):Show()
+									// 		oReport:Section(1):Cell("C5_EMISSAOC"	):Show()
+									// 	EndIf
+									// EndIf
+									
+									oReport:Section(1):Cell("C6_ITEM"	 	):Show()
+									oReport:Section(1):Cell("C6_PRODUTO"	):Show()
+									oReport:Section(1):Cell("C6_UM"	   		):Show()
+									oReport:Section(1):Cell("B1_GRUPO"		):Show()
+									oReport:Section(1):Cell("C6_QTDVEN"		):Show()
+									oReport:Section(1):Cell("C6_VALOR"		):Show()
+									oReport:Section(1):Cell("C6_ENTREG"		):Show()
+									// Informacoes do remito
+									oReport:Section(1):Cell("DOC"			):Show()
+									oReport:Section(1):Cell("ITEM"			):Show()
+									oReport:Section(1):Cell("EMISSAO"		):Show()
+									oReport:Section(1):Cell("QUANT"			):Show()
+									// Informacoes da Fatura
+									// oReport:Section(1):Cell(SerieNfId("SD2",3,"D2_SERIE")):Hide()
+									// oReport:Section(1):Cell("D2_DOC"		):Hide()
+									// oReport:Section(1):Cell("D2_ITEM"		):Hide()
+									// oReport:Section(1):Cell("D2_EMISSAO"	):Hide()
+									// oReport:Section(1):Cell("D2_QUANT"		):Hide()
+									// oReport:Section(1):Cell("D2_TOTAL"		):Hide()
+									
+									oReport:Section(1):PrintLine()
+								Endif
+								DbSelectArea("SD2")
+								DbGoTo(nReg)
+								DbSetOrder(8) //D2_FILIAL+D2_PEDIDO+D2_ITEMPV 
 							Endif
-							DbSelectArea("SD2")
-							DbGoTo(nReg)
-							DbSetOrder(8) //D2_FILIAL+D2_PEDIDO+D2_ITEMPV 
 						Endif
 						DbSkip()
 					Enddo
@@ -1318,3 +1330,68 @@ RetIndex("SC5")
 RetIndex("SC6")
 
 Return
+
+// static function validRDV(cFilal,cDoc,cSerie,cCliente,cLoja)
+
+// 	Local aArea := getArea()
+// 	Local lRet  := .T.
+// 	Local _cAQuery := ""
+
+// 	If ALLTRIM(cSerie) == 'R'
+// 		_cAQuery := " SELECT D1_DOC,D1_SERIE FROM  "+RetSQLName('SD1')+"  SD1 "
+// 		_cAQuery += " WHERE D_E_L_E_T_ <> '*' "
+// 		_cAQuery += " AND D1_FILIAL =  '"+xFilial("SD1")+"' "
+		
+// 		_cAQuery += " AND D1_NFORI =  '"+cDoc+"' "
+// 		_cAQuery += " AND D1_SERIORI =  '"+cSerie+"' "
+// 		_cAQuery += " AND D1_FORNECE =  '"+cCliente+"' "
+// 		_cAQuery += " AND D1_LOJA =  '"+cLoja+"' "
+// 		_cAQuery += " AND D1_SERIE =  'RDV' "
+// 		TcQuery _cAQuery New Alias "_aQRY"
+// 		dbSelectArea("_aQRY")
+// 		If !_aQRY->(EOF())
+// 			lRet := .F.
+// 		EndIf
+// 		_aQRY->(dbCloseArea())
+// 	EndIf
+
+
+
+// 	RestArea( aArea )
+// return lRet
+
+
+static function validRDV(cDoc,cSerie,CItem,cCliente,cLoja,cQuant)
+
+	Local aArea := getArea()
+	Local lRet  := .T.
+	Local _cAQuery := ""
+
+	If ALLTRIM(cSerie) == 'R'
+		_cAQuery := " SELECT D1_DOC,D1_SERIE,D1_QUANT FROM  "+RetSQLName('SD1')+"  SD1 "
+		_cAQuery += " WHERE D_E_L_E_T_ <> '*' "
+		_cAQuery += " AND D1_FILIAL =  '"+xFilial("SD1")+"' "
+		
+		_cAQuery += " AND D1_NFORI =  '"+cDoc+"' "
+		_cAQuery += " AND D1_SERIORI =  '"+cSerie+"' "
+		_cAQuery += " AND D1_ITEMORI =  '"+CItem+"' "
+		_cAQuery += " AND D1_FORNECE =  '"+cCliente+"' "
+		_cAQuery += " AND D1_LOJA =  '"+cLoja+"' "
+		_cAQuery += " AND D1_SERIE =  'RDV' "
+		TcQuery _cAQuery New Alias "_aQRY"
+		dbSelectArea("_aQRY")
+		If !_aQRY->(EOF())
+
+			If _aQRY->D1_QUANT >= cQuant
+				lRet := .F.
+			ElseIf _aQRY->D1_QUANT < cQuant
+				cQuant := cQuant - _aQRY->D1_QUANT
+			EndIf
+		EndIf
+		_aQRY->(dbCloseArea())
+	EndIf
+
+
+
+	RestArea( aArea )
+Return ({lRet,cQuant})

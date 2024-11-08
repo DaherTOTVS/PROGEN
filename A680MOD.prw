@@ -14,24 +14,22 @@ User Function A680MOD()
     Local nRet := PARAMIXB
     Local nNewTempo := 0
 
-    CONOUT("A680MOD","DESARROLLO_WS",cMOD)
-
 
     If !EMPTY(cMOD)
+        If alltrim(cMOD) != "0.0000"
+                nNewTempo := MultiplicaTiempo(cTempo,cMOD)
 
-        nNewTempo := MultiplicaTiempo(cTempo,cMOD)
+                RecLock("SH6", .F.)
+                    SH6->H6_TEMPO := nNewTempo
+                SH6->(MsUnlock())
 
-        RecLock("SH6", .F.)
-            SH6->H6_TEMPO := nNewTempo
-        SH6->(MsUnlock())
-
-        nRet := A680QtMod()
+                nRet := A680QtMod()
 
 
-        RecLock("SH6", .F.)
-            SH6->H6_TEMPO := cTempo
-        SH6->(MsUnlock())
-
+                RecLock("SH6", .F.)
+                    SH6->H6_TEMPO := cTempo
+                SH6->(MsUnlock())
+        EndIf
     EndIf
 
 

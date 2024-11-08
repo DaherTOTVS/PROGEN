@@ -13,7 +13,7 @@ Punto de entrada para enviar campos extra para layout Fact Eletronica Colombia
 @since 01/03/2023  // DOC SOPORTE  NIT+DV
 @return return_type, return_description       // MV_CFDIAMB, MV_WSRTSS , MV_TKN_EMP, MV_TKN_PAS
 /*/ 
-User Function M486OWSCOL()
+User Function M486OWSCOL
 	Local aArea     	:= GetArea()
 	Local cSerieDoc 	:= PARAMIXB[1] //Serie
 	Local cNumDoc   	:= PARAMIXB[2] //Número de Documento
@@ -30,7 +30,7 @@ User Function M486OWSCOL()
 	Local cpaisCli  	:= " "//
 	Local cCodDpto  	:= " "//
 	Local aAreaSA1		:= SA1->(GetArea())
-	Local cTemplate		:= " "//Template de factura venta, ncc o exportación
+	Local cTempalte		:= " "//Template de factura venta, ncc o exportación
 	LOcal cTipDocT		:= " "//Tipo de documento transmitido: 01 NF, 91 ncc y 02 Nf Exp
 	Local cExtra11I 	:= " "
 	Local cExtra11V		:= " "
@@ -55,8 +55,6 @@ User Function M486OWSCOL()
 	Local cFechaEmision	:= ""
 	Local cVencimiento	:= ""
 	Local nValunitSD1	:= 0
-	Local lActivador    := .F.
-	Local cActivador    := "USD"
 	Local cCorreo       := "" //Correo de facturacion electronica
 	Local _cAlias 		:= GetNextAlias()  // Juan Pablo Astorga 11.03.2024
 	Local cPreLista		:= 0 // Juan Pablo Astorga 11.03.2024
@@ -130,26 +128,12 @@ User Function M486OWSCOL()
 			//Tempalte a usar
 			IF (ALLTRIM(cEspecie)<>'NCC')
 				IF cTipDocT == "02"
-					cTemplate	:= "co-progenFE-55" //"co-progenFE-68" //"co-progenFE-55" //"co-progenFE-52"//Exportacion co-progenFE-40
+					cTempalte	:= "co-progenFE-67" //"co-progenFE-55" //"co-progenFE-52"//Exportacion co-progenFE-40
 				ELSE
-					cTemplate	:= "co-progenFV-89"//"co-progenFV-72" //"co-progenFV-68" //"co-progenFV-64"//Nacional co-progenFV-59
+					cTempalte	:= "co-progenFV-73"//"co-progenFV-72" //"co-progenFV-68" //"co-progenFV-64"//Nacional co-progenFV-59
 				ENDIF
 			ELSE
-				cTemplate	:= "co-progenNC-53"//"co-progenNC-27" //"co-progenNC-22" //"co-progenNC-17" // NCC  co-progenNC-15
-			ENDIF
-
-			// 14/09/2024 DAHN - Validador para facturas nacionales en moneda Dolar
-			IF SA1->A1_PAIS == "169" .AND. cTipDocT != '02'
-				IF ALLTRIM(cEspecie)=="NF"
-					IF SF2->F2_MOEDA <> 1
-						lActivador := .T.
-					ENDIF
-				ENDIF
-				IF ALLTRIM(cEspecie)=="NCC"
-					IF SF1->F1_MOEDA <> 1
-						lActivador := .T.
-					ENDIF
-				ENDIF
+				cTempalte	:= "co-progenNC-30"//"co-progenNC-27" //"co-progenNC-22" //"co-progenNC-17" // NCC  co-progenNC-15
 			ENDIF
 
 			oWS:oWSextras:=Service_ArrayOfExtras():new() //AH
@@ -158,91 +142,18 @@ User Function M486OWSCOL()
 			oWSextra:ccontrolInterno2     := ""
 			oWSextra:cnombre              := "333221"
 			oWSextra:cpdf                 := "1"
-			oWSextra:cvalor               := cTemplate
+			oWSextra:cvalor               := cTempalte
 			oWSextra:cxml                 := "0"
 			aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
 			aCabDatos := CabDatos()
-
-
-
-			IF ALLTRIM(cEspecie)=="NCC"
-				If aCabDatos[1][29]==1
-					aRetenc:=Retenciones(cNumDoc,cSerieDoc,cCodCli,cCodLoj,.F.)
-					cValor := TRANSFORM(aRetenc[2]+aRetenc[3]+aRetenc[4],"@E 999,999,999.99")
-					If ALLTRIM(cValor)  != "0,00"
-						//oWS:oWSextras:=Service_ArrayOfExtras():new()
-						oWSextra:=Service_Extras():new()
-						oWSextra:ccontrolInterno1     := "TOTAL Retenciones"
-						oWSextra:ccontrolInterno2     := ""
-						oWSextra:cnombre              := "5170019"
-						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := cValor
-						oWSextra:cxml                 := "0"
-						aAdd(oWS:oWSextras:oWSextras,oWSextra)
-					EndIf	
-				Else
-					aRetenc:=Retenciones(cNumDoc,cSerieDoc,cCodCli,cCodLoj,.F.)
-					cValor := TRANSFORM(aRetenc[2]+aRetenc[3]+aRetenc[4],"@E 999,999,999.99")
-					If ALLTRIM(cValor)  != "0,00"
-						//oWS:oWSextras:=Service_ArrayOfExtras():new()
-						oWSextra:=Service_Extras():new()
-						oWSextra:ccontrolInterno1     := "TOTAL Retenciones USD"
-						oWSextra:ccontrolInterno2     := ""
-						oWSextra:cnombre              := "5170019"
-						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := cValor
-						oWSextra:cxml                 := "0"
-						aAdd(oWS:oWSextras:oWSextras,oWSextra)
-					EndIf
-				EndIf
-			EndIf
-
-			IF ALLTRIM(cEspecie)=="NF"
-				If aCabDatos[1][29]==1
-					aRetenc:=Retenciones(cNumDoc,cSerieDoc,cCodCli,cCodLoj,.T.)
-					cValor := TRANSFORM(aRetenc[2]+aRetenc[3]+aRetenc[4],"@E 999,999,999.99")
-					If ALLTRIM(cValor)  != "0,00"
-						//oWS:oWSextras:=Service_ArrayOfExtras():new()
-						oWSextra:=Service_Extras():new()
-						oWSextra:ccontrolInterno1     := "TOTAL Retenciones"
-						oWSextra:ccontrolInterno2     := ""
-						oWSextra:cnombre              := "5170019"
-						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := cValor
-						oWSextra:cxml                 := "0"
-						aAdd(oWS:oWSextras:oWSextras,oWSextra)
-					EndIF
-				Else
-					aRetenc:=Retenciones(cNumDoc,cSerieDoc,cCodCli,cCodLoj,.T.)
-					cValor := TRANSFORM(aRetenc[2]+aRetenc[3]+aRetenc[4],"@E 999,999,999.99")
-					//oWS:oWSextras:=Service_ArrayOfExtras():new()
-					If ALLTRIM(cValor)  != "0,00"
-						oWSextra:=Service_Extras():new()
-						oWSextra:ccontrolInterno1     := "TOTAL Retenciones USD"
-						oWSextra:ccontrolInterno2     := ""
-						oWSextra:cnombre              := "5170019"
-						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := cValor
-						oWSextra:cxml                 := "0"
-						aAdd(oWS:oWSextras:oWSextras,oWSextra)
-					EndIf
-				EndIf
-			EndIf
-
 
 			oWSextra:=Service_Extras():new()
 			oWSextra:ccontrolInterno1     := "Descuento"
 			oWSextra:ccontrolInterno2     := ""
 			oWSextra:cnombre              := "5170001"
 			oWSextra:cpdf                 := "1"
-			if cTipDocT == "02"
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][12]*aCabDatos[1][28]),"@E 999,999,999.99")
-			ElseIf lActivador
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][12]*aCabDatos[1][28]),"@E 999,999,999.99")
-			else
-				oWSextra:cvalor               :=  TRANSFORM(aCabDatos[1][12],"@E 999,999,999.99") 
-			EndIF
+			oWSextra:cvalor               :=  TRANSFORM(aCabDatos[1][12],"@E 999,999,999.99")
 			oWSextra:cxml                 := "0"
 			aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -258,8 +169,6 @@ User Function M486OWSCOL()
 			oWSextra:cpdf                 := "1"
 			if cTipDocT == "02"
 				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][16]*aCabDatos[1][28]),"@E 999,999,999.99")
-			ElseIf lActivador
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][16]*aCabDatos[1][28]),"@E 999,999,999.99")
 			else
 				oWSextra:cvalor               := TRANSFORM(aCabDatos[1][16],"@E 999,999,999.99")
 			endif
@@ -273,8 +182,6 @@ User Function M486OWSCOL()
 			oWSextra:cnombre              := "5170003"
 			oWSextra:cpdf                 := "1"
 			if cTipDocT == "02"
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][2]*aCabDatos[1][28]),"@E 999,999,999.99")
-			ElseIf lActivador
 				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][2]*aCabDatos[1][28]),"@E 999,999,999.99")
 			else
 				oWSextra:cvalor               := TRANSFORM(aCabDatos[1][2],"@E 999,999,999.99")
@@ -290,8 +197,6 @@ User Function M486OWSCOL()
 			oWSextra:cpdf                 := "1"
 			if cTipDocT == "02"
 				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][7]*aCabDatos[1][28]),"@E 999,999,999.99")
-			ElseIf lActivador
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][7]*aCabDatos[1][28]),"@E 999,999,999.99")
 			else
 				oWSextra:cvalor               := TRANSFORM(aCabDatos[1][7],"@E 999,999,999.99")
 			endif
@@ -306,9 +211,6 @@ User Function M486OWSCOL()
 			oWSextra:cpdf                 := "1"
 			if cTipDocT == "02"
 				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][4]*aCabDatos[1][28]),"@E 999,999,999.99")
-			ElseIf lActivador
-				cValimp1 := POSICIONE("SF3",4,xfilial("SF3")+CCODCLI+CCODLOJ+CNUMDOC+CSERIEDOC,"F3_VALIMP1")
-				oWSextra:cvalor               := TRANSFORM(cValimp1,"@E 999,999,999.99")
 			else
 				oWSextra:cvalor               := TRANSFORM(aCabDatos[1][4],"@E 999,999,999.99")
 			endif
@@ -433,7 +335,6 @@ User Function M486OWSCOL()
 			aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
 
-
 			//Agregado Javier Rocha 31/01/2024
 			IF cTipDocT == "02"
 
@@ -475,7 +376,7 @@ User Function M486OWSCOL()
 					oWSextra:=Service_Extras():new()
 					oWSextra:ccontrolInterno1     := ""
 					oWSextra:ccontrolInterno2     := ""
-					oWSextra:cnombre              := "5170030"
+					oWSextra:cnombre              := "5170019"
 					oWSextra:cpdf                 := "1"
 					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][2],"@E 999,999,999.99")
 					oWSextra:cxml                 := "0"
@@ -515,22 +416,8 @@ User Function M486OWSCOL()
 				ENDIF
 			EndIF
 
-			
+			IF SA1->A1_PAIS == "169" .AND. SF2->F2_MOEDA <> 1 .AND. cTipDocT != '02'
 
-
-			SA1->(dbSetOrder(1))
-			If SA1->(msSeek(xFilial("SA1")+cCodCli+cCodLoj))
-				cpaisCli    := alltrim(SA1->A1_PAIS)
-				IF Empty(cCodDpto)
-					cCodDpto    := alltrim(SA1->A1_PAIS)
-				EndIf
-				IF (cpaisCli <> "169" .AND. cCodDpto == "EX")
-					oWS:oWSCliente:oWSdireccionCliente := NIL //
-					oWS:oWSCliente:oWSdireccionFiscal := NIL
-				ENDIF
-			EndIf
-
-			IF lActivador
 				DbSelectArea("SF2")
 				SF2->(DbSetOrder(1))
 				IF SF2->(DbSeek(xFilial("SF2") + cNumDoc + cSerieDoc + cCodCli + cCodLoj ))
@@ -595,9 +482,23 @@ User Function M486OWSCOL()
 					oWSextra:cxml                 := "0"
 					aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
+
 					SF2->(dbCloseArea())
 				ENDIF
-			ENDIF
+			EndIF
+
+
+			SA1->(dbSetOrder(1))
+			If SA1->(msSeek(xFilial("SA1")+cCodCli+cCodLoj))
+				cpaisCli    := alltrim(SA1->A1_PAIS)
+				IF Empty(cCodDpto)
+					cCodDpto    := alltrim(SA1->A1_PAIS)
+				EndIf
+				IF (cpaisCli <> "169" .AND. cCodDpto == "EX")
+					oWS:oWSCliente:oWSdireccionCliente := NIL //
+					oWS:oWSCliente:oWSdireccionFiscal := NIL
+				ENDIF
+			EndIf
 
 			//IF cEspecie <> 'NCC'
 			If !EMPTY(aCabDatos[1][17]) .or. !EMPTY(aCabDatos[1][18])  // Mensaje Factura Cliente / NCC
@@ -784,6 +685,15 @@ User Function M486OWSCOL()
 				EndDo
 				QrySC5->(dbCloseArea())
 
+				DbSelectArea("SF2")
+				SF2->(DbSetOrder(1))
+				IF SF2->(DbSeek(xFilial("SF2") + cNumDoc + cSerieDoc + cCodCli + cCodLoj ))
+					IF SA1->A1_PAIS == "169" .AND. SF2->F2_MOEDA <> 1 .AND. cTipDocT != '02'
+						OWS:CMONEDA := REPLACE(OWS:CMONEDA,"USD","COP")
+					EndIf
+				EndIf
+
+
 				// Para notas Credito
 			ELSEIF ALLTRIM(cEspecie) == 'NCC'
 
@@ -941,11 +851,7 @@ User Function M486OWSCOL()
 						oWS:cprecioTotalSinImpuestos:= CvALTOcHAR(0.00)
 						oWS:cprecioTotal       		:= CvALTOcHAR(0.00)
 						oWS:csecuencia   			:= "1"
-						If lActivador
-							oWs:cPrecioventaunitario 	:= CvALTOcHAR(D2_TOTAL*SF2->F2_TXMOEDA)
-						Else
-							oWs:cPrecioventaunitario 	:= CvALTOcHAR(D2_TOTAL)
-						EndIf
+						oWs:cPrecioventaunitario 	:= CvALTOcHAR(D2_TOTAL)
 					EndIf
 
 					// PARA LOS OBSEQUIOS Y LAS GARANTIAS CARGO IVA CLIENTES
@@ -956,11 +862,7 @@ User Function M486OWSCOL()
 						oWS:cprecioTotalSinImpuestos:= CvALTOcHAR(0.00)
 						oWS:cprecioTotal       		:= CvALTOcHAR(0.00)
 						oWS:csecuencia   			:= "1"
-						If lActivador
-							oWs:cPrecioventaunitario 	:= CvALTOcHAR(D2_TOTAL*SF2->F2_TXMOEDA)
-						Else
-							oWs:cPrecioventaunitario 	:= CvALTOcHAR(D2_TOTAL)
-						EndIf
+						oWs:cPrecioventaunitario 	:= CvALTOcHAR(D2_TOTAL)
 					EndIf
 
 
@@ -971,9 +873,7 @@ User Function M486OWSCOL()
 					SF2->(DbSetOrder(1))
 					IF SF2->(DbSeek(xFilial("SF2") + cNumDoc + cSerieDoc + cCodCli + cCodLoj ))
 						IF SF2->F2_MOEDA <> 1
-							// oWSAdicion:cnombre 		:= TRANSFORM((SD2->D2_PRUNIT*SF2->F2_TXMOEDA),"@E 999,999,999.99")
-							oWSAdicion:cnombre 		:= TRANSFORM((SD2->D2_PRUNIT),"@E 999,999,999.99")
-
+							oWSAdicion:cnombre 		:= TRANSFORM((SD2->D2_PRUNIT*SF2->F2_TXMOEDA),"@E 999,999,999.99")
 						else
 							oWSAdicion:cnombre 		:= TRANSFORM(SD2->D2_PRUNIT,"@E 999,999,999.99")
 						endif
@@ -1032,24 +932,18 @@ User Function M486OWSCOL()
 							// PARA Cantidad y Precio Dolar
 							oWSAdicion:=Service_LineaInformacionAdicional():New()
 							oWSAdicion:ccodigo 		:= "5175"
-							oWSAdicion:cnombre 		:= TRANSFORM((SD2->D2_PRUNIT*SD2->D2_QUANT),"@E 999,999,999.99")
+							oWSAdicion:cnombre 		:= TRANSFORM(SD2->D2_PRUNIT,"@E 999,999,999.99")
 							oWSAdicion:csecuencia 	:= "1"
 							oWSAdicion:cvalor 		:= TRANSFORM((SD2->D2_PRUNIT*SD2->D2_QUANT),"@E 999,999,999.99")
 							aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
 						ENDIF
 
-						
-						// 14/09/2024 DAHN - Validador para facturas nacionales en moneda Dolar
 						IF SA1->A1_PAIS == "169" .AND. SF2->F2_MOEDA <> 1 .AND. cTipDocT != '02'
-							lActivador := .T.
-						ENDIF
-
-						IF lActivador
 							oWSAdicion:=Service_LineaInformacionAdicional():New()
 							oWSAdicion:ccodigo 		:= "5176"
 							oWSAdicion:cnombre 		:= TRANSFORM(SD2->D2_PRUNIT,"@E 999,999,999.99")
 							oWSAdicion:csecuencia 	:= "1"
-							oWSAdicion:cvalor 		:= TRANSFORM((SD2->D2_PRUNIT),"@E 999,999,999.99")
+							oWSAdicion:cvalor 		:= TRANSFORM((SD2->D2_PRUNIT*SD2->D2_QUANT),"@E 999,999,999.99")
 							aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
 
 						ENDIF
@@ -1213,8 +1107,6 @@ Static function	CabDatos
 	Local nSubTotalD2	:= 0
 	Local nSubTotAntIva := 0
 	Local lMultiPedidos	:= .F.
-	Local nTxmoeda      := 0
-	Local nMoeda        := 0
 
 
 	If (ALLTRIM(cEspecie)=='NF' .OR. ALLTRIM(cEspecie)=='NDC')
@@ -1251,8 +1143,6 @@ Static function	CabDatos
 		cNaturez		:= SF2->F2_NATUREZ
 		cnumPedido		:= SD2->D2_PEDIDO
 		cFechaEmis 		:= SF2->F2_EMISSAO
-		nTxmoeda		:= SF2->F2_TXMOEDA
-		nMoeda			:= SF2->F2_MOEDA
 
 		// SUMO LOS ITEMS DE LA FACTURA DE MUESTRAS Y GARANTIAS PORQUE NO TIENEN VR. IVA Y LA FACTURA VALE CERO
 		// ENTONCES TOCA CALCULAR EL VALOR DE LA MERCADERIA, EL SUBTOTAL Y EL TOTAL DESDE LA SD2
@@ -1346,8 +1236,13 @@ Static function	CabDatos
 		" ",;										//25
 		cnumOrden,;									//26
 		cnumPedido,;								//27
-		nTxmoeda,;									//28
-		nMoeda})									//29
+		SF2->F2_TXMOEDA})							//28
+
+		If empty(SF2->F2_FLFTEX)
+			RecLock("SF2",.F.)
+				SF2->F2_FLFTEX := "0"
+			SF2->(MsUnlock())
+		EndiF
 
 		SF2->(DbCloseArea())
 		SD2->(DbCloseArea())
@@ -1380,8 +1275,6 @@ Static function	CabDatos
 		dFecVctotoReal	:= SE1->E1_VENCREA
 		nSubTotalD1 	:= 0
 		cFechaEmis 		:= SF1->F1_EMISSAO
-		nTxmoeda		:= SF1->F1_TXMOEDA
-		nMoeda			:= SF1->F1_MOEDA
 
 
 		While  SD1->(!Eof()) .and. SD1->D1_DOC == cNumDoc .and. SD1->D1_SERIE == cSerieDoc .and. SD1->D1_FORNECE == cCodCli .and. SD1->D1_LOJA == cCodLoj .and. SD1->D1_ESPECIE == cEspecie
@@ -1413,9 +1306,6 @@ Static function	CabDatos
 			nSubTotal		:= SF1->F1_VALMERC + SF1->F1_DESCONT
 			nSubTotAntIva	:= SF1->F1_VALMERC
 			nValTotal		:= SF1->F1_VALMERC + SF1->F1_VALIMP1
-			if SF1->F1_VALIMP2 > 0 // Javier Rocha 19/02/2024 para descontar ReteIva al Subtotal
-				nValTotal		:= nValTotal - SF1->F1_VALIMP2
-			endif
 		ENDIF
 
 		cBuscaSE1:=xFilial("SE1")+ cCodCli + cCodLoj + cSerieDoc + cNumDoc+SPACE(TamSX3("E1_PARCELA")[1])+cEspecie
@@ -1467,8 +1357,13 @@ Static function	CabDatos
 		SF1->F1_TIPREF,;							//25
 		cnumOrden,;									//26
 		cnumPedido,;								//27
-		nTxmoeda,;									//28
-		nMoeda})							        //29
+		SF1->F1_TXMOEDA})							//28
+
+		If empty(SF1->F1_FLFTEX)
+			RecLock("SF1",.F.)
+				SF1->F1_FLFTEX := "0"
+			SF1->(MsUnlock())
+		EndiF
 
 		SF1->(DbCloseArea())
 		SD1->(DbCloseArea())
@@ -1502,89 +1397,5 @@ Static Function formatValEnv(nValFormat,tpformat)
 	EndIf
 	cValformatado := Alltrim(cValformatado)
 Return cValformatado
-
-Static Function Retenciones(cDOC,cSERIE,cCodCli,cCodLoj,lF2)
-    Local cQuery  :=""
-    Local cImpus  := GetNextAlias()
-    //Local nCantid := GetNextAlias()
-    Local aReten  :={}
-    Local lRF0Tran:= POSICIONE("SFB",1,xFilial("SFB")+'RF0','FB_CLASSE')=='R'
-    Local lICATran:= POSICIONE("SFB",1,xFilial("SFB")+'ICA','FB_CLASSE')=='R'
-    Local lRIVATra:= POSICIONE("SFB",1,xFilial("SFB")+'RV0','FB_CLASSE')=='R'
-
-    If lF2
-        cQuery+= " SELECT SUM(SD2.D2_VALIMP1) AS IVA, "
-        cQuery+= " SUM(CASE WHEN RV0.FC_TES IS NOT NULL THEN SD2.D2_VALIMP2 ELSE 0 END ) AS RETEIVA, "
-        cQuery+= " SUM(CASE WHEN ICA.FC_TES IS NOT NULL THEN SD2.D2_VALIMP3 ELSE 0 END ) AS ICA, "
-        cQuery+= " SUM(CASE WHEN RFT.FC_TES IS NOT NULL THEN SD2.D2_VALIMP4 ELSE 0 END ) AS RETEFTE "
-        cQuery+= " FROM "+RetSQLName("SD2")+" SD2 "
-        cQuery+= " LEFT JOIN "+RetSQLName("SFC")+" RFT ON RFT.FC_FILIAL='"+xFilial("SFC")+"' AND RFT.FC_TES=D2_TES AND RFT.D_E_L_E_T_ <> '*' AND RFT.FC_IMPOSTO='RF0' AND RFT.FC_INCDUPL='2' AND RFT.FC_INCNOTA='2' "
-        cQuery+= " LEFT JOIN "+RetSQLName("SFC")+" RV0 ON RV0.FC_FILIAL='"+xFilial("SFC")+"' AND RV0.FC_TES=D2_TES AND RV0.D_E_L_E_T_ <> '*' AND RV0.FC_IMPOSTO='RV0' AND RV0.FC_INCDUPL='2' AND RV0.FC_INCNOTA='2' "
-        cQuery+= " LEFT JOIN "+RetSQLName("SFC")+" ICA ON ICA.FC_FILIAL='"+xFilial("SFC")+"' AND ICA.FC_TES=D2_TES AND ICA.D_E_L_E_T_ <> '*' AND ICA.FC_IMPOSTO='ICA' AND ICA.FC_INCDUPL='2' AND ICA.FC_INCNOTA='2' "
-        cQuery+= " WHERE SD2.D2_FILIAL='"+xFilial("SD2")+"' AND SD2.D2_DOC='"+cDOC+"' AND SD2.D2_SERIE='"+cSERIE+"' AND SD2.D_E_L_E_T_ <> '*' "
-        cQuery+= " AND SD2.D2_CLIENTE='"+cCodCli+"' AND SD2.D2_LOJA='"+cCodLoj+"' "
-        cQuery+= " GROUP BY SD2.D2_DOC,SD2.D2_SERIE "
-        cQuery+= " ORDER BY SD2.D2_DOC,SD2.D2_SERIE "
-        dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cImpus,.T.,.T.)
-
-        If (cImpus)->(!Eof())
-            aAdd(aReten,(cImpus)->IVA)
-            aAdd(aReten,IF(lRIVATra,(cImpus)->RETEIVA   ,0 ))
-            aAdd(aReten,IF(lICATran,(cImpus)->ICA       ,0 ))
-            aAdd(aReten,IF(lRF0Tran,(cImpus)->RETEFTE   ,0 ))
-        Else
-            aAdd(aReten,0)
-            aAdd(aReten,0)
-            aAdd(aReten,0)
-            aAdd(aReten,0)
-        EndIf
-        (cImpus)->(DbCloseArea())
-        //cQuery:= " SELECT SUM(SD2.D2_QUANT) AS CANTIDAD FROM "+RetSQLName("SD2")+" SD2 "
-        //cQuery+= " WHERE SD2.D2_FILIAL='"+xFilial("SD2")+"' AND SD2.D2_DOC='"+cDOC+"' AND SD2.D2_SERIE='"+cSERIE+"' AND SD2.D_E_L_E_T_ <> '*' "
-        //cQuery+= " AND SD2.D2_CLIENTE='"+cCodCli+"' AND SD2.D2_LOJA='"+cCodLoj+"' "
-        //cQuery+= " GROUP BY SD2.D2_DOC,SD2.D2_SERIE,SD2.D2_CLIENTE,SD2.D2_LOJA "
-
-        //dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),nCantid,.T.,.T.)
-        //aAdd(aReten,(nCantid)->CANTIDAD)
-        //(nCantid)->(DbCloseArea())
-
-    Else
-
-        cQuery+= " SELECT SUM(SD1.D1_VALIMP1) AS IVA, "
-        cQuery+= " SUM(CASE WHEN RV0.FC_TES IS NOT NULL THEN SD1.D1_VALIMP2 ELSE 0 END ) AS RETEIVA, "
-        cQuery+= " SUM(CASE WHEN ICA.FC_TES IS NOT NULL THEN SD1.D1_VALIMP3 ELSE 0 END ) AS ICA, "
-        cQuery+= " SUM(CASE WHEN RFT.FC_TES IS NOT NULL THEN SD1.D1_VALIMP4 ELSE 0 END ) AS RETEFTE "
-        cQuery+= " FROM "+RetSQLName("SD1")+" SD1 "
-        cQuery+= " LEFT JOIN "+RetSQLName("SFC")+" RFT ON RFT.FC_FILIAL='"+xFilial("SFC")+"' AND RFT.FC_TES=D1_TES AND RFT.D_E_L_E_T_ <> '*' AND RFT.FC_IMPOSTO='RF0' AND RFT.FC_INCDUPL='2' AND RFT.FC_INCNOTA='2' "
-        cQuery+= " LEFT JOIN "+RetSQLName("SFC")+" RV0 ON RV0.FC_FILIAL='"+xFilial("SFC")+"' AND RV0.FC_TES=D1_TES AND RV0.D_E_L_E_T_ <> '*' AND RV0.FC_IMPOSTO='RV0' AND RV0.FC_INCDUPL='2' AND RV0.FC_INCNOTA='2' "
-        cQuery+= " LEFT JOIN "+RetSQLName("SFC")+" ICA ON ICA.FC_FILIAL='"+xFilial("SFC")+"' AND ICA.FC_TES=D1_TES AND ICA.D_E_L_E_T_ <> '*' AND ICA.FC_IMPOSTO='ICA' AND ICA.FC_INCDUPL='2' AND ICA.FC_INCNOTA='2' "
-        cQuery+= " WHERE SD1.D1_FILIAL='"+xFilial("SD1")+"' AND SD1.D1_DOC='"+cDOC+"' AND SD1.D1_SERIE='"+cSERIE+"' AND SD1.D_E_L_E_T_ <> '*' "
-        cQuery+= " GROUP BY SD1.D1_DOC,SD1.D1_SERIE "
-        cQuery+= " ORDER BY SD1.D1_DOC,SD1.D1_SERIE "
-        dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),cImpus,.T.,.T.)
-        If (cImpus)->(!Eof())
-            aAdd(aReten,(cImpus)->IVA)
-            aAdd(aReten,IF(lRIVATra,(cImpus)->RETEIVA  ,0 ) )
-            aAdd(aReten,IF(lICATran,(cImpus)->ICA      ,0 ) )
-            aAdd(aReten,IF(lRF0Tran,(cImpus)->RETEFTE  ,0 ) )
-        Else
-            aAdd(aReten,0)
-            aAdd(aReten,0)
-            aAdd(aReten,0)
-            aAdd(aReten,0)
-        EndIf
-        (cImpus)->(DbCloseArea())
-        //cQuery:= " SELECT SUM(SD1.D1_QUANT) AS CANTIDAD FROM "+RetSQLName("SD1")+" SD1 "
-        //cQuery+= " WHERE SD1.D1_FILIAL='"+xFilial("SD1")+"' AND SD1.D1_DOC='"+cDOC+"' AND SD1.D1_SERIE='"+cSERIE+"' AND SD1.D_E_L_E_T_ <> '*' "
-        //cQuery+= " AND SD1.D1_FORNECE='"+cCodCli+"' AND SD1.D1_LOJA='"+cCodLoj+"' "
-        //cQuery+= " GROUP BY SD1.D1_DOC,SD1.D1_SERIE,SD1.D1_FORNECE,SD1.D1_LOJA "
-
-        //dbUseArea(.T.,"TOPCONN",TcGenQry(,,cQuery),nCantid,.T.,.T.)
-        //aAdd(aReten,(nCantid)->CANTIDAD)
-        //(nCantid)->(DbCloseArea())
-    EndIf
-
-
-return aReten
 
 

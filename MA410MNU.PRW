@@ -178,13 +178,14 @@ Static Function fCarAcols(cPedido,ldatos)
     cQry += "  LEFT JOIN " + RetSQLName('SD2') + " SD2 "           + CRLF
     cQry += "  ON D2_PEDIDO=C9_PEDIDO "           + CRLF
     cQry += "  AND D2_ITEMPV=C9_ITEM "           + CRLF
-    cQry += "  AND D2_SERIE='FVE' "           + CRLF
+    cQry += "  AND D2_SERIE IN ('FVE','SET') "           + CRLF
     cQry += "  AND C9_REMITO=D2_REMITO "           + CRLF
     cQry += "  AND SD2.D_E_L_E_T_ <> '*'   "           + CRLF    
 
     cQry += "  WHERE SC9.D_E_L_E_T_ <> '*'              "      + CRLF
     cQry += "  AND   SB1.D_E_L_E_T_ <> '*'              "      + CRLF
     cQry += "  AND C9_PEDIDO = '"+cPedido+"' 		"      + CRLF
+    cQry += "  ORDER BY C9_ITEM"      + CRLF
  
    TCQuery cQry New Alias "QRY_SBM"
 

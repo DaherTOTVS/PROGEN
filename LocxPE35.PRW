@@ -166,7 +166,9 @@ If (FunName()=="MATA465N")  // GENERACION DE NOTAS CREDITO Y DEBITO CLIENTE
       ("SX3")->(dbClosearea())
 	
 	IF M->F1_TIPOPE == "20"
-            M->F1_NATUREZ     := cSF2Naturez   // 05-MAY-2023 PARA TRAER LA NATURALEZ DESDE LA FACTURA DE VENTAS
+            IF !EMPTY(cSF2Naturez)
+                  M->F1_NATUREZ     := cSF2Naturez   // 05-MAY-2023 PARA TRAER LA NATURALEZ DESDE LA FACTURA DE VENTAS
+            ENDIF
             M->F1_VEND1       := cSF2Vendedor  // 25-MAY-2023 PARA TRAR EL VENDEDOR DESDE LA FACTURA DE VENTAS 
      ENDIF
 
