@@ -130,11 +130,12 @@ User Function M486OWSCOL()
 			//Tempalte a usar
 			IF (ALLTRIM(cEspecie)<>'NCC')
 				IF cTipDocT == "02"
-					cTemplate	:= "co-progenFE-55" //"co-progenFE-68" //"co-progenFE-55" //"co-progenFE-52"//Exportacion co-progenFE-40
+					cTemplate	:= "co-progenFE-70" //"co-progenFE-68" //"co-progenFE-55" //"co-progenFE-52"//Exportacion co-progenFE-40
 				ELSE
 					cTemplate	:= "co-progenFV-89"//"co-progenFV-72" //"co-progenFV-68" //"co-progenFV-64"//Nacional co-progenFV-59
 				ENDIF
 			ELSE
+			
 				cTemplate	:= "co-progenNC-53"//"co-progenNC-27" //"co-progenNC-22" //"co-progenNC-17" // NCC  co-progenNC-15
 			ENDIF
 
@@ -689,6 +690,12 @@ User Function M486OWSCOL()
 						oXml:_FE_LEGALMONETARYTOTAL:_CBC_LINEEXTENSIONAMOUNT:TEXT := cValToChar(0.00) // (totalSinImpuestos), Valor en Cero segun THKA
 						//oXml:_FE_LEGALMONETARYTOTAL:_CBC_TAXEXCLUSIVEAMOUNT:TEXT := cValToChar(0.00)
 					EndIF
+				ELSEIF (Alltrim(aCabDatos[1][8]) $ GetMV("MV_NATOBEX",,""))
+
+					oWs:ctotalMonto             := formatValEnv(aCabDatos[1][4],2)
+					oXML:_FE_LEGALMONETARYTOTAL:_CBC_PAYABLEAMOUNT:TEXT :=  formatValEnv(aCabDatos[1][4],2)  // (totalBrutoConImpuesto) Valor IVA
+					oXml:_FE_LEGALMONETARYTOTAL:_CBC_LINEEXTENSIONAMOUNT:TEXT := cValToChar(0.00) // (totalSinImpuestos), Valor en Cero segun THKA
+					
 				ENDIF
 
 
@@ -970,10 +977,10 @@ User Function M486OWSCOL()
 					DbSelectArea("SF2")
 					SF2->(DbSetOrder(1))
 					IF SF2->(DbSeek(xFilial("SF2") + cNumDoc + cSerieDoc + cCodCli + cCodLoj ))
-						IF SF2->F2_MOEDA <> 1
-							// oWSAdicion:cnombre 		:= TRANSFORM((SD2->D2_PRUNIT*SF2->F2_TXMOEDA),"@E 999,999,999.99")
+						IF SF2->F2_MOEDA <> 1 .AND. SA1->A1_PAIS == "169"
+							oWSAdicion:cnombre 		:= TRANSFORM((SD2->D2_PRUNIT*SF2->F2_TXMOEDA),"@E 999,999,999.99")
+						elseif SF2->F2_MOEDA <> 1
 							oWSAdicion:cnombre 		:= TRANSFORM((SD2->D2_PRUNIT),"@E 999,999,999.99")
-
 						else
 							oWSAdicion:cnombre 		:= TRANSFORM(SD2->D2_PRUNIT,"@E 999,999,999.99")
 						endif
