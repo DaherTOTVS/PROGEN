@@ -532,71 +532,140 @@ User Function M486OWSCOL()
 			EndIf
 
 			IF lActivador
-				DbSelectArea("SF2")
-				SF2->(DbSetOrder(1))
-				IF SF2->(DbSeek(xFilial("SF2") + cNumDoc + cSerieDoc + cCodCli + cCodLoj ))
+				IF ALLTRIM(cEspecie)=="NF"
+					DbSelectArea("SF2")
+					SF2->(DbSetOrder(1))
+					IF SF2->(DbSeek(xFilial("SF2") + cNumDoc + cSerieDoc + cCodCli + cCodLoj ))
 
-					oWSextra:=Service_Extras():new()
-					oWSextra:ccontrolInterno1     := "Campo activador"
-					oWSextra:ccontrolInterno2     := ""
-					oWSextra:cnombre              := "5170025"
-					oWSextra:cpdf                 := "1"
-					oWSextra:cvalor               := Posicione("CTO",1,xFilial("CTO")+Strzero(SF2->F2_MOEDA,2),"CTO_MOESAT")
-					oWSextra:cxml                 := "0"
-					aAdd(oWS:oWSextras:oWSextras,oWSextra)
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "Campo activador"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170025"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := Posicione("CTO",1,xFilial("CTO")+Strzero(SF2->F2_MOEDA,2),"CTO_MOESAT")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
-					// "DTO COMERCIAL USD"
-					oWSextra:=Service_Extras():new()
-					oWSextra:ccontrolInterno1     := "DTO COMERCIAL USD"
-					oWSextra:ccontrolInterno2     := ""
-					oWSextra:cnombre              := "5170026"
-					oWSextra:cpdf                 := "1"
-					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][12],"@E 999,999,999.99")
-					oWSextra:cxml                 := "0"
-					aAdd(oWS:oWSextras:oWSextras,oWSextra)
+						// "DTO COMERCIAL USD"
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "DTO COMERCIAL USD"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170026"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][12],"@E 999,999,999.99")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
-					// SUBTOTAL
-					oWSextra:=Service_Extras():new()
-					oWSextra:ccontrolInterno1     := "SUBTOTAL USD"
-					oWSextra:ccontrolInterno2     := ""
-					oWSextra:cnombre              := "5170024"
-					oWSextra:cpdf                 := "1"
-					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][16],"@E 999,999,999.99")
-					oWSextra:cxml                 := "0"
-					aAdd(oWS:oWSextras:oWSextras,oWSextra)
+						// SUBTOTAL
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "SUBTOTAL USD"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170024"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][16],"@E 999,999,999.99")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
-					// TOTAL
-					oWSextra:=Service_Extras():new()
-					oWSextra:ccontrolInterno1     := "TOTAL FV USD"
-					oWSextra:ccontrolInterno2     := ""
-					oWSextra:cnombre              := "5170030"
-					oWSextra:cpdf                 := "1"
-					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][2],"@E 999,999,999.99")
-					oWSextra:cxml                 := "0"
-					aAdd(oWS:oWSextras:oWSextras,oWSextra)
+						// TOTAL
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "TOTAL FV USD"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170030"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][2],"@E 999,999,999.99")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
 
-					//ANTES DE IVA
-					oWSextra:=Service_Extras():new()
-					oWSextra:ccontrolInterno1     := "TOTAL ANTES DE IVA USD"
-					oWSextra:ccontrolInterno2     := ""
-					oWSextra:cnombre              := "5170027"
-					oWSextra:cpdf                 := "1"
-					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][7],"@E 999,999,999.99")
-					oWSextra:cxml                 := "0"
-					aAdd(oWS:oWSextras:oWSextras,oWSextra)
+						//ANTES DE IVA
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "TOTAL ANTES DE IVA USD"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170027"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][7],"@E 999,999,999.99")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
-					// IVA 
-					oWSextra:=Service_Extras():new()
-					oWSextra:ccontrolInterno1     := "IVA USD"
-					oWSextra:ccontrolInterno2     := ""
-					oWSextra:cnombre              := "5170028"
-					oWSextra:cpdf                 := "1"
-					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][4],"@E 999,999,999.99")
-					oWSextra:cxml                 := "0"
-					aAdd(oWS:oWSextras:oWSextras,oWSextra)
+						// IVA 
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "IVA USD"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170028"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][4],"@E 999,999,999.99")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
-					SF2->(dbCloseArea())
+						SF2->(dbCloseArea())
+					ENDIF
+				ELSEIF ALLTRIM(cEspecie)=="NCC"
+					DbSelectArea("SF1")
+					SF1->(DbSetOrder(1))
+					IF SF1->(DbSeek(xFilial("SF1") + cNumDoc + cSerieDoc + cCodCli + cCodLoj ))
+
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "Campo activador"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170025"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := Posicione("CTO",1,xFilial("CTO")+Strzero(SF1->F1_MOEDA,2),"CTO_MOESAT")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
+
+						// "DTO COMERCIAL USD"
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "DTO COMERCIAL USD"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170026"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][12],"@E 999,999,999.99")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
+
+						// SUBTOTAL
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "SUBTOTAL USD"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170024"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][16],"@E 999,999,999.99")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
+
+						// TOTAL
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "TOTAL FV USD"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170030"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][2],"@E 999,999,999.99")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
+
+
+						//ANTES DE IVA
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "TOTAL ANTES DE IVA USD"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170027"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][7],"@E 999,999,999.99")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
+
+						// IVA 
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "IVA USD"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170028"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][4],"@E 999,999,999.99")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
+
+						SF1->(dbCloseArea())
+					ENDIF
 				ENDIF
 			ENDIF
 
