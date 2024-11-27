@@ -1,0 +1,1128 @@
+#INCLUDE 'msobject.ch'
+#INCLUDE 'tlpp-core.th'
+#INCLUDE 'tlpp-rest.th'
+#INCLUDE 'totvs.framework.treports.integratedprovider.th'
+#INCLUDE 'backoffice.sv.fat.salesorder.ch'
+
+//-------------------------------------------------------------------------------
+/*{Protheus.doc} pruebaTReportsBusinessObject
+Classe para criação do Objeto de Negocio de faturamento para SmartView
+@author Leonardo Pereira
+@since 27/09/2023
+@version 1.0
+*/
+//-------------------------------------------------------------------------------
+namespace custom.faturamento.prueba.integratedprovider
+
+// Annotation
+@totvsFrameworkTReportsIntegratedProvider( active=.T., team='SIGAFAT', tables='SC5,SC6,SA1,SB1,SC9,SD2', name='Prueba Duvan', country='ALL', initialRelease='12.1.2410', customTables='ALL' )
+class pruebaTReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+
+	public Method new() as object
+	public Method getData() as object
+	public Method getSchema() as object
+
+	protected data aFields as array
+	protected data aStruct as array
+
+endclass
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} NEW
+Método de instância da classe: Define a lista de importações que serão acessados no objeto de negocios
+@return object: self
+@author Leonardo Pereira
+@since 27/09/2023
+@version 1.0
+*/
+//------------------------------------------------------------------- 
+Method new() class pruebaTReportsBusinessObject
+
+	Local aCpos as array
+
+	aCpos := { }
+
+	_Super:new()
+
+	// Define a Área
+	self:appendArea( STR0039 ) // 'Faturamento'
+
+	//Define o nome do Objeto de Negócio
+	self:setDisplayName( 'Prueba Dh' ) // 'Pedido de Ventas'
+
+	//Define a descrição do Objeto de Negócio
+	self:setDescription( 'Informe de prueba DH' ) // 'Pedido de Ventas'
+ 
+	// Indica o pergunte que será utilizado no relatório
+	If !self:setPergunte( 'MATSV898' ) // Indica o pergunte que será utilizado
+		IIf(!self:setErrorStatus( 400, STR0002, STR0003 ),FwLogMsg( 'WARN',, 'Smart View',,,, STR0004,,, ),'') //'Sin Preguntas' //'¡Verifique el grupo de preguntas dado!' //'Código de error no válido, solo acepte códigos de error 4xx'
+		FwLogMsg( 'WARN',, 'Smart View',,,, STR0005 ,,, ) //'¡Grupo de preguntas no encontrado!'
+	EndIf
+
+	// Adiciona os campos virtuais/calculados
+	aAdd( aCpos, { 'C5_DESMOE' , STR0006, 'string', STR0007 } ) // 'Descripción de la moneda Pedido' ## 'Desc. Moneda Pedido'
+	aAdd( aCpos, { 'C5_DETALHE', STR0008, 'string', STR0009 } ) // 'Detalle del Pedido' ## 'Detalle Pedido'
+	aAdd( aCpos, { 'C5_TAXADIA', STR0010, 'number', STR0010 } ) // 'Tasa del Día' ## 'Tasa del Día' 
+	aAdd( aCpos, { 'C5_TOTPED' , STR0011, 'number', STR0012 } ) // 'Total de Pedido de Venta' ## 'Total Pedido'
+	aAdd( aCpos, { 'C5_TOTCON1', STR0013, 'number', STR0014 } ) // 'Total del Pedido en Moneda 1' ## 'Total Pedido Moneda 1'
+	aAdd( aCpos, { 'C5_TOTCON2', STR0015, 'number', STR0016 } ) // 'Total del Pedido Convertido Tx. Dia' ## 'Total Pedido Convertido Tx. Dia'
+	aAdd( aCpos, { 'C5_TOTPES1', STR0017, 'number', STR0018 } ) // 'Peso del Item' ## 'Peso ítem'
+	aAdd( aCpos, { 'C5_TOTPES2', STR0019, 'number', STR0020 } ) // 'Peso del Pedido' ## 'Peso Pedido' 
+	aAdd( aCpos, { 'C5_STATUS' , STR0021, 'string', STR0021 } ) // 'Estado'
+	aAdd( aCpos, { 'D2_TOTDOC' , STR0022, 'number', STR0023 } ) // 'Total de la Factura' ## 'Total Factura'
+	aAdd( aCpos, { 'D2_TOTCON1', STR0024, 'number', STR0025 } ) // 'Total de Factura en Moneda 1' ## 'Total Factura Moneda 1'
+	aAdd( aCpos, { 'D2_TOTCON2', STR0026, 'number', STR0026 } ) // 'Total Factura Convertido  Tx. Dia'
+	aAdd( aCpos, { 'D2_EMISS_1', STR0027, 'date'  , STR0028 } ) // 'Fecha de Emisión de la Factura' ## 'Emisión Factura'
+	aAdd( aCpos, { 'D2_DOC'    , STR0029, 'string', STR0029 } ) // 'Factura'
+	aAdd( aCpos, { 'D2_SERIE_1', STR0030, 'string', STR0030 } ) // 'Serie'
+	aAdd( aCpos, { 'D2_ITEM_1' , STR0031, 'string', STR0031 } ) // 'Artículo'
+	aAdd( aCpos, { 'D2_QUANT_1', STR0032, 'number', STR0032 } ) // 'Cantidad'
+	aAdd( aCpos, { 'F2_DESMOE' , STR0033, 'string', STR0034 } ) // 'Descripción de la moneda factura' ## 'Desc. Moneda Factura'
+	aAdd( aCpos, { 'F2_TAXADIA', STR0010, 'number', STR0010 } ) // 'Tasa del Día' ## 'Tasa del Día' 
+
+	// Define os campos que serão retornados no objeto de negocios
+	self:aFields := { 'C5_FILIAL', 'C5_EMISSAO', 'C5_CATPV', 'C5_NUM', 'C5_CLIENTE', 'C5_LOJACLI', 'A1_NOME', 'C6_ITEM', 'C6_PRODUTO', 'B1_DESC', 'C6_UM', 'B1_GRUPO', 'C6_QTDVEN', 'C5_TOTPES1', 'C5_TOTPES2', 'C5_MOEDA', 'C5_DESMOE', 'C5_TXMOEDA', 'C5_TAXADIA', 'C6_VALOR', 'C5_TOTPED', 'C5_TOTCON1', 'C5_TOTCON2','C6_ENTREG', 'C5_STATUS', 'C5_DETALHE', 'D2_EMISSAO', 'D2_REMITO', 'D2_SERIE', 'D2_ITEM', 'D2_QUANT', 'D2_EMISS_1', 'D2_DOC', 'D2_SERIE_1', 'D2_ITEM_1', 'D2_QUANT_1', 'F2_MOEDA', 'F2_DESMOE', 'F2_TXMOEDA', 'F2_TAXADIA', 'D2_TOTAL', 'D2_TOTDOC', 'D2_TOTCON1', 'D2_TOTCON2' }
+
+	self:aStruct := getStrutObj( self:aFields, aCpos, .T. )
+
+Return( self )
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} getSchema
+Retorna a estrutura de campos 
+@return object: self:oSchema 
+@author Leonardo Pereira
+@since 27/09/2023
+@version 1.0
+*/
+//------------------------------------------------------------------- 
+Method getSchema( ) as object class pruebaTReportsBusinessObject
+
+	Local n1 as numeric
+
+	// Adiciona as propriedades dos campos que serão retornados para o SMARTVIEW
+	For n1 := 1 To Len( self:aStruct )
+		self:addProperty( self:aStruct[n1][1], self:aStruct[n1][2], self:aStruct[n1][3], self:aStruct[n1][4], self:aStruct[n1][5] )
+	Next
+
+Return( self:oSchema )
+
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} getData
+Retorna os datos do objeto de negócios
+@param nPage, numérico, indica a pagina atual
+@param oFilter, objeto, contém o filtro do SmartView
+@return object: self:oData
+@author Leonardo Pereira
+@since 27/09/2023
+@version 1.0
+*/
+//------------------------------------------------------------------- 
+Method getData( nPage as numeric, oFilter as object) as object class pruebaTReportsBusinessObject
+
+	// Declaracao de variaveis
+	Local jParams as json
+	Local jItems as json
+
+	Local cQuery as character
+	Local cAliasA := GetNextAlias() as character
+	Local cAliasB := GetNextAlias() as character
+	Local cAliasC := GetNextAlias() as character
+	Local cDescMon as character
+	Local cFiltro as character
+	Local cExp as character
+	Local cFilSA1 as character
+	Local cFilSB1 as character
+	Local cFilAGR as character
+	Local cFilSBM as character
+	Local cFilSC5 as character
+	Local cFilSC6 as character
+	Local cFilSD2 as character
+	Local cFilSF2 as character
+
+	Local nSkip as numeric
+	Local nCount as numeric
+	Local nX as numeric
+	Local nDecs as numeric
+	Local nMoeda as numeric
+	Local n1 as numeric
+	Local nPosMon as numeric
+	Local nPosExp as numeric
+	Local nQtMoedas as numeric
+	Local nTxMoeConv as numeric
+	Local nTOTCon1 as numeric
+	Local nTOTPed as numeric
+	Local nTOTDoc as numeric
+	Local nTOTPes1 as numeric
+	Local nTOTPes2 as numeric
+	Local nParMoe as numeric
+	Local nParOpc as numeric
+
+	Local aPDFields as array
+	Local aNomeMoed as array
+	Local aStatusPed as array
+	Local aFiltro as array
+
+	Local lObfuscated as logical
+
+	Local oQueryA		as object
+	Local oQueryB		as object
+	Local oQueryC		as object
+
+	cDescMon := ''
+	cFiltro := ''
+	cExp := ''
+	cFilSA1 := xFilial( 'SA1' )
+	cFilSB1 := xFilial( 'SB1' )
+	cFilAGR := xFilial( 'AGR' )
+	cFilSBM := xFilial( 'SBM' )
+	cFilSC5 := xFilial( 'SC5' )
+	cFilSC6 := xFilial( 'SC6' )
+	cFilSD2 := xFilial( 'SD2' )
+	cFilSF2 := xFilial( 'SF2' )
+
+	nCount := 0
+	nPosMon := 0
+	nPosExp := 0
+	nDecs := MsDecimais( 1 )
+	nQtMoedas := Moedfin( )
+	nMoeda := 1
+	n1 := 0
+	nTxMoeConv := 0
+	nTOTCon1 := 0
+	nTOTPed := 0
+	nTOTDoc := 0
+	nTOTPes1 := 0
+	nTOTPes2 := 0
+
+	aPDFields := { }
+	aNomeMoed := { }
+	aStatusPed := { '', '' }
+	aFiltro := { }
+
+	lObfuscated := .F.
+
+	// Verifica se existem campos sensiveis na lista de campos a serem retornados
+	aPDFields := FwProtectedDataUtil():UsrAccessPDField( __cUserID, self:aFields )
+	lObfuscated := Len( aPDFields ) != Len( self:aFields )
+
+	// Lista as moedas e suas descrições
+	For nX := 1 To nQtMoedas
+		aAdd( aNomeMoed, { AllTrim( Str( nX ) ), SuperGetMv( 'MV_MOEDA' + AllTrim( Str( nX ) ) ) } )
+	Next
+
+	// Coleta os dados dos parametros
+	jParams := oFilter:getParameters( )
+
+	If oFilter:hasFilter()
+		// Tratamento para conversão para moeda selecionada
+		cFiltro := oFilter:getSQLExpression( )
+
+		aFiltro := getParamToArr( cFiltro )
+
+		// Ordena os parametros
+		aSort( aFiltro,,, { |x, y| x[1] + x[3] < y[1] + y[3] } )
+	EndIf
+
+	nParMoe := IIf(ValType(jParams['MV_PAR12'][1])=="C",Val(jParams['MV_PAR12'][1]),jParams['MV_PAR12'][1])
+	nParOpc := IIf(ValType(jParams['MV_PAR01'][1])=="C",Val(jParams['MV_PAR01'][1]),jParams['MV_PAR01'][1])
+
+	// Pesquisa a taxa do dia
+	If ( nParMoe > 0 )
+		DbSelectArea( 'SM2' )
+		SM2->( DbSetOrder( 1 ) )
+		If SM2->( DbSeek( DtoS( dDataBase ) ) ) // M2_DATA
+			nTxMoeConv := SM2->&( ( 'M2_MOEDA' + StrZero( nParMoe, 1 ) ) )
+		EndIf
+	EndIf
+
+	If ( nParOpc == 1 )
+		// Realiza a montagem da QUERY que será enviada para o banco de dados
+		cQuery := "SELECT SC5.C5_FILIAL, SC5.C5_NOTA, SC5.C5_EMISSAO, SC5.C5_CATPV||' '||AGR.AGR_DESCRI AS C5_CATPV, SC5.C5_NUM, SC5.C5_CLIENTE, SC5.C5_LOJACLI, SC5.C5_MOEDA, SC5.C5_TXMOEDA, SA1.A1_NOME, SA1.A1_RISCO, SC6.C6_ITEM, SC6.C6_PRODUTO, SB1.B1_DESC, SC6.C6_UM, SB1.B1_GRUPO||' '||SBM.BM_DESC AS B1_GRUPO, SB1.B1_PESO, SC6.C6_QTDVEN, SC6.C6_VALOR, SC6.C6_ENTREG "
+		cQuery += "FROM " + RetSQLName( 'SC5' ) + " AS SC5 "
+		cQuery += "INNER JOIN " + RetSQLName( 'SC6' ) + " AS SC6 ON SC6.D_E_L_E_T_ = ' ' AND SC6.C6_FILIAL = SC5.C5_FILIAL AND SC6.C6_NUM = SC5.C5_NUM AND SC6.C6_CLI = SC5.C5_CLIENTE "
+		cQuery += "INNER JOIN " + RetSQLName( 'SA1' ) + " AS SA1 ON SA1.D_E_L_E_T_ = ' ' AND SA1.A1_FILIAL = ? AND SA1.A1_COD = SC5.C5_CLIENTE AND SA1.A1_LOJA = SC5.C5_LOJACLI "
+		cQuery += "INNER JOIN " + RetSQLName( 'SB1' ) + " AS SB1 ON SB1.D_E_L_E_T_ = ' ' AND SB1.B1_FILIAL = ? AND SB1.B1_COD = SC6.C6_PRODUTO "
+		cQuery += "LEFT JOIN  " + RetSQLName( 'AGR' ) + " AS AGR ON AGR.D_E_L_E_T_ = ' ' AND AGR.AGR_FILIAL = ? AND AGR.AGR_COD = SC5.C5_CATPV "
+		cQuery += "LEFT JOIN  " + RetSQLName( 'SBM' ) + " AS SBM ON SBM.D_E_L_E_T_ = ' ' AND SBM.BM_FILIAL = ? AND SBM.BM_GRUPO = SB1.B1_GRUPO "
+		cQuery += "WHERE SC5.C5_FILIAL = ? "
+		cQuery += "AND SC5.D_E_L_E_T_ = ' ' "
+		cQuery += "AND SC5.C5_NUM BETWEEN ? AND ? "
+		cQuery += "AND SC5.C5_EMISSAO BETWEEN ? AND ? "
+		cQuery += "AND SC5.C5_CLIENTE BETWEEN ? AND ? "
+		cQuery += "AND SC5.C5_LOJACLI BETWEEN ? AND ? "
+		cQuery += "AND SC6.C6_PRODUTO BETWEEN ? AND ? "
+
+		// Agrega os filtros do SMARTVIEW na QUERY
+		For nX := 1 To Len( aFiltro )
+			cQuery += "AND " + aFiltro[nX, 1] + ' ' + aFiltro[nX, 2] + " " + aFiltro[nX, 3] + " "
+		Next
+
+		cQuery += "ORDER BY SC5.C5_EMISSAO, SC5.C5_CLIENTE, SC5.C5_LOJACLI, SC6.C6_NUM, SC6.C6_ITEM "
+
+		// Executa a QUERY e cria uma tabela temporaria com os dados retornados
+		cQuery := ChangeQuery(cQuery)
+		oQueryA := FwExecStatement():New()
+
+		//Define a consulta e os parâmetros
+		oQueryA:SetQuery(cQuery)
+		oQueryA:SetString(01, cFilSA1 )
+		oQueryA:SetString(02, cFilSB1 )
+		oQueryA:SetString(03, cFilAGR )
+		oQueryA:SetString(04, cFilSBM )
+		oQueryA:SetString(05, cFilSC5 )
+		oQueryA:SetString(06, jParams['MV_PAR02'][1] )
+		oQueryA:SetString(07, jParams['MV_PAR03'][1] )
+		oQueryA:SetString(08, DtoS( FwDateTimeToLocal( jParams['MV_PAR10'][1] )[1] ) )
+		oQueryA:SetString(09, DtoS( FwDateTimeToLocal( jParams['MV_PAR11'][1] )[1] ) )
+		oQueryA:SetString(10, jParams['MV_PAR04'][1] )
+		oQueryA:SetString(11, jParams['MV_PAR06'][1] )
+		oQueryA:SetString(12, jParams['MV_PAR05'][1] )
+		oQueryA:SetString(13, jParams['MV_PAR07'][1] )
+		oQueryA:SetString(14, jParams['MV_PAR08'][1] )
+		oQueryA:SetString(15, jParams['MV_PAR09'][1] )
+
+		// cria alias 
+		oQueryA:OpenAlias(cAliasA)
+
+		// Realiza a contagem de paginas
+		If ( nPage == 1 )
+			( cAliasA )->( DbGoTop( ) )
+		Else
+			// Encontra a quantidade de itens que irá pular de acordo com a página atual
+			nSkip := ( ( nPage - 1 ) * self:getPageSize( ) )
+			( cAliasA )->( DbSkip( nSkip ) )
+		EndIf
+
+		// Alimenta o objeto de dados da classe para retornar ao SmartView
+		DbSelectArea( cAliasA )
+		While !( cAliasA )->( EOF( ) )
+			jItems := JsonObject():new()
+
+			aStatusPed := getStatus( cAliasA )
+
+			nTOTPed := calcTotDoc( 1, cAliasA,, cFilSB1 )
+			nTOTPes1 := calcTotDoc( 3, cAliasA,, cFilSB1 )
+			nTOTPes2 := calcTotDoc( 4, cAliasA,, cFilSB1 )
+
+			// Realiza a montagem da QUERY que será enviada para o banco de dados
+			cQuery := "SELECT SD21.D2_FILIAL, SD21.D2_EMISSAO, SD21.D2_DOC AS D2_REMITO, SD21.D2_SERIE, SD21.D2_ITEM, SD21.D2_QUANT "
+			cQuery += "FROM " + RetSQLName( 'SD2' ) + " AS SD21 "
+			cQuery += "WHERE SD21.D2_FILIAL = ? "
+			cQuery += "AND SD21.D2_PEDIDO = ? "
+			cQuery += "AND SD21.D2_ITEMPV = ? "
+			cQuery += "AND SD21.D2_CLIENTE = ? "
+			cQuery += "AND SD21.D2_LOJA = ? "
+			cQuery += "AND SD21.D2_TIPODOC >= '50' "
+			cQuery += "AND SD21.D_E_L_E_T_ = ' ' "
+
+			// Executa a QUERY e cria uma tabela temporaria com os dados retornados
+			cQuery := ChangeQuery(cQuery)
+			oQueryB := FwExecStatement():New()
+
+			//Define a consulta e os parâmetros
+			oQueryB:SetQuery(cQuery)
+			oQueryB:SetString(01, cFilSD2 )
+			oQueryB:SetString(02, ( cAliasA )->C5_NUM )
+			oQueryB:SetString(03, ( cAliasA )->C6_ITEM )
+			oQueryB:SetString(04, ( cAliasA )->C5_CLIENTE )
+			oQueryB:SetString(05, ( cAliasA )->C5_LOJACLI )
+			
+			// cria alias 
+			oQueryB:OpenAlias(cAliasB)
+
+			// Realiza a montagem da QUERY que será enviada para o banco de dados
+			cQuery := "SELECT SD22.D2_FILIAL, SD22.D2_EMISSAO AS D2_EMISS_1, SD22.D2_DOC, SD22.D2_SERIE AS D2_SERIE_1, SD22.D2_ITEM AS D2_ITEM_1, SD22.D2_QUANT AS D2_QUANT_1, SF22.F2_MOEDA, SF22.F2_TXMOEDA, SD22.D2_TOTAL "
+			cQuery += "FROM " + RetSQLName( 'SD2' ) + " AS SD22, " + RetSQLName( 'SF2' ) + " AS SF22 "
+			cQuery += "WHERE SD22.D2_FILIAL =  ? "
+			cQuery += "AND SD22.D2_PEDIDO = ? "
+			cQuery += "AND SD22.D2_ITEMPV = ? "
+			cQuery += "AND SD22.D2_CLIENTE = ? "
+			cQuery += "AND SD22.D2_LOJA = ? "
+			cQuery += "AND SD22.D2_TIPODOC < '50' "
+			cQuery += "AND SF22.F2_FILIAL = SD22.D2_FILIAL "
+			cQuery += "AND SF22.F2_DOC = SD22.D2_DOC "
+			cQuery += "AND SF22.F2_SERIE = SD22.D2_SERIE "
+			cQuery += "AND SF22.F2_SERIE <> 'R' "
+			cQuery += "AND SF22.F2_CLIENTE = SD22.D2_CLIENTE "
+			cQuery += "AND SF22.F2_LOJA = SD22.D2_LOJA "
+			cQuery += "AND SD22.D_E_L_E_T_ = ' ' "
+			cQuery += "AND SF22.D_E_L_E_T_ = ' ' "
+
+			// Executa a QUERY e cria uma tabela temporaria com os dados retornados
+			cQuery := ChangeQuery(cQuery)
+			oQueryC := FwExecStatement():New()
+
+			//Define a consulta e os parâmetros
+			oQueryC:SetQuery(cQuery)
+			oQueryC:SetString(01, cFilSD2 )
+			oQueryC:SetString(02, ( cAliasA )->C5_NUM )
+			oQueryC:SetString(03, ( cAliasA )->C6_ITEM )
+			oQueryC:SetString(04, ( cAliasA )->C5_CLIENTE )
+			oQueryC:SetString(05, ( cAliasA )->C5_LOJACLI )
+			
+			// cria alias 
+			oQueryC:OpenAlias(cAliasC)
+
+			DbSelectArea( cAliasC )
+			If !( cAliasC )->( EOF( ) )
+				nTOTDoc := calcTotDoc( 2, cAliasA, cAliasC, cFilSB1 )
+			EndIf
+
+			// Alimenta o objeto de dados da classe para retornar ao SmartView
+			For nX := 1 To Len( self:aStruct )
+				If ( AllTrim( self:aStruct[nx][5] ) $ 'C5_EMISSAO|C5_CATPV|C5_NUM|C5_CLIENTE|C5_LOJACLI|A1_NOME|C6_ITEM|C6_PRODUTO|B1_DESC|C6_UM|B1_GRUPO|C6_QTDVEN|C5_TOTPES1|C5_TOTPES2|C5_MOEDA|C5_DESMOE|C5_TXMOEDA|C5_TAXADIA|C6_VALOR|C5_TOTPED|C5_TOTCON1|C5_TOTCON2|C6_ENTREG|C5_STATUS|C5_DETALHE' )
+					If lObfuscated .And. ( aScan( aPDFields, self:aStruct[nX][5] ) == 0 )
+						jItems[self:aStruct[nX][1]] := FwProtectedDataUtil():ValueAsteriskToAnonymize( ( cAliasA )->&( self:aStruct[nX][5] ) )
+					ElseIf ( self:aStruct[nX][3] == 'date' )
+						jItems[self:aStruct[nX][1]] := totvs.framework.treports.date.dateToTimeStamp( StoD( ( cAliasA )->&( self:aStruct[nX][5] ) ) )
+					ElseIf ( self:aStruct[nx][5] == 'C5_DESMOE' )
+						// Moneda Orden
+						nPosMon := aScan( aNomeMoed, { | x, y | AllTrim( x[1] ) == AllTrim( Str( ( cAliasA )->C5_MOEDA ) ) } )
+						cDescMon := IIf( ( nPosMon > 0 ), aNomeMoed[nPosMon][2], '' )
+						jItems[self:aStruct[nX][1]] := cDescMon
+					ElseIf ( self:aStruct[nx][5] == 'C5_TAXADIA' )
+						jItems[self:aStruct[nX][1]] := nTxMoeConv
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTPED' )
+						jItems[self:aStruct[nX][1]] := Round( nTOTPed, nDecs )
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTCON1' )
+						nTOTCon1 := Round( xMoeda( nTOTPed, ( cAliasA )->C5_MOEDA, nMoeda, dDataBase, nDecs, ( cAliasA )->C5_TXMOEDA, 1, ), nDecs )
+						jItems[self:aStruct[nX][1]] := nTOTCon1
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTCON2' )
+						jItems[self:aStruct[nX][1]] := IIF(nTxMoeConv > 0,Round( xMoeda( nTOTCon1, 1, nParMoe, dDataBase,,,, ), nDecs ),0)
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTPES1' )
+						jItems[self:aStruct[nX][1]] := Round( nTOTPes1, nDecs )
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTPES2' )
+						jItems[self:aStruct[nX][1]] := Round( nTOTPes2, nDecs )
+					ElseIf ( self:aStruct[nx][5] == 'C5_STATUS' )
+						jItems[self:aStruct[nX][1]] := aStatusPed[1]
+					ElseIf ( self:aStruct[nx][5] == 'C5_DETALHE' )
+						jItems[self:aStruct[nX][1]] := aStatusPed[2]
+					Else
+						jItems[self:aStruct[nX][1]] := ( cAliasA )->&( self:aStruct[nX][5] )
+					EndIf
+				ElseIf ( AllTrim( self:aStruct[nx][5] ) $ 'D2_EMISSAO|D2_REMITO|D2_SERIE|D2_ITEM|D2_QUANT' )
+					If lObfuscated .And. ( aScan( aPDFields, self:aStruct[nX][5] ) == 0 )
+						jItems[self:aStruct[nX][1]] := FwProtectedDataUtil():ValueAsteriskToAnonymize( ( cAliasB )->&( self:aStruct[nX][5] ) )
+					ElseIf ( self:aStruct[nX][3] == 'date' )
+						jItems[self:aStruct[nX][1]] := totvs.framework.treports.date.dateToTimeStamp( StoD( ( cAliasB )->&( self:aStruct[nX][5] ) ) )
+					Else
+						jItems[self:aStruct[nX][1]] := ( cAliasB )->&( self:aStruct[nX][5] )
+					EndIf
+				ElseIf ( AllTrim( self:aStruct[nx][5] ) $ 'D2_EMISS_1|D2_DOC|D2_SERIE_1|D2_ITEM_1|D2_QUANT_1|F2_MOEDA|F2_DESMOE|F2_TXMOEDA|F2_TAXADIA|D2_TOTAL|D2_TOTDOC|D2_TOTCON1|D2_TOTCON2' )
+					If lObfuscated .And. ( aScan( aPDFields, self:aStruct[nX][5] ) == 0 )
+						jItems[self:aStruct[nX][1]] := FwProtectedDataUtil():ValueAsteriskToAnonymize( ( cAliasC )->&( self:aStruct[nX][5] ) )
+					ElseIf ( self:aStruct[nX][3] == 'date' )
+						jItems[self:aStruct[nX][1]] := totvs.framework.treports.date.dateToTimeStamp( StoD( ( cAliasC )->&( self:aStruct[nX][5] ) ) )
+					ElseIf ( self:aStruct[nx][5] == 'F2_DESMOE' )
+						// Moneda Factura
+						nPosMon := aScan( aNomeMoed, { | x, y | AllTrim( x[1] ) == AllTrim( Str( ( cAliasC )->F2_MOEDA ) ) } )
+						cDescMon := IIf( ( nPosMon > 0 ), aNomeMoed[nPosMon][2], '' )
+						jItems[self:aStruct[nX][1]] := cDescMon
+					ElseIf ( self:aStruct[nx][5] == 'F2_TAXADIA' )
+						jItems[self:aStruct[nX][1]] := nTxMoeConv
+					ElseIf ( self:aStruct[nx][5] == 'D2_TOTDOC' )
+						jItems[self:aStruct[nX][1]] := Round( nTOTDoc, nDecs )
+					ElseIf ( self:aStruct[nx][5] == 'D2_TOTCON1' )
+						nTOTCon1 := Round( xMoeda( nTOTDoc, ( cAliasC )->F2_MOEDA, nMoeda, dDataBase, nDecs, ( cAliasC )->F2_TXMOEDA, 1, ), nDecs )
+						jItems[self:aStruct[nX][1]] := nTOTCon1
+					ElseIf ( self:aStruct[nx][5] == 'D2_TOTCON2' )
+						jItems[self:aStruct[nX][1]] := IIF(nTxMoeConv > 0,Round( xMoeda( nTOTCon1, 1, nParMoe, dDataBase,,,, ), nDecs ),0)
+					Else
+						jItems[self:aStruct[nX][1]] := ( cAliasC )->&( self:aStruct[nX][5] )
+					EndIf
+				ElseIf ( AllTrim( self:aStruct[nx][5] ) == 'C5_FILIAL' )
+					jItems[self:aStruct[nX][1]] := IIF(!Empty( ( cAliasA )->C5_FILIAL ),( cAliasA )->C5_FILIAL,IIF(!Empty( ( cAliasB )->D2_FILIAL ),( cAliasB )->D2_FILIAL,IIF(!Empty( ( cAliasC )->D2_FILIAL ),( cAliasC )->D2_FILIAL,"")))
+				EndIf
+			Next
+
+			// Inclui os dados no objeto paea retorno ao SmartView
+			self:oData:appendData( jItems )
+
+			( cAliasB )->( DbCloseArea( ) )
+			( cAliasC )->( DbCloseArea( ) )
+
+			( cAliasA )->( DbSkip( ) )
+			nCount++
+
+			nTOTCon1 := 0
+			nTOTPed := 0
+			nTOTDoc := 0
+			nTOTPes1 := 0
+			nTOTPes2 := 0
+
+			// Sai do loop quando chegar no tamanho de itens da página
+			If ( nCount == self:getPageSize( ) )
+				Exit
+			EndIf
+		End
+
+		// Se não for o último registro indica que terá próxima página
+		self:setHasNext( !( cAliasA )->( EOF( ) ) )
+		( cAliasA )->( DbCloseArea( ) )
+	ElseIf ( nParOpc == 2 )
+		// Realiza a montagem da QUERY que será enviada para o banco de dados
+		cQuery := "SELECT SD21.D2_FILIAL, SD21.D2_EMISSAO, SD21.D2_DOC AS D2_REMITO, SD21.D2_SERIE, SD21.D2_ITEM, SD21.D2_QUANT, SD21.D2_PEDIDO, SD21.D2_ITEMPV, SD21.D2_CLIENTE, SD21.D2_LOJA "
+		cQuery += "FROM " + RetSQLName( 'SD2' ) + " AS SD21, " + RetSQLName( 'SA1' ) + " AS SA1, " + RetSQLName( 'SB1' ) + " AS SB1 "
+		cQuery += "WHERE SD21.D2_FILIAL = ? "
+		cQuery += "AND SD21.D2_DOC BETWEEN ? AND ? "
+		cQuery += "AND SD21.D2_EMISSAO BETWEEN ? AND ? "
+		cQuery += "AND SD21.D2_CLIENTE BETWEEN ? AND ? "
+		cQuery += "AND SD21.D2_LOJA BETWEEN ? AND ? "
+		cQuery += "AND SD21.D2_COD BETWEEN ? AND ? "
+		cQuery += "AND SD21.D2_TIPODOC >= '50' "
+		cQuery += "AND SD21.D_E_L_E_T_ = ' ' "
+		cQuery += "AND SA1.A1_FILIAL = ? "
+		cQuery += "AND SA1.A1_COD = SD21.D2_CLIENTE "
+		cQuery += "AND SA1.A1_LOJA = SD21.D2_LOJA "
+		cQuery += "AND SA1.D_E_L_E_T_ = ' ' "
+		cQuery += "AND SB1.B1_FILIAL = ? "
+		cQuery += "AND SB1.B1_COD = SD21.D2_COD "
+		cQuery += "AND SB1.D_E_L_E_T_ = ' ' "
+		cQuery += "ORDER BY SD21.D2_EMISSAO, SD21.D2_CLIENTE, SD21.D2_LOJA, SD21.D2_DOC, SD21.D2_ITEM "
+
+		// Executa a QUERY e cria uma tabela temporaria com os dados retornados
+		cQuery := ChangeQuery(cQuery)
+		oQueryB := FwExecStatement():New()
+
+		//Define a consulta e os parâmetros
+		oQueryB:SetQuery(cQuery)
+		oQueryB:SetString(01, cFilSD2 )
+		oQueryB:SetString(02, jParams['MV_PAR02'][1] )
+		oQueryB:SetString(03, jParams['MV_PAR03'][1] )
+		oQueryB:SetString(04, DtoS( FwDateTimeToLocal( jParams['MV_PAR10'][1] )[1] ) )
+		oQueryB:SetString(05, DtoS( FwDateTimeToLocal( jParams['MV_PAR11'][1] )[1] ) )
+		oQueryB:SetString(06, jParams['MV_PAR04'][1] )
+		oQueryB:SetString(07, jParams['MV_PAR06'][1] )
+		oQueryB:SetString(08, jParams['MV_PAR05'][1] )
+		oQueryB:SetString(09, jParams['MV_PAR07'][1] )
+		oQueryB:SetString(10, jParams['MV_PAR08'][1] )
+		oQueryB:SetString(11, jParams['MV_PAR09'][1] )
+		oQueryB:SetString(12, cFilSA1 )
+		oQueryB:SetString(13, cFilSB1 )
+	
+		// cria alias 
+		oQueryB:OpenAlias(cAliasB)
+
+		// Realiza a contagem de paginas
+		If ( nPage == 1 )
+			( cAliasB )->( DbGoTop( ) )
+		Else
+			// Encontra a quantidade de itens que irá pular de acordo com a página atual
+			nSkip := ( ( nPage - 1 ) * self:getPageSize( ) )
+			( cAliasB )->( DbSkip( nSkip ) )
+		EndIf
+
+		// Alimenta o objeto de dados da classe para retornar ao SmartView
+		DbSelectArea( cAliasB )
+		While !( cAliasB )->( EOF( ) )
+			jItems := JsonObject():new()
+
+			// Realiza a montagem da QUERY que será enviada para o banco de dados
+			cQuery := "SELECT SD22.D2_FILIAL, SD22.D2_EMISSAO AS D2_EMISS_1, SD22.D2_DOC, SD22.D2_SERIE AS D2_SERIE_1, SD22.D2_ITEM AS D2_ITEM_1, SD22.D2_QUANT AS D2_QUANT_1, SF22.F2_MOEDA, SF22.F2_TXMOEDA, SD22.D2_TOTAL "
+			cQuery += "FROM  " + RetSQLName( 'SD2' ) +  " SD22, "  + RetSQLName( 'SF2' ) + " SF22 "
+			cQuery += "WHERE SD22.D2_FILIAL = ? "
+			cQuery += "AND SD22.D2_REMITO = ? "
+			cQuery += "AND SD22.D2_ITEMREM = ? "
+			cQuery += "AND SD22.D2_CLIENTE = ? "
+			cQuery += "AND SD22.D2_LOJA = ? "
+			cQuery += "AND SD22.D2_TIPODOC < '50' "
+			cQuery += "AND SD22.D_E_L_E_T_ = ' ' "
+			cQuery += "AND SF22.F2_FILIAL = SD22.D2_FILIAL "
+			cQuery += "AND SF22.F2_DOC = SD22.D2_DOC "
+			cQuery += "AND SF22.F2_SERIE = SD22.D2_SERIE "
+			cQuery += "AND SF22.F2_CLIENTE = SD22.D2_CLIENTE "
+			cQuery += "AND SF22.F2_LOJA = SD22.D2_LOJA "
+			cQuery += "AND SF22.D_E_L_E_T_ = ' ' "
+
+			// Executa a QUERY e cria uma tabela temporaria com os dados retornados
+			cQuery := ChangeQuery(cQuery)
+			oQueryC := FwExecStatement():New()
+
+			//Define a consulta e os parâmetros
+			oQueryC:SetQuery(cQuery)
+			oQueryC:SetString(01, cFilSD2 )
+			oQueryC:SetString(02, ( cAliasB )->D2_REMITO )
+			oQueryC:SetString(03, ( cAliasB )->D2_ITEM )
+			oQueryC:SetString(04, ( cAliasB )->D2_CLIENTE )
+			oQueryC:SetString(05, ( cAliasB )->D2_LOJA )
+
+			// cria alias 
+			oQueryC:OpenAlias(cAliasC)
+
+			DbSelectArea( cAliasC )
+			If !( cAliasC )->( EOF( ) )
+				nTOTDoc := calcTotDoc( 2,, cAliasC, cFilSB1 )
+			EndIf
+
+			// Realiza a montagem da QUERY que será enviada para o banco de dados
+			cQuery := "SELECT SC5.C5_FILIAL, SC5.C5_NOTA, SC5.C5_EMISSAO, SC5.C5_CATPV||' '||AGR.AGR_DESCRI AS C5_CATPV, SC5.C5_NUM, SC5.C5_CLIENTE, SC5.C5_LOJACLI, SC5.C5_MOEDA, SC5.C5_TXMOEDA, SA1.A1_NOME, SA1.A1_RISCO, SC6.C6_ITEM, SC6.C6_PRODUTO, SB1.B1_DESC, SC6.C6_UM, SB1.B1_GRUPO||' '||SBM.BM_DESC AS B1_GRUPO, SB1.B1_PESO, SC6.C6_QTDVEN, SC6.C6_VALOR, SC6.C6_ENTREG "
+			cQuery += "FROM " + RetSQLName( 'SC5' ) + " AS SC5 "
+			cQuery += "INNER JOIN " + RetSQLName( 'SC6' ) + " AS SC6 ON SC6.D_E_L_E_T_ = ' ' AND SC6.C6_FILIAL = SC5.C5_FILIAL AND SC6.C6_NUM = SC5.C5_NUM AND SC6.C6_CLI = SC5.C5_CLIENTE AND SC6.C6_ITEM = ? "
+			cQuery += "INNER JOIN " + RetSQLName( 'SA1' ) + " AS SA1 ON SA1.D_E_L_E_T_ = ' ' AND SA1.A1_FILIAL = ? AND SA1.A1_COD = SC5.C5_CLIENTE AND SA1.A1_LOJA = SC5.C5_LOJACLI "
+			cQuery += "INNER JOIN " + RetSQLName( 'SB1' ) + " AS SB1 ON SB1.D_E_L_E_T_ = ' ' AND SB1.B1_FILIAL = ? AND SB1.B1_COD = SC6.C6_PRODUTO "
+			cQuery += "LEFT JOIN  " + RetSQLName( 'AGR' ) + " AS AGR ON AGR.D_E_L_E_T_ = ' ' AND AGR.AGR_FILIAL = ? AND AGR.AGR_COD = SC5.C5_CATPV "
+			cQuery += "LEFT JOIN  " + RetSQLName( 'SBM' ) + " AS SBM ON SBM.D_E_L_E_T_ = ' ' AND SBM.BM_FILIAL = ? AND SBM.BM_GRUPO = SB1.B1_GRUPO "
+			cQuery += "WHERE SC5.C5_FILIAL = ? "
+			cQuery += "AND SC5.D_E_L_E_T_ = ' ' "
+			cQuery += "AND SC5.C5_NUM = ? "
+			cQuery += "AND SC5.C5_CLIENTE = ? "
+			cQuery += "AND SC5.C5_LOJACLI = ? "
+
+			// Agrega os filtros do SMARTVIEW na QUERY
+			For nX := 1 To Len( aFiltro )
+				cQuery += "AND " + aFiltro[nX, 1] + ' ' + aFiltro[nX, 2] + " " + aFiltro[nX, 3] + " "
+			Next
+
+			// Executa a QUERY e cria uma tabela temporaria com os dados retornados
+			cQuery := ChangeQuery(cQuery)
+			oQueryA := FwExecStatement():New()
+
+			//Define a consulta e os parâmetros
+			oQueryA:SetQuery(cQuery)
+			oQueryA:SetString(01, ( cAliasB )->D2_ITEMPV )
+			oQueryA:SetString(02, cFilSA1 )
+			oQueryA:SetString(03, cFilSB1 )
+			oQueryA:SetString(04, cFilAGR )
+			oQueryA:SetString(05, cFilSBM )
+			oQueryA:SetString(06, cFilSC5 )
+			oQueryA:SetString(07, ( cAliasB )->D2_PEDIDO )
+			oQueryA:SetString(08, ( cAliasB )->D2_CLIENTE )
+			oQueryA:SetString(09, ( cAliasB )->D2_LOJA )
+
+			// cria alias 
+			oQueryA:OpenAlias(cAliasA)
+
+			If !( cAliasA )->( EOF( ) )
+				aStatusPed := getStatus( cAliasA )
+
+				nTOTPed := calcTotDoc( 1, cAliasA,, cFilSB1 )
+				nTOTPes1 := calcTotDoc( 3, cAliasA,, cFilSB1 )
+				nTOTPes2 := calcTotDoc( 4, cAliasA,, cFilSB1 )
+			EndIf
+
+			// Alimenta o objeto de dados da classe para retornar ao SmartView
+			For nX := 1 To Len( self:aStruct )
+				If ( AllTrim( self:aStruct[nx][5] ) $ 'C5_EMISSAO|C5_CATPV|C5_NUM|C5_CLIENTE|C5_LOJACLI|A1_NOME|C6_ITEM|C6_PRODUTO|B1_DESC|C6_UM|B1_GRUPO|C6_QTDVEN|C5_TOTPES1|C5_TOTPES2|C5_MOEDA|C5_DESMOE|C5_TXMOEDA|C5_TAXADIA|C6_VALOR|C5_TOTPED|C5_TOTCON1|C5_TOTCON2|C6_ENTREG|C5_STATUS|C5_DETALHE' )
+					If lObfuscated .And. ( aScan( aPDFields, self:aStruct[nX][5] ) == 0 )
+						jItems[self:aStruct[nX][1]] := FwProtectedDataUtil():ValueAsteriskToAnonymize( ( cAliasA )->&( self:aStruct[nX][5] ) )
+					ElseIf ( self:aStruct[nX][3] == 'date' )
+						jItems[self:aStruct[nX][1]] := totvs.framework.treports.date.dateToTimeStamp( StoD( ( cAliasA )->&( self:aStruct[nX][5] ) ) )
+					ElseIf ( self:aStruct[nx][5] == 'C5_DESMOE' )
+						// Moneda Orden
+						nPosMon := aScan( aNomeMoed, { | x, y | AllTrim( x[1] ) == AllTrim( Str( ( cAliasA )->C5_MOEDA ) ) } )
+						cDescMon := IIf( ( nPosMon > 0 ), aNomeMoed[nPosMon][2], '' )
+						jItems[self:aStruct[nX][1]] := cDescMon
+					ElseIf ( self:aStruct[nx][5] == 'C5_TAXADIA' )
+						jItems[self:aStruct[nX][1]] := nTxMoeConv
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTPED' )
+						jItems[self:aStruct[nX][1]] := Round( nTOTPed, nDecs )
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTCON1' )
+						nTOTCon1 := Round( xMoeda( nTOTPed, ( cAliasA )->C5_MOEDA, nMoeda, dDataBase, nDecs, ( cAliasA )->C5_TXMOEDA, 1, ), nDecs )
+						jItems[self:aStruct[nX][1]] := nTOTCon1
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTCON2' )
+						jItems[self:aStruct[nX][1]] := IIF( nTxMoeConv > 0 ,Round( xMoeda( nTOTCon1, 1, nParMoe, dDataBase,,,, ), nDecs ),0)
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTPES1' )
+						jItems[self:aStruct[nX][1]] := Round( nTOTPes1, nDecs )
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTPES2' )
+						jItems[self:aStruct[nX][1]] := Round( nTOTPes2, nDecs )
+					ElseIf ( self:aStruct[nx][5] == 'C5_STATUS' )
+						jItems[self:aStruct[nX][1]] := aStatusPed[1]
+					ElseIf ( self:aStruct[nx][5] == 'C5_DETALHE' )
+						jItems[self:aStruct[nX][1]] := aStatusPed[2]
+					Else
+						jItems[self:aStruct[nX][1]] := ( cAliasA )->&( self:aStruct[nX][5] )
+					EndIf				
+				ElseIf ( AllTrim( self:aStruct[nx][5] ) $ 'D2_EMISSAO|D2_REMITO|D2_SERIE|D2_ITEM|D2_QUANT' )
+					If lObfuscated .And. ( aScan( aPDFields, self:aStruct[nX][5] ) == 0 )
+						jItems[self:aStruct[nX][1]] := FwProtectedDataUtil():ValueAsteriskToAnonymize( ( cAliasB )->&( self:aStruct[nX][5] ) )
+					ElseIf ( self:aStruct[nX][3] == 'date' )
+						jItems[self:aStruct[nX][1]] := totvs.framework.treports.date.dateToTimeStamp( StoD( ( cAliasB )->&( self:aStruct[nX][5] ) ) )
+					Else
+						jItems[self:aStruct[nX][1]] := ( cAliasB )->&( self:aStruct[nX][5] )
+					EndIf
+				ElseIf ( AllTrim( self:aStruct[nx][5] ) $ 'D2_EMISS_1|D2_DOC|D2_SERIE_1|D2_ITEM_1|D2_QUANT_1|F2_MOEDA|F2_DESMOE|F2_TXMOEDA|F2_TAXADIA|D2_TOTAL|D2_TOTDOC|D2_TOTCON1|D2_TOTCON2' )
+					If lObfuscated .And. ( aScan( aPDFields, self:aStruct[nX][5] ) == 0 )
+						jItems[self:aStruct[nX][1]] := FwProtectedDataUtil():ValueAsteriskToAnonymize( ( cAliasC )->&( self:aStruct[nX][5] ) )
+					ElseIf ( self:aStruct[nX][3] == 'date' )
+						jItems[self:aStruct[nX][1]] := totvs.framework.treports.date.dateToTimeStamp( StoD( ( cAliasC )->&( self:aStruct[nX][5] ) ) )
+					ElseIf ( self:aStruct[nx][5] == 'F2_DESMOE' )
+						// Moneda Factura
+						nPosMon := aScan( aNomeMoed, { | x, y | AllTrim( x[1] ) == AllTrim( Str( ( cAliasC )->F2_MOEDA ) ) } )
+						cDescMon := IIf( ( nPosMon > 0 ), aNomeMoed[nPosMon][2], '' )
+						jItems[self:aStruct[nX][1]] := cDescMon
+					ElseIf ( self:aStruct[nx][5] == 'F2_TAXADIA' )
+						jItems[self:aStruct[nX][1]] := nTxMoeConv
+					ElseIf ( self:aStruct[nx][5] == 'D2_TOTDOC' )
+						jItems[self:aStruct[nX][1]] := Round( nTOTDoc, nDecs )
+					ElseIf ( self:aStruct[nx][5] == 'D2_TOTCON1' )
+						nTOTCon1 := Round( xMoeda( nTOTDoc, ( cAliasC )->F2_MOEDA, nMoeda, dDataBase, nDecs, ( cAliasC )->F2_TXMOEDA, 1, ), nDecs )
+						jItems[self:aStruct[nX][1]] := nTOTCon1
+					ElseIf ( self:aStruct[nx][5] == 'D2_TOTCON2' )
+						jItems[self:aStruct[nX][1]] := IIF(nTxMoeConv > 0,Round( xMoeda( nTOTCon1, 1, nParMoe, dDataBase,,,, ), nDecs ),0)
+					Else
+						jItems[self:aStruct[nX][1]] := ( cAliasC )->&( self:aStruct[nX][5] )
+					EndIf
+				ElseIf ( AllTrim( self:aStruct[nx][5] ) == 'C5_FILIAL' )
+					jItems[self:aStruct[nX][1]] := IIF(!Empty( ( cAliasA )->C5_FILIAL ),( cAliasA )->C5_FILIAL,IIF(!Empty( ( cAliasB )->D2_FILIAL ),( cAliasB )->D2_FILIAL,IIF(!Empty( ( cAliasC )->D2_FILIAL ),( cAliasC )->D2_FILIAL,"")))
+				EndIf
+			Next
+
+			// Inclui os dados no objeto paea retorno ao SmartView
+			self:oData:appendData( jItems )
+
+			( cAliasA )->( DbCloseArea( ) )
+			( cAliasC )->( DbCloseArea( ) )
+
+			( cAliasB )->( DbSkip( ) )
+			nCount++
+
+			nTOTCon1 := 0
+			nTOTPed := 0
+			nTOTDoc := 0
+			nTOTPes1 := 0
+			nTOTPes2 := 0
+
+			// Sai do loop quando chegar no tamanho de itens da página
+			If ( nCount == self:getPageSize( ) )
+				Exit
+			EndIf
+		End
+
+		// Se não for o último registro indica que terá próxima página
+		self:setHasNext( !( cAliasB )->( EOF( ) ) )
+		( cAliasB )->( DbCloseArea( ) )
+	ElseIf ( nParOpc == 3 )
+		// Realiza a montagem da QUERY que será enviada para o banco de dados
+		cQuery := "SELECT SD22.D2_FILIAL, SD22.D2_EMISSAO AS D2_EMISS_1, SD22.D2_DOC, SD22.D2_SERIE AS D2_SERIE_1, SD22.D2_ITEM AS D2_ITEM_1, SD22.D2_QUANT AS D2_QUANT_1, SF22.F2_MOEDA, SF22.F2_TXMOEDA, SD22.D2_TOTAL, SD22.D2_REMITO, SD22.D2_SERIREM, SD22.D2_ITEMREM, SD22.D2_PEDIDO, SD22.D2_ITEMPV, SD22.D2_CLIENTE, SD22.D2_LOJA "
+		cQuery += "FROM " + RetSQLName( 'SD2' ) + " SD22, " + RetSQLName( 'SF2' ) + " SF22, " + RetSQLName( 'SA1' ) + " SA1, " + RetSQLName( 'SB1' ) + " SB1 "
+		cQuery += "WHERE SD22.D2_FILIAL = ? "
+		cQuery += "AND SD22.D2_DOC BETWEEN ? AND ? "
+		cQuery += "AND SD22.D2_EMISSAO BETWEEN ? AND ? "
+		cQuery += "AND SD22.D2_CLIENTE BETWEEN ? AND ? "
+		cQuery += "AND SD22.D2_LOJA BETWEEN ? AND ? "
+		cQuery += "AND SD22.D2_COD BETWEEN ? AND ? "
+		cQuery += "AND SD22.D2_TIPODOC < '50' "
+		cQuery += "AND SD22.D_E_L_E_T_ = ' ' "
+		cQuery += "AND SF22.F2_FILIAL = SD22.D2_FILIAL "
+		cQuery += "AND SF22.F2_DOC = SD22.D2_DOC "
+		cQuery += "AND SF22.F2_SERIE = SD22.D2_SERIE "
+		cQuery += "AND SF22.F2_CLIENTE = SD22.D2_CLIENTE "
+		cQuery += "AND SF22.F2_LOJA = SD22.D2_LOJA "
+		cQuery += "AND SF22.D_E_L_E_T_ = ' ' "
+		cQuery += "AND SA1.A1_FILIAL = ? "
+		cQuery += "AND SA1.A1_COD = SD22.D2_CLIENTE "
+		cQuery += "AND SA1.A1_LOJA = SD22.D2_LOJA "
+		cQuery += "AND SA1.D_E_L_E_T_ = ' ' "
+		cQuery += "AND SB1.B1_FILIAL = ? "
+		cQuery += "AND SB1.B1_COD = SD22.D2_COD "
+		cQuery += "AND SB1.D_E_L_E_T_ = ' ' "
+
+		// Executa a QUERY e cria uma tabela temporaria com os dados retornados
+		cQuery := ChangeQuery(cQuery)
+		oQueryC := FwExecStatement():New()
+
+		//Define a consulta e os parâmetros
+		oQueryC:SetQuery(cQuery)
+		oQueryC:SetString(01, cFilSD2 )
+		oQueryC:SetString(02, jParams['MV_PAR02'][1] )
+		oQueryC:SetString(03, jParams['MV_PAR03'][1] )
+		oQueryC:SetString(04, DtoS( FwDateTimeToLocal( jParams['MV_PAR10'][1] )[1] ) )
+		oQueryC:SetString(05, DtoS( FwDateTimeToLocal( jParams['MV_PAR11'][1] )[1] ) )
+		oQueryC:SetString(06, jParams['MV_PAR04'][1] )
+		oQueryC:SetString(07, jParams['MV_PAR06'][1] )
+		oQueryC:SetString(08, jParams['MV_PAR05'][1] )
+		oQueryC:SetString(09, jParams['MV_PAR07'][1] )
+		oQueryC:SetString(10, jParams['MV_PAR08'][1] )
+		oQueryC:SetString(11, jParams['MV_PAR09'][1] )
+		oQueryC:SetString(12, cFilSA1 )
+		oQueryC:SetString(13, cFilSB1 )
+
+		// cria alias 
+		oQueryC:OpenAlias(cAliasC)
+
+		// Realiza a contagem de paginas
+		If ( nPage == 1 )
+			( cAliasC )->( DbGoTop( ) )
+		Else
+			// Encontra a quantidade de itens que irá pular de acordo com a página atual
+			nSkip := ( ( nPage - 1 ) * self:getPageSize( ) )
+			( cAliasC )->( DbSkip( nSkip ) )
+		EndIf
+
+		// Alimenta o objeto de dados da classe para retornar ao SmartView
+		DbSelectArea( cAliasC )
+		While !( cAliasC )->( EOF( ) )
+			jItems := JsonObject():new()
+
+			If !( cAliasC )->( EOF( ) )
+				nTOTDoc := calcTotDoc( 2,, cAliasC, cFilSB1 )
+			EndIf
+
+			// Realiza a montagem da QUERY que será enviada para o banco de dados
+			cQuery := "SELECT SC5.C5_FILIAL, SC5.C5_NOTA, SC5.C5_EMISSAO, SC5.C5_CATPV||' '||AGR.AGR_DESCRI AS C5_CATPV, SC5.C5_NUM, SC5.C5_CLIENTE, SC5.C5_LOJACLI, SC5.C5_MOEDA, SC5.C5_TXMOEDA, SA1.A1_NOME, SA1.A1_RISCO, SC6.C6_ITEM, SC6.C6_PRODUTO, SB1.B1_DESC, SC6.C6_UM, SB1.B1_GRUPO||' '||SBM.BM_DESC AS B1_GRUPO, SB1.B1_PESO, SC6.C6_QTDVEN, SC6.C6_VALOR, SC6.C6_ENTREG "
+			cQuery += "FROM " + RetSQLName( 'SC5' ) + " AS SC5 "
+			cQuery += "INNER JOIN " + RetSQLName( 'SC6' ) + " AS SC6 ON SC6.D_E_L_E_T_ = ' ' AND SC6.C6_FILIAL = SC5.C5_FILIAL AND SC6.C6_NUM = SC5.C5_NUM AND SC6.C6_CLI = SC5.C5_CLIENTE AND SC6.C6_ITEM = ? "
+			cQuery += "INNER JOIN " + RetSQLName( 'SA1' ) + " AS SA1 ON SA1.D_E_L_E_T_ = ' ' AND SA1.A1_FILIAL = ? AND SA1.A1_COD = SC5.C5_CLIENTE AND SA1.A1_LOJA = SC5.C5_LOJACLI "
+			cQuery += "INNER JOIN " + RetSQLName( 'SB1' ) + " AS SB1 ON SB1.D_E_L_E_T_ = ' ' AND SB1.B1_FILIAL = ? AND SB1.B1_COD = SC6.C6_PRODUTO "
+			cQuery += "LEFT JOIN  " + RetSQLName( 'AGR' ) + " AS AGR ON AGR.D_E_L_E_T_ = ' ' AND AGR.AGR_FILIAL = ? AND AGR.AGR_COD = SC5.C5_CATPV "
+			cQuery += "LEFT JOIN  " + RetSQLName( 'SBM' ) + " AS SBM ON SBM.D_E_L_E_T_ = ' ' AND SBM.BM_FILIAL = ? AND SBM.BM_GRUPO = SB1.B1_GRUPO "
+			cQuery += "WHERE SC5.C5_FILIAL = ? "
+			cQuery += "AND SC5.C5_NUM = ? "
+			cQuery += "AND SC5.C5_CLIENTE = ? "
+			cQuery += "AND SC5.C5_LOJACLI = ? "
+			cQuery += "AND SC5.D_E_L_E_T_ = ' ' "
+
+			// Agrega os filtros do SMARTVIEW na QUERY
+			For nX := 1 To Len( aFiltro )
+				cQuery += "AND " + aFiltro[nX, 1] + ' ' + aFiltro[nX, 2] + " " + aFiltro[nX, 3] + " "
+			Next
+
+			// Executa a QUERY e cria uma tabela temporaria com os dados retornados
+			cQuery := ChangeQuery(cQuery)
+			oQueryA := FwExecStatement():New()
+
+			//Define a consulta e os parâmetros
+			oQueryA:SetQuery(cQuery)
+			oQueryA:SetString(01, ( cAliasC )->D2_ITEMPV )
+			oQueryA:SetString(02, cFilSA1 )
+			oQueryA:SetString(03, cFilSB1 )
+			oQueryA:SetString(04, cFilAGR ) 
+			oQueryA:SetString(05, cFilSBM ) 
+			oQueryA:SetString(06, cFilSC5 )
+			oQueryA:SetString(07, ( cAliasC )->D2_PEDIDO )
+			oQueryA:SetString(08, ( cAliasC )->D2_CLIENTE )
+			oQueryA:SetString(09, ( cAliasC )->D2_LOJA )
+		
+			// cria alias 
+			oQueryA:OpenAlias(cAliasA)
+
+			If !( cAliasA )->( EOF( ) )
+				aStatusPed := getStatus( cAliasA )
+
+				nTOTPed := calcTotDoc( 1, cAliasA,, cFilSB1 )
+				nTOTPes1 := calcTotDoc( 3, cAliasA,, cFilSB1 )
+				nTOTPes2 := calcTotDoc( 4, cAliasA,, cFilSB1 )
+			EndIf
+
+			// Realiza a montagem da QUERY que será enviada para o banco de dados
+			cQuery := "SELECT SD21.D2_FILIAL, SD21.D2_EMISSAO, SD21.D2_DOC AS D2_REMITO, SD21.D2_SERIE, SD21.D2_ITEM, SD21.D2_QUANT "
+			cQuery += "FROM " + RetSQLName( 'SD2' ) + " SD21 "
+			cQuery += "WHERE SD21.D2_FILIAL = ? "
+			cQuery += "AND SD21.D2_DOC = ? "
+			cQuery += "AND SD21.D2_SERIE = ? "
+			cQuery += "AND SD21.D2_ITEM = ? "
+			cQuery += "AND SD21.D2_CLIENTE = ? "
+			cQuery += "AND SD21.D2_LOJA = ? "
+			cQuery += "AND SD21.D2_TIPODOC >= '50' "
+			cQuery += "AND SD21.D_E_L_E_T_ = ' ' "
+
+			// Executa a QUERY e cria uma tabela temporaria com os dados retornados
+			cQuery := ChangeQuery(cQuery)
+			oQueryB := FwExecStatement():New()
+
+			//Define a consulta e os parâmetros
+			oQueryB:SetQuery(cQuery)
+			oQueryB:SetString(01, cFilSD2 )
+			oQueryB:SetString(02, ( cAliasC )->D2_REMITO )
+			oQueryB:SetString(03, ( cAliasC )->D2_SERIREM )
+			oQueryB:SetString(04, ( cAliasC )->D2_ITEMREM )
+			oQueryB:SetString(05, ( cAliasC )->D2_CLIENTE )
+			oQueryB:SetString(06, ( cAliasC )->D2_LOJA )
+
+			// cria alias 
+			oQueryB:OpenAlias(cAliasB)
+
+			// Alimenta o objeto de dados da classe para retornar ao SmartView
+			For nX := 1 To Len( self:aStruct )
+				If ( AllTrim( self:aStruct[nx][5] ) $ 'C5_EMISSAO|C5_CATPV|C5_NUM|C5_CLIENTE|C5_LOJACLI|A1_NOME|C6_ITEM|C6_PRODUTO|B1_DESC|C6_UM|B1_GRUPO|C6_QTDVEN|C5_TOTPES1|C5_TOTPES2|C5_MOEDA|C5_DESMOE|C5_TXMOEDA|C5_TAXADIA|C6_VALOR|C5_TOTPED|C5_TOTCON1|C5_TOTCON2|C6_ENTREG|C5_STATUS|C5_DETALHE' )
+					If lObfuscated .And. ( aScan( aPDFields, self:aStruct[nX][5] ) == 0 )
+						jItems[self:aStruct[nX][1]] := FwProtectedDataUtil():ValueAsteriskToAnonymize( ( cAliasA )->&( self:aStruct[nX][5] ) )
+					ElseIf ( self:aStruct[nX][3] == 'date' )
+						jItems[self:aStruct[nX][1]] := totvs.framework.treports.date.dateToTimeStamp( StoD( ( cAliasA )->&( self:aStruct[nX][5] ) ) )
+					ElseIf ( self:aStruct[nx][5] == 'C5_DESMOE' )
+						// Moneda Orden
+						nPosMon := aScan( aNomeMoed, { | x, y | AllTrim( x[1] ) == AllTrim( Str( ( cAliasA )->C5_MOEDA ) ) } )
+						cDescMon := IIf( ( nPosMon > 0 ), aNomeMoed[nPosMon][2], '' )
+						jItems[self:aStruct[nX][1]] := cDescMon
+					ElseIf ( self:aStruct[nx][5] == 'C5_TAXADIA' )
+						jItems[self:aStruct[nX][1]] := nTxMoeConv
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTPED' )
+						jItems[self:aStruct[nX][1]] := Round( nTOTPed, nDecs )
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTCON1' )
+						nTOTCon1 := Round( xMoeda( nTOTPed, ( cAliasA )->C5_MOEDA, nMoeda, dDataBase, nDecs, ( cAliasA )->C5_TXMOEDA, 1, ), nDecs )
+						jItems[self:aStruct[nX][1]] := nTOTCon1
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTCON2' )
+						jItems[self:aStruct[nX][1]] := IIF(nTxMoeConv > 0,Round( xMoeda( nTOTCon1, 1, nParMoe, dDataBase,,,, ), nDecs ),0)
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTPES1' )
+						jItems[self:aStruct[nX][1]] := Round( nTOTPes1, nDecs )
+					ElseIf ( self:aStruct[nx][5] == 'C5_TOTPES2' )
+						jItems[self:aStruct[nX][1]] := Round( nTOTPes2, nDecs )
+					ElseIf ( self:aStruct[nx][5] == 'C5_STATUS' )
+						jItems[self:aStruct[nX][1]] := aStatusPed[1]
+					ElseIf ( self:aStruct[nx][5] == 'C5_DETALHE' )
+						jItems[self:aStruct[nX][1]] := aStatusPed[2]
+					Else
+						jItems[self:aStruct[nX][1]] := ( cAliasA )->&( self:aStruct[nX][5] )
+					EndIf
+				ElseIf ( AllTrim( self:aStruct[nx][5] ) $ 'D2_EMISSAO|D2_REMITO|D2_SERIE|D2_ITEM|D2_QUANT' )
+					If lObfuscated .And. ( aScan( aPDFields, self:aStruct[nX][5] ) == 0 )
+						jItems[self:aStruct[nX][1]] := FwProtectedDataUtil():ValueAsteriskToAnonymize( ( cAliasB )->&( self:aStruct[nX][5] ) )
+					ElseIf ( self:aStruct[nX][3] == 'date' )
+						jItems[self:aStruct[nX][1]] := totvs.framework.treports.date.dateToTimeStamp( StoD( ( cAliasB )->&( self:aStruct[nX][5] ) ) )
+					Else
+						jItems[self:aStruct[nX][1]] := ( cAliasB )->&( self:aStruct[nX][5] )
+					EndIf
+				ElseIf ( AllTrim( self:aStruct[nx][5] ) $ 'D2_EMISS_1|D2_DOC|D2_SERIE_1|D2_ITEM_1|D2_QUANT_1|F2_MOEDA|F2_DESMOE|F2_TXMOEDA|F2_TAXADIA|D2_TOTAL|D2_TOTDOC|D2_TOTCON1|D2_TOTCON2' )
+					If lObfuscated .And. ( aScan( aPDFields, self:aStruct[nX][5] ) == 0 )
+						jItems[self:aStruct[nX][1]] := FwProtectedDataUtil():ValueAsteriskToAnonymize( ( cAliasC )->&( self:aStruct[nX][5] ) )
+					ElseIf ( self:aStruct[nX][3] == 'date' )
+						jItems[self:aStruct[nX][1]] := totvs.framework.treports.date.dateToTimeStamp( StoD( ( cAliasC )->&( self:aStruct[nX][5] ) ) )
+					ElseIf ( self:aStruct[nx][5] == 'F2_DESMOE' )
+						// Moneda Factura
+						nPosMon := aScan( aNomeMoed, { | x, y | AllTrim( x[1] ) == AllTrim( Str( ( cAliasC )->F2_MOEDA ) ) } )
+						cDescMon := IIf( ( nPosMon > 0 ), aNomeMoed[nPosMon][2], '' )
+						jItems[self:aStruct[nX][1]] := cDescMon
+					ElseIf ( self:aStruct[nx][5] == 'F2_TAXADIA' )
+						jItems[self:aStruct[nX][1]] := nTxMoeConv
+					ElseIf ( self:aStruct[nx][5] == 'D2_TOTDOC' )
+						jItems[self:aStruct[nX][1]] := Round( nTOTDoc, nDecs )
+					ElseIf ( self:aStruct[nx][5] == 'D2_TOTCON1' )
+						nTOTCon1 := Round( xMoeda( nTOTDoc, ( cAliasC )->F2_MOEDA, nMoeda, dDataBase, nDecs, ( cAliasC )->F2_TXMOEDA, 1, ), nDecs )
+						jItems[self:aStruct[nX][1]] := nTOTCon1
+					ElseIf ( self:aStruct[nx][5] == 'D2_TOTCON2' )
+						jItems[self:aStruct[nX][1]] := IIF(nTxMoeConv > 0,Round( xMoeda( nTOTCon1, 1, nParMoe, dDataBase,,,, ), nDecs ),0)
+					Else
+						jItems[self:aStruct[nX][1]] := ( cAliasC )->&( self:aStruct[nX][5] )
+					EndIf
+				ElseIf ( AllTrim( self:aStruct[nx][5] ) == 'C5_FILIAL' )
+					jItems[self:aStruct[nX][1]] := IIF(!Empty( ( cAliasA )->C5_FILIAL ),( cAliasA )->C5_FILIAL,IIF(!Empty( ( cAliasB )->D2_FILIAL ),( cAliasB )->D2_FILIAL,IIF(!Empty( ( cAliasC )->D2_FILIAL ),( cAliasC )->D2_FILIAL,"")))
+				EndIf
+			Next
+
+			// Inclui os dados no objeto paea retorno ao SmartView
+			self:oData:appendData( jItems )
+
+			( cAliasA )->( DbCloseArea( ) )
+			( cAliasB )->( DbCloseArea( ) )
+
+			( cAliasC )->( DbSkip( ) )
+			nCount++
+
+			nTOTCon1 := 0
+			nTOTPed := 0
+			nTOTDoc := 0
+			nTOTPes1 := 0
+			nTOTPes2 := 0
+
+			// Sai do loop quando chegar no tamanho de itens da página
+			If ( nCount == self:getPageSize( ) )
+				Exit
+			EndIf
+		End
+
+		// Se não for o último registro indica que terá próxima página
+		self:setHasNext( !( cAliasC )->( EOF( ) ) )
+		( cAliasC )->( DbCloseArea( ) )
+	EndIf
+
+	// fecha objeto
+	If oQueryA <> Nil
+		oQueryA:Destroy()
+		oQueryA := NIL
+		FwFreeObj(oQueryA)
+	EndIf
+	If oQueryB <> Nil
+		oQueryB:Destroy()
+		oQueryB := NIL
+		FwFreeObj(oQueryB)
+	EndIf
+	If oQueryC <> Nil
+		oQueryC:Destroy()
+		oQueryC := NIL
+		FwFreeObj(oQueryC)
+	EndIf
+
+Return( self:oData )
+
+//-------------------------------------------------------------------------------
+/*{Protheus.doc} getStatus
+@description Rotina para retornar o status do pedido de venda
+@author Leonardo Pereira
+@since 27/09/2023
+@version 1.0
+*/
+//-------------------------------------------------------------------------------
+Static Function getStatus( cAliasA )
+
+	Local cStatus as character
+	Local cDetalhe as character
+	Local cQry as character
+	Local cAliasB as character
+
+	Local aRet as array
+
+	Default cAliasA := ''
+
+	cStatus := ''
+	cDetalhe := ''
+	cQry := ''
+
+	aRet := { }
+
+	If !Empty( cAliasA )
+		cQry := "SELECT SC9.C9_REMITO, SC9.C9_NFISCAL, SC9.C9_BLCRED, SC9.C9_BLEST "
+		cQry += "FROM " + RetSQlName( 'SC9' ) + " SC9 "
+		cQry += "WHERE SC9.C9_FILIAL = '" + ( cAliasA )->C5_FILIAL + "' "
+		cQry += "AND SC9.C9_PEDIDO = '" + ( cAliasA )->C5_NUM + "' "
+		cQry += "AND SC9.C9_ITEM = '" + ( cAliasA )->C6_ITEM + "' "
+		cQry += "AND SC9.C9_CLIENTE = '" + ( cAliasA )->C5_CLIENTE + "' "
+		cQry += "AND SC9.C9_LOJA = '" + ( cAliasA )->C5_LOJACLI + "' "
+		cQry += "AND SC9.D_E_L_E_T_ = ' ' "
+
+		// Executa a QUERY e cria uma tabela temporaria com os dados retornados
+		cAliasB := MPSysOpenQuery( cQry )
+
+		If !( cAliasB )->( EOF( ) )
+			If ( ( cAliasB )->C9_BLCRED == "09" )
+				cEstatus := STR0035 // "Rechazado"
+				If ( ( cAliasA )->A1_RISCO == "E" )
+					cDetalhe := STR0036 // "MANUAL"
+				Else
+					cDetalhe := STR0037 //"Excede el límite de crédito"
+				EndIf
+			ElseIf ( !Empty( ( cAliasB )->C9_BLCRED ) .And. ( ( cAliasB )->C9_BLCRED != "10" ) ) .And. ( ( cAliasA )->A1_RISCO != "E" )
+				cEstatus := STR0038 // "Análise"
+				cDetalhe := STR0037 // "Excede el límite de crédito"
+			ElseIf ( !Empty( ( cAliasB )->C9_BLCRED ) .And. ( ( cAliasB )->C9_BLCRED != "10" ) ) .And. ( ( cAliasA )->A1_RISCO == "E" )
+				cEstatus := STR0036 // "MANUAL"
+				cDetalhe := STR0040 // "Bloquear para análisis"
+			ElseIf ( ( cAliasB )->C9_BLCRED == "10" )
+				If !Empty( ( cAliasB )->C9_NFISCAL )
+					cStatus := STR0041 // "Facturado"
+				ElseIf !Empty( ( cAliasB )->C9_REMITO )
+					cEstatus := STR0042 // "Facturacion"
+				EndIf
+				If ( ( cAliasA )->A1_RISCO == "A" )
+					cDetalhe := STR0043 // "Autorizar siempre"
+				ElseIf ( ( cAliasA )->A1_RISCO == "E" )
+					cDetalhe := STR0036 // "MANUAL"
+				Else
+					cDetalhe := STR0044 // "Riesgo no definido"
+				EndIf
+				// Control de status "Despacho"
+			ElseIf Empty( ( cAliasB )->C9_BLCRED ) .And. Empty( ( cAliasB )->C9_BLEST )
+				If Empty( ( cAliasB )->C9_REMITO ) .And. Empty( ( cAliasB )->C9_NFISCAL )
+					cStatus := STR0045 // "Aprobado"
+				ElseIf !Empty( ( cAliasB )->C9_NFISCAL )
+					cStatus := STR0042 // "Facturacion"
+				ElseIf !Empty( ( cAliasB )->C9_REMITO )
+					cStatus := STR0046 // "Remitido"
+				EndIf
+
+				If ( ( cAliasA )->A1_RISCO == "A" )
+					cDetalhe := STR0043 // "Autorizar siempre"
+				ElseIf ( ( cAliasA )->A1_RISCO == "E" )
+					cDetalhe := STR0036 // "MANUAL"
+				Else
+					cDetalhe := STR0044 // "Riesgo no definido"
+				EndIf
+			ElseIf Empty( ( cAliasB )->C9_BLCRED ) .And. !Empty( ( cAliasB )->C9_BLEST )
+				cStatus := STR0047 // "Bloqueado por Estoque"
+				If ( ( cAliasA )->A1_RISCO == "A" )
+					cDetalhe := STR0043 // "Autorizar siempre"
+				ElseIf ( ( cAliasA )->A1_RISCO == "E" )
+					cDetalhe := STR0036 // "MANUAL"
+				Else
+					cDetalhe := STR0044 // "Riesgo no definido"
+				EndIf
+			EndIf
+			// Não existe na SC9
+		Else
+			If Empty( ( cAliasA )->C5_NOTA )
+				cStatus	:= STR0048 // "En cartera"
+				cDetalhe := STR0049 // "Orden en cartera"
+			Else
+				cStatus	:= STR0050 // "Residuo"
+				cDetalhe := STR0051 // "Orden 100% Eliminado por residuo"
+			EndIf
+		EndIf
+
+		aAdd( aRet, cStatus )
+		aAdd( aRet, cDetalhe )
+
+		( cAliasB )->( DbCloseArea( ) )
+	EndIf
+
+Return( aRet )
+
+//-------------------------------------------------------------------------------
+/*{Protheus.doc} calcTotDoc
+@description Rotina para retornar o $ total do documento ou o peso total
+@author Leonardo Pereira
+@since 27/09/2023
+@version 1.0
+*/
+//-------------------------------------------------------------------------------
+Static Function calcTotDoc( nTipoDoc, cAliasA, cAliasC, cFilSB1 )
+
+	Local nRet as numeric
+	Local cQry as character
+	Local cAliasD as character
+
+	Default nTipoDoc := 0
+	Default cAliasA := ''
+	Default cAliasC := ''
+	Default cFilSB1 := ''
+
+	nRet := 0
+
+	cQry := ''
+
+	If ( nTipoDoc == 1 ) .And. !Empty( cAliasA )
+		cQry := "SELECT SUM( SC6.C6_VALOR) AS TOTAL "
+		cQry += "FROM " + RetSQlName( 'SC6' ) + " SC6 "
+		cQry += "WHERE SC6.C6_FILIAL = '" + ( cAliasA )->C5_FILIAL + "' "
+		cQry += "AND SC6.C6_NUM = '" + ( cAliasA )->C5_NUM + "' "
+		cQry += "AND SC6.C6_CLI = '" + ( cAliasA )->C5_CLIENTE + "' "
+		cQry += "AND SC6.C6_LOJA = '" + ( cAliasA )->C5_LOJACLI + "' "
+		cQry += "AND SC6.D_E_L_E_T_ = ' ' "
+	ElseIf ( nTipoDoc == 2 ) .And. !Empty( cAliasC )
+		If !Empty( ( cAliasC )->D2_DOC )
+			cQry := "SELECT SUM( SD2.D2_TOTAL) AS TOTAL "
+			cQry += "FROM " + RetSQlName( 'SD2' ) + " SD2 "
+			cQry += "WHERE SD2.D2_FILIAL = '" + ( cAliasc )->D2_FILIAL + "' "
+			cQry += "AND SD2.D2_DOC = '" + ( cAliasC )->D2_DOC + "' "
+			cQry += "AND SD2.D2_SERIE = '" + ( cAliasC )->D2_SERIE_1 + "' "
+			cQry += "AND SD2.D_E_L_E_T_ = ' ' "
+		EndIf
+	ElseIf ( ( nTipoDoc == 3 ) .Or. ( nTipoDoc == 4 ) ) .And. !Empty( cAliasA )
+		cQry := "SELECT SUM(SB1.B1_PESO * SC6.C6_QTDVEN) AS TOTAL "
+		cQry += "FROM " + RetSQlName( 'SB1' ) + " SB1, " + RetSQlName( 'SC6' ) + " SC6 "
+		cQry += "WHERE SC6.C6_FILIAL = '" + ( cAliasA )->C5_FILIAL + "' "
+		cQry += "AND SC6.C6_NUM = '" + ( cAliasA )->C5_NUM + "' "
+		cQry += "AND SC6.C6_CLI = '" + ( cAliasA )->C5_CLIENTE + "' "
+		cQry += "AND SC6.C6_LOJA = '" + ( cAliasA )->C5_LOJACLI + "' "
+		If ( nTipoDoc == 3 )
+			cQry += "AND SC6.C6_ITEM = '" + ( cAliasA )->C6_ITEM + "' "
+		EndIf
+		cQry += "AND SB1.B1_FILIAL = '" + cFilSB1 + "' "
+		cQry += "AND SB1.B1_COD = SC6.C6_PRODUTO "
+		cQry += "AND SB1.D_E_L_E_T_ = ' ' "
+		cQry += "AND SC6.D_E_L_E_T_ = ' ' "
+	EndIf
+
+	// Executa a QUERY e cria uma tabela temporaria com os dados retornados
+	If !Empty( cQry )
+		cAliasD := MPSysOpenQuery( cQry )
+
+		DbSelectArea( cAliasD )
+		If !( cAliasD )->( EOF( ) )
+			nRet := ( cAliasD )->TOTAL
+		EndIf
+		( cAliasD )->( DbCloseArea( ) )
+	EndIf
+
+Return( nRet )
+

@@ -56,7 +56,6 @@ User Function M486OWSCOL()
 	Local cVencimiento	:= ""
 	Local nValunitSD1	:= 0
 	Local lActivador    := .F.
-	Local cActivador    := "USD"
 	Local cCorreo       := "" //Correo de facturacion electronica
 	Local _cAlias 		:= GetNextAlias()  // Juan Pablo Astorga 11.03.2024
 	Local cPreLista		:= 0 // Juan Pablo Astorga 11.03.2024
@@ -130,7 +129,7 @@ User Function M486OWSCOL()
 			//Tempalte a usar
 			IF (ALLTRIM(cEspecie)<>'NCC')
 				IF cTipDocT == "02"
-					cTemplate	:= "co-progenFE-70" //"co-progenFE-68" //"co-progenFE-55" //"co-progenFE-52"//Exportacion co-progenFE-40
+					cTemplate	:= "co-progenFE-71"//"co-progenFE-70" //"co-progenFE-68" //"co-progenFE-55" //"co-progenFE-52"//Exportacion co-progenFE-40
 				ELSE
 					cTemplate	:= "co-progenFV-89"//"co-progenFV-72" //"co-progenFV-68" //"co-progenFV-64"//Nacional co-progenFV-59
 				ENDIF
@@ -509,6 +508,17 @@ User Function M486OWSCOL()
 					oWSextra:cnombre              := "5170022"
 					oWSextra:cpdf                 := "1"
 					oWSextra:cvalor               := "COP"
+					oWSextra:cxml                 := "0"
+					aAdd(oWS:oWSextras:oWSextras,oWSextra)
+
+
+					//Descriptores Currency
+					oWSextra:=Service_Extras():new()
+					oWSextra:ccontrolInterno1     := "CURRENCY"
+					oWSextra:ccontrolInterno2     := ""
+					oWSextra:cnombre              := "5170040"
+					oWSextra:cpdf                 := "1"
+					oWSextra:cvalor               := Posicione("CTO",1,xFilial("CTO")+Strzero(SF2->F2_MOEDA,2),"CTO_MOESAT")
 					oWSextra:cxml                 := "0"
 					aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -1137,6 +1147,15 @@ User Function M486OWSCOL()
 				SD2->(DBCLOSEAREA(  ))
 
 			ElseIf (ALLTRIM(cEspecie)=="NCC" )       // Notas de credito
+
+				DbSelectArea("SF1")
+				SF1->(DbSetOrder(1))
+				IF SF1->(DbSeek(xFilial("SF1") + cNumDoc + cSerieDoc + cCodCli + cCodLoj ))
+					IF SA1->A1_PAIS == "169" .AND. SF1->F1_MOEDA <> 1
+						lActivador := .T.
+					ENDIF
+				ENDIF
+
 				cCodProd	:= Padr(oWS:ccodigoProducto,TamSX3("D1_COD" )[1],' ')
 				//cSDITem     := Padl(oXML:_CBC_ID:TEXT  ,TamSX3("D1_ITEM")[1],'0')
 				cSDITem 	:= oXML:_CBC_ID:TEXT
@@ -1197,14 +1216,14 @@ User Function M486OWSCOL()
 					EndIf
 
 
-				/*oWSAdicion:=Service_LineaInformacionAdicional():New()
-				oWSAdicion:ccodigo 		:= "5173"
-				oWSAdicion:cnombre 		:= TRANSFORM(nValunitSD1,"@E 999,999,999.99") 
-				oWSAdicion:csecuencia 	:= "1"
-				oWSAdicion:cvalor 		:= TRANSFORM((nValunitSD1*SD1->D1_QUANT),"@E 999,999,999.99")
-				aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
-				*/
-				// Modificado Juan Pablo Astorga 11.03.2024	
+					/*oWSAdicion:=Service_LineaInformacionAdicional():New()
+					oWSAdicion:ccodigo 		:= "5173"
+					oWSAdicion:cnombre 		:= TRANSFORM(nValunitSD1,"@E 999,999,999.99") 
+					oWSAdicion:csecuencia 	:= "1"
+					oWSAdicion:cvalor 		:= TRANSFORM((nValunitSD1*SD1->D1_QUANT),"@E 999,999,999.99")
+					aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
+					*/
+					// Modificado Juan Pablo Astorga 11.03.2024	
 					cQuery := "SELECT D2_PRUNIT FROM " + InitSQLName("SD2")
 					cQuery += " WHERE D2_FILIAL = '" + xFilial('SD2') + "'"
 					cQuery += "   AND D2_DOC = '" + SD1->D1_NFORI + "'"
@@ -1225,14 +1244,42 @@ User Function M486OWSCOL()
 					// Modificado Juan Pablo Astorga 11.03.2024	
 
 					// PARA EL PRECIO UNITARIO DE LISTA Y EL PRECIO TOTAL DE LA LINEA
-					oWSAdicion:=Service_LineaInformacionAdicional():New()
-					oWSAdicion:ccodigo 		:= "5173"
-					oWSAdicion:cnombre 		:= TRANSFORM(cPreLista,"@E 999,999,999.99") // VR UNITARIO Modificado 11.03.2024 JPA
-					//oWSAdicion:cnombre 	:= TRANSFORM((SD1->D1_TOTAL+SD1->D1_VALDESC)/SD1->D1_QUANT,"@E 999,999,999.99") // VR UNITARIO
-					oWSAdicion:csecuencia 	:= "1"
-					oWSAdicion:cvalor 		:= TRANSFORM(cValor1,"@E 999,999,999.99") // VR. TOTAL LINEA Modificado 11.03.2024 JPA
-					//oWSAdicion:cvalor 	:= TRANSFORM((SD1->D1_TOTAL+SD1->D1_VALDESC),"@E 999,999,999.99") // VR. TOTAL LINEA
-					aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
+					If lActivador
+						oWSAdicion:=Service_LineaInformacionAdicional():New()
+						oWSAdicion:ccodigo 		:= "5173"
+						oWSAdicion:cnombre 		:= TRANSFORM(cPreLista*SF1->F1_TXMOEDA,"@E 999,999,999.99")
+						oWSAdicion:csecuencia 	:= "1"
+						oWSAdicion:cvalor 		:= TRANSFORM(cValor1*SF1->F1_TXMOEDA,"@E 999,999,999.99")
+						aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
+
+						oWSAdicion:=Service_LineaInformacionAdicional():New()
+						oWSAdicion:ccodigo 		:= "5175"
+						oWSAdicion:cnombre 		:= TRANSFORM((cValor1),"@E 999,999,999.99")
+						oWSAdicion:csecuencia 	:= "1"
+						oWSAdicion:cvalor 		:= TRANSFORM((cValor1),"@E 999,999,999.99")
+						aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
+
+						oWSAdicion:=Service_LineaInformacionAdicional():New()
+						oWSAdicion:ccodigo 		:= "5176"
+						oWSAdicion:cnombre 		:= TRANSFORM(cPreLista,"@E 999,999,999.99")
+						oWSAdicion:csecuencia 	:= "1"
+						oWSAdicion:cvalor 		:= TRANSFORM((cPreLista),"@E 999,999,999.99")
+						aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
+
+
+
+
+					Else
+						oWSAdicion:=Service_LineaInformacionAdicional():New()
+						oWSAdicion:ccodigo 		:= "5173"
+						oWSAdicion:cnombre 		:= TRANSFORM(cPreLista,"@E 999,999,999.99") // VR UNITARIO Modificado 11.03.2024 JPA
+						//oWSAdicion:cnombre 	:= TRANSFORM((SD1->D1_TOTAL+SD1->D1_VALDESC)/SD1->D1_QUANT,"@E 999,999,999.99") // VR UNITARIO
+						oWSAdicion:csecuencia 	:= "1"
+						oWSAdicion:cvalor 		:= TRANSFORM(cValor1,"@E 999,999,999.99") // VR. TOTAL LINEA Modificado 11.03.2024 JPA
+						//oWSAdicion:cvalor 	:= TRANSFORM((SD1->D1_TOTAL+SD1->D1_VALDESC),"@E 999,999,999.99") // VR. TOTAL LINEA
+						aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
+					EndIf
+
 
 
 					// PARA EL NUMERO DE ITEM NUMERICO Y LA CANTIDAD CON COMA EN VES DE PUNTO
