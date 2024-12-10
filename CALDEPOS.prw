@@ -19,7 +19,8 @@ cQuery += " D1_NUMCQ = '" + nSeqCal + "'
 TcQuery cQuery New Alias "TRB3"
 dbSelectArea("TRB3")
 If !TRB3->(EoF())
-    cDeposito :=  Posicione("SB1",1,xFilial("SB1")+SD7->D7_PRODUTO,"B1_LOCPAD")   	// Modificado 03.05.2024 //TRB3->D1_XLOCAL
+    // cDeposito :=  Posicione("SB1",1,xFilial("SB1")+SD7->D7_PRODUTO,"B1_LOCPAD")   	// Modificado 03.05.2024 //TRB3->D1_XLOCAL
+    cDeposito :=  TRB3->D1_XLOCAL   	// Modificado 05.12.2024 //TRB3->D1_XLOCAL
 else
     cDeposito :=  Posicione("SB1",1,xFilial("SB1")+SD7->D7_PRODUTO,"B1_LOCPAD")   	
 EndIf 

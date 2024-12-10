@@ -19,6 +19,8 @@ User Function LocxPE17()
 	Local cTRBQry := GetNextAlias()
 	Local cModa	  := M->F1_NATUREZ
 	Local cNat    := ""
+	Local cMoeda  := M->F1_MOEDA 
+	Local cTxMoeda  := M->F1_TXMOEDA 
 	
 
 
@@ -26,7 +28,7 @@ User Function LocxPE17()
 		if AllTrim(SD1->D1_SERIORI)$'R'
 			//Consulta Naturaleza cuando viene de Remito
 			cQuery := " SELECT "
-			cQuery += " F2_NATUREZ NAT "
+			cQuery += " F2_NATUREZ NAT, F2_MOEDA MOEDA, F2_TXMOEDA TXMOEDA "
 			cQuery += " FROM " + RetSqlName("SF2") + " SF2 "
 			cQuery += " WHERE " 
 			cQuery += " F2_FILIAL = '" +XFILIAL("SF2")+"' "
@@ -39,8 +41,17 @@ User Function LocxPE17()
 			DbUseArea(.T.,  "TOPCONN", TcGenQry(,,cQuery ),cTRBQry,.T.,.T.)
 			While (cTRBQry)->(!eof())
 				cNat := (cTRBQry)->NAT
+				cMoeda := (cTRBQry)->MOEDA
+				cTxMoeda := (cTRBQry)->TXMOEDA
 				(cTRBQry)->(DbSkip())
 			EndDo
+			If M->F1_TXMOEDA != cTxMoeda
+				M->F1_TXMOEDA := cTxMoeda
+			EndIf
+			If M->F1_MOEDA != cMoeda
+				M->F1_MOEDA  := cMoeda
+				U_SyEnterCpo("F1_MOEDA",M->F1_MOEDA, n)
+			EndIF
 			(cTRBQry)->(dbCloseArea())
 		elseif ALLTRIM(SD2->D2_ESPECIE)=='NF'
 			//Consulta Naturaleza cuando viene de FVE
@@ -86,7 +97,7 @@ User Function LocxPE17()
 		//Autor: Duvan Hernandez
 		//Fecha: 27/06/2024
 		cQuery := " SELECT "
-		cQuery += " F2_NATUREZ NAT "
+		cQuery += " F2_NATUREZ NAT, F2_MOEDA MOEDA "
 		cQuery += " FROM " + RetSqlName("SF2") + " SF2 "
 		cQuery += " WHERE "
 		cQuery += " F2_FILIAL = '" +XFILIAL("SF2")+"' "
