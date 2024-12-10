@@ -474,10 +474,10 @@ Static Function AcmDtaiPR()
 			nLinea ++;  oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+30	, "Su item..... "						,	oArial11N,,,,2)
 						oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+300	, AliasQDetail->A7_CODCLI				,	oArial11N,,,,2)
 			nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+300	, AliasQDetail->A7_DESCCLI				,	oArial11N,,,,2)
-			if Alltrim((AliasQDetail)->OBS) <>"" 
-				nLinea +=0.5
-				nLinea +=ImpMemo(oPrinter,zMemoToA( "+ "+(AliasQDetail)->OBS, 80)	,n1Linea+(nFontAlto*nLinea) , nMargIqz+25, 1100  	, nFontAlto	, oArial12	, 0			,0)
-			endif
+		endif
+		if Alltrim((AliasQDetail)->OBS) <>"" 
+			nLinea +=0.5
+			nLinea +=ImpMemo(oPrinter,zMemoToA( "+ "+(AliasQDetail)->OBS, 80)	,n1Linea+(nFontAlto*nLinea) , nMargIqz+25, 1100  	, nFontAlto	, oArial12	, 0			,0)
 		endif
 
 		(AliasQDetail)->(dbSkip())

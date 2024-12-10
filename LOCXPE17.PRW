@@ -23,7 +23,19 @@ User Function LocxPE17()
 	Local cTxMoeda  := M->F1_TXMOEDA 
 	
 
-
+	If (Funname()== "MATA465N".AND. "NCC"$cEspecie  )
+		If M->F1_MOEDA != 2
+			M->F1_MOEDA := POSICIONE("SF2",2,xFilial("SF2")+SD1->D1_FORNECE+SD1->D1_LOJA+SD1->D1_NFORI+SD1->D1_SERIORI+"N"+"RFN","F2_MOEDA")
+			U_SyEnterCpo("F1_MOEDA",M->F1_MOEDA, n)
+			SysRefresh()
+			If  M->F1_TXMOEDA <= 1
+				M->F1_TXMOEDA := POSICIONE("SF2",2,xFilial("SF2")+SD1->D1_FORNECE+SD1->D1_LOJA+SD1->D1_NFORI+SD1->D1_SERIORI+"N"+"RFN","F2_TXMOEDA")
+				U_SyEnterCpo("F1_TXMOEDA",M->F1_TXMOEDA, n)
+				SysRefresh()
+			EndIF
+		EndIF
+	EndIF
+	
 	If(Funname()=="MATA465N".AND. AllTrim(cEspecie)=="NCC")
 		if AllTrim(SD1->D1_SERIORI)$'R'
 			//Consulta Naturaleza cuando viene de Remito
