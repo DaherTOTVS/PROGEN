@@ -1,7 +1,7 @@
 #INCLUDE "Protheus.ch"
 #INCLUDE "TopConn.ch"
 
-/*/{Protheus.doc} MA265TDOK
+/*/{Protheus.Doc} MA265TDOK
  si genero una orden de producción el sistema registre el campo C2_LOCAL con la información del campo B1_XALM pero si ese campo es VACIO 
  tome el campo de la bodega default del producto o el B1_LOCPAD. 
 @type function
@@ -28,11 +28,12 @@ User function MA265TDOK()
 	Local cLogTxt       := ""
 	Local cArquivo      := 'C:\TOTVS\'+DTOS(dDataBase)+'_UBICA'+'log.txt'
 	Local cPasta        := DTOS(dDataBase)+'_UBICA'+'log.txt'
-	Local Doc
+	Local cDoc
 	Local txt 
 	Local cDaDoc
 	Local aLogAuto := ""
 	Local  aItens := {}
+	Local cAQuery := ""
 
 	If(Funname()=="MATA265" )
 		IF !(M->DA_SERIE $ "NCC|RDV")
@@ -55,8 +56,8 @@ User function MA265TDOK()
 				If ALLTRIM(cEstorno) ==''
 
 				    
-                	If ( Ascan( aItens, {|x| x[1]+x[2] == cLocaliz+cNumser} ) ) == 0
-						aAdd( aItens, {cLocaliz,cNumser})
+                	If ( Ascan( aItens, {|x| x[1] == cNumser} ) ) == 0
+						aAdd( aItens, {cNumser})
 					else
 						aLogAuto := "*************************"+CRLF+;
 						"Item "+ALLTRIM(cItem)+" - Numero de serie "+ALLTRIM(cNumser)+" no permitido, tuvo entrada en este mismo documento "+CRLF+;
@@ -64,40 +65,44 @@ User function MA265TDOK()
 						// MSGALERT( "Item "+ALLTRIM(cItem)+" - Numero de serie "+ALLTRIM(cNumser)+" no permitido, tuvo entrada en el documento "+ALLTRIM(SDB->(DB_DOC)), "Entrada duplicada" )
 						lRet := .F.
 					EndIf
-					dbSelectArea( "SDB" )
 					dbSelectArea( "SD3" )
-					SDB ->(dbSetOrder(2))
 					SD3 ->(dbSetOrder(2))
-					SDB->(DbSeek(xfilial("SDB")+cProducto+cBodega+cLote+cNLote+cNumser+cLocaliz))
-					While !SDB->(Eof()) .AND. xfilial("SDB")+cProducto+cBodega+cLote+cNLote+cNumser+cLocaliz ==;
-											SDB->(DB_FILIAL+DB_PRODUTO+DB_LOCAL+DB_LOTECTL+DB_NUMLOTE+DB_NUMSERI+DB_LOCALIZ)
-						IF SDB->(DB_TM) <='499'					
-							Doc := ALLTRIM(SDB->(DB_DOC))
-							If	ALLTRIM(SDB->(DB_ESTORNO)) ==''
-								If !(ALLTRIM(SDB->(DB_NUMSEQ))==ALLTRIM(cSequen) .AND. ALLTRIM(Doc) == ALLTRIM(cDaDoc))
-									txt := "el movimiento interno"
-									IF SD3->(DBSEEK(xfilial("SD3")+Doc+cProducto))
-										IF !EMPTY(SD3->(D3_OP))
-											txt := "la Orden de Producción"
-										EndIF
-									EndIF
-									aLogAuto := "*************************"+CRLF+;
-									"Item "+ALLTRIM(cItem)+" - Numero de serie "+ALLTRIM(cNumser)+" no permitido, tuvo entrada en "+txt+" "+Doc+CRLF+;
-									"*************************"+CRLF
-									// MSGALERT( "Item "+ALLTRIM(cItem)+" - Numero de serie "+ALLTRIM(cNumser)+" no permitido, tuvo entrada en el documento "+ALLTRIM(SDB->(DB_DOC)), "Entrada duplicada" )
-									lRet := .F.
+
+					cAQuery := " SELECT DB_FILIAL,DB_DOC,DB_PRODUTO,DB_LOCAL,DB_LOTECTL,DB_NUMLOTE,DB_NUMSERI,DB_LOCALIZ,DB_NUMSEQ FROM  "+RetSQLName('SDB')+"  SDB "
+					cAQuery += " WHERE D_E_L_E_T_ <> '*' "
+					cAQuery += " AND DB_FILIAL =  '"+xFilial("SDB")+"' "
+					cAQuery += " AND DB_PRODUTO =  '"+cProducto+"' "
+					cAQuery += " AND DB_NUMSERI =  '"+cNumser+"' "
+					cAQuery += " AND DB_TM  <=  '499' "
+					cAQuery += " AND TRIM(DB_ESTORNO) =  '' "
+					TcQuery cAQuery New Alias "_aQRY"
+					dbSelectArea("_aQRY")
+					While !_aQRY->(EOF())
+					
+						cDoc := ALLTRIM(_aQRY->DB_DOC)
+						If !(ALLTRIM(_aQRY->DB_NUMSEQ)==ALLTRIM(cSequen) .AND. ALLTRIM(cDoc) == ALLTRIM(cDaDoc))
+							txt := "el movimiento interno"
+							IF SD3->(DBSEEK(xfilial("SD3")+cDoc+cProducto))
+								IF !EMPTY(SD3->(D3_OP))
+									txt := "la Orden de Producción"
 								EndIF
 							EndIF
-						EndIf
-						SDB->(dbSkip())
+							aLogAuto := "*************************"+CRLF+;
+							"Item "+ALLTRIM(cItem)+" - Numero de serie "+ALLTRIM(cNumser)+" no permitido, tuvo entrada en "+txt+" "+cDoc+CRLF+;
+							"*************************"+CRLF
+							lRet := .F.
+						EndIF
+
+						_aQRY->(dbSkip())
 					EndDo
+					_aQRY->(dbCloseArea())
+
 					If !EMPTY( aLogAuto )
 						cLogTxt += aLogAuto + CRLF
 						MemoWrite(cArquivo, cLogTxt)
 						aLogAuto := ""
 					EndIf
 
-					("SDB")->(DBCloseArea())
 					("SD3")->(DBCloseArea())	
 				EndIf
 			Next i
