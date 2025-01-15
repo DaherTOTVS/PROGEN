@@ -17,7 +17,8 @@ User Function MA410MNU()
 
 	Aadd(aRotina,{"Modificar Mens.p/Nota"     ,"U_ModText(SC5->C5_NUM)",0,13,Nil})
 	Aadd(aRotina,{"Consulta Relacionada Seguimiento"  ,"U_SC9Visu(SC5->C5_NUM)",0,14,Nil}) // Modificado 03/05/2023 Juan Pablo Astorga
-	
+	Aadd(aRotina,{"Modificar Correo Elec."     ,"U_ModCorr(SC5->C5_NUM)",0,15,Nil})
+
 Return()
 
 //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
@@ -250,4 +251,99 @@ Static Function fCarAcols(cPedido,ldatos)
 Return
 
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Programa: ModText      ||Data: 17/12/2022 ||Empresa: PROGEN         //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Autor: Juan Pablo Astorga||Empresa: TOTVS   ||Módulo: Facturacion   //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Descrição: P.E. Funcion para modificar texto en el pedido de venta  //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+
+User Function ModCorr(cPedido)
+
+Local aPergs  := {}
+Local aObs    := {}
+    DbSelectArea("SC5")
+    DbSetorder(1)                                                                                                                                                                                                      
+    IF  DbSeek(xFilial('SC5') + cPedido , .T.)
+        IF EstadoPed(cPedido)
+            aAdd( aPergs ,{9,"Correo Actual: "+SC5->C5_XEMAIL,200, 40,.T.}) 
+            aAdd( aPergs , {1,"Nuevo Correo Elect.:",Space(TamSx3("C5_XEMAIL")[1]),  "@!","U_CheckEmail(ALLTRIM(MV_PAR02))", "", '.T.',80,.F.})
+            If ParamBox(aPergs ,"Nuevo Correo Elect.:",@aObs,,,,,,,,.f.)
+                If !Empty(aObs[2])
+
+                    If   Reclock('SC5', .F.)
+                        SC5->C5_XEMAIL := ALLTRIM(aObs[2])
+                        SC5->( MsUnlock())
+                    EndIf
+                    
+                    MsgInfo("Modificaciones realizadas con exito!", "Aviso")
+                    Return
+                EndIf
+            Else
+                MsgAlert("Processo Cancelado por usuário")	
+                return
+            EndIf
+        Else
+            msgAlert("El pedido "+cPedido+" ya se encuentra facturado en su totalidad","Proceso abortado")
+        EndIf
+    EndIf
 Return
+
+User Function CheckEmail(cEmail)
+    Local lIsValid := .T.
+    Local aSpecialChars := {"!", "#", "$", "%", "&", "'", "*", "+", "/", "=", "?", "^", "_", "`", "{", "|", "}", "~"}
+    Local nCount := Len(aSpecialChars)
+    Local i := 1
+
+    // Verifica si el correo tiene caracteres especiales
+    For i := 1 To nCount
+        If aSpecialChars[i] $ cEmail
+            lIsValid := .F.
+            Exit
+        EndIf
+    Next
+
+    // Verifica si el correo tiene un formato básico válido (algo@algo.algo)
+    If !IsEmail(cEmail)
+        lIsValid := .F.
+    EndIf
+
+    IF !lIsValid
+        msgAlert("El correo no cumple con una estructura valida.","Validación C5_XEMAIL")
+    EndIf
+
+Return lIsValid
+
+
+Static Function IsEmailFormat(cEmail)
+    Local lResult := .F.
+    Local nAt := At("@", cEmail)
+    Local nDot := At(".", cEmail, nAt)
+
+    If nAt > 1 .And. nDot > nAt + 1 .And. nDot < Len(cEmail)
+        lResult := .T.
+    EndIf
+
+Return lResult
+
+static Function EstadoPed(cNumPed)
+ 	
+	Local lRet := .F.
+
+	Qryped := " SELECT  C9_PEDIDO  FROM   "+RetSQLName('SC9')+" WHERE "
+	Qryped += " C9_PEDIDO = '"+cNumPed+"' "
+	// Qryped += " AND C9_REMITO    != ' ' "
+	Qryped += " AND C9_NFISCAL = ' '"
+	Qryped += " AND D_E_L_E_T_  != '*'"
+	TcQuery Qryped New Alias "_QRYPED"
+	dbSelectArea("_QRYPED")
+	IF !_QRYPED->(EOF())
+	    
+	    lRet := .T.
+	   
+	EndIf
+	("_QRYPED")->(DBCloseArea())
+
+Return lRet
+
