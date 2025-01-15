@@ -845,7 +845,7 @@ Static Function xVerPag()
 	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 	//³Inicia a montagem da impressao.³
 	//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-	If	( nLinha >= 2800 )
+	If	( nLinha >= 2650 )
 
 		If	( ! lFlag )
 			xRodape()

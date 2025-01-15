@@ -11,7 +11,7 @@ User Function PCA200MD()
     If cOpcx == "MODEL"   
 	oStrMaster:AddField('STR0017'									,;	// [01]  C   Titulo do campo  //"Quantidade Base"
 	                    'STR0017'									,;	// [02]  C   ToolTip do campo //"Quantidade Base"
-	                    "NQTBASE"								,;	// [03]  C   Id do Field
+	                    "NQTBASE1"								,;	// [03]  C   Id do Field
 	                    "N"										,;	// [04]  C   Tipo do campo
 	                    GetSx3Cache("B1_QB","X3_TAMANHO")		,;	// [05]  N   Tamanho do campo
 	                    GetSx3Cache("B1_QB","X3_DECIMAL")		,;	// [06]  N   Decimal do campo
@@ -23,6 +23,21 @@ User Function PCA200MD()
 	                    NIL										,;	// [12]  L   Indica se trata-se de um campo chave
 	                    NIL										,;	// [13]  L   Indica se o campo pode receber valor em uma operao de update.
 	                    .T.										)	// [14]  L   Indica se o campo  virtual
+
+							oStrCmp:AddField('STR0016'								,;	// [01]  C   Titulo do campo  //"Unidade"
+	                 'STR0016'								,;	// [02]  C   ToolTip do campo //"Unidade"
+	                 "CUMCMP1"								,;	// [03]  C   Id do Field
+	                 "C"									,;	// [04]  C   Tipo do campo
+	                 GetSx3Cache("B1_UM","X3_TAMANHO")		,;	// [05]  N   Tamanho do campo
+	                 0										,;	// [06]  N   Decimal do campo
+	                 NIL									,;	// [07]  B   Code-block de validao do campo
+	                 NIL									,;	// [08]  B   Code-block de validao When do campo
+	                 NIL									,;	// [09]  A   Lista de valores permitido do campo
+	                 .F.									,;	// [10]  L   Indica se o campo tem preenchimento obrigatrio
+	                 {||IniUm()}							,;	// [11]  B   Code-block de inicializacao do campo
+	                 NIL									,;	// [12]  L   Indica se trata-se de um campo chave
+	                 NIL									,;	// [13]  L   Indica se o campo pode receber valor em uma operao de update.
+	                 .T.									)	// [14]  L   Indica se o campo  virtual
     EndIf
  
 Return Nil
@@ -44,3 +59,15 @@ Static Function VldBase()
 		lRet := .F.
 	EndIf
 Return lRet
+
+Static Function IniUm(cProduto)
+	Local cUnidade := ""
+	Default cProduto := SG1->G1_COD
+
+	SB1->(dbSetOrder(1))
+	If SB1->(MsSeek(xFilial("SB1")+cProduto))
+		cUnidade := SB1->B1_UM
+	Else
+		cUnidade := CriaVar('B1_UM')
+	EndIf
+Return cUnidade

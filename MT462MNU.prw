@@ -16,7 +16,7 @@
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 */
 
-User Function MT462MNU
+User Function MT462MNU()
 
 
 if FUNNAME()=='MATA102DN'
@@ -33,6 +33,10 @@ EndIf
 iF  Funname()=="MATA467N"
         AADD(AROTINA,{ 'Seguimiento Factura','u_SD2SEFT(SF2->F2_CLIENTE,SF2->F2_LOJA,SF2->F2_DOC,SF2->F2_SERIE)',0,5})	
 EndiF
+iF  Funname()=="MATA102N"
+        AADD(AROTINA,{ 'Seguimiento Guia','u_SD1SEGG(SF1->F1_FORNECE,SF1->F1_LOJA,SF1->F1_DOC,SF1->F1_SERIE)',0,5})	
+EndiF
+
 
 Return
 
@@ -639,3 +643,170 @@ Static Function fCarAcols2(cCliente,cLoja,cDocumento,cSerie,ldatos)
     RestArea(aArea)
 Return
 
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Programa: GenTerc      ||Data: 15/05/2023 ||Empresa: PROGEN         //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Autor: Duvan Hernandez ||Empresa: TOTVS   ||Módulo: Facturacion   //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Descrição: P.E. Seguimiento de Guia de remision                     //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+
+User Function SD1SEGG(cCliente,cLoja,cDocumento,cSerie)
+
+Local aArea := GetArea()
+Private aHeadSBM := {}
+Private aColsSBM := {}
+Private oDlgPvt
+Private oMsGetSBM
+Private oBtnFech
+Private oBtnLege
+Private nJanLarg   := 1100
+Private nJanAltu   := 600
+Private cFontUti   := "Tahoma"
+Private oFontAno   := TFont():New(cFontUti,,-38)
+Private oFontSub   := TFont():New(cFontUti,,-20)
+Private oFontSubN  := TFont():New(cFontUti,,-20,,.T.)
+Private oFontBtn   := TFont():New(cFontUti,,-14)
+Private ldatos     := .F. 
+
+aAdd(aHeadSBM, {"proveedor",       "D1_FORNECE",       "",                             TamSX3("D1_FORNECE")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Nombre",       "A2_NOME",       "",                             TamSX3("A2_NOME")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Pedido Compra",      "D1_PEDIDO",    "",                             TamSX3("D1_PEDIDO")[01],     	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Fecha Pedido",      "C7_EMISSAO",   "",                             TamSX3("C7_EMISSAO")[01],     	0,                        ".T.",              ".T.", "D", "",    ""} )
+aAdd(aHeadSBM, {"Numero Guia",       "D1_DOC",       "",                             TamSX3("D1_DOC")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Serie Guia",        "D1_SERIE",     "",                             TamSX3("D1_SERIE")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Emision Guia",      "D1_EMISSAO",   "",                             TamSX3("D1_EMISSAO")[01],     	0,                        ".T.",              ".T.", "D", "",    ""} )
+aAdd(aHeadSBM, {"Item",          	 "D1_ITEM",      "",                             TamSX3("D1_ITEM")[01],      	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Producto",          "D1_COD",       "",                          	 TamSX3("D1_COD")[01],   	    0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Desc Prod",         "D1_XDESCRI",      "",                          TamSX3("D1_XDESCRI")[01],     	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Deposito",         "D1_LOCAL",      "",                          TamSX3("D1_LOCAL")[01],     	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Cantidad",          "D1_QUANT",     "",      		 TamSX3("D1_QUANT")[01],     	0,                        ".T.",              ".T.", "N", "",    ""} )
+aAdd(aHeadSBM, {"Valor unitario",    "D1_VUNIT",       "@E 999,999,999.99",       TamSX3("D1_VUNIT")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Valor total",    "D1_TOTAL",       "@E 999,999,999.99",           TamSX3("D1_TOTAL")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Numero Factura",    "D1_DOC",       "",                             TamSX3("D1_DOC")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Serie Factura",     "D1_SERIE",     "",                             TamSX3("D1_SERIE")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Emision Factra",    "D1_EMISSAO",   "",                             TamSX3("D1_EMISSAO")[01],     	0,                        ".T.",              ".T.", "D", "",    ""} )
+
+
+Processa({|| RCarAcols1(cCliente,cLoja,cDocumento,cSerie,@ldatos)}, "Processando ... Por favor espere ...")
+if ldatos=.F.
+    Return
+else   
+
+DEFINE MSDIALOG oDlgPvt TITLE "Proceso para consulta relacionada" FROM 000, 000  TO nJanAltu, nJanLarg COLORS 0, 16777215 PIXEL
+@ 004, 003 SAY "Proceso Seguimiento" SIZE 200, 030 FONT oFontAno  OF oDlgPvt COLORS RGB(149,179,215) PIXEL
+//@ 004, 150 SAY "Seguimiento"       SIZE 200, 030 FONT oFontSub  OF oDlgPvt COLORS RGB(031,073,125) PIXEL
+//@ 014, 150 SAY "SC9" 					    SIZE 200, 030 FONT oFontSubN OF oDlgPvt COLORS RGB(031,073,125) PIXEL
+@ 006, (nJanLarg/2-001)-(0052*01) BUTTON oBtnFech  PROMPT "Salir"  SIZE 050, 018 OF oDlgPvt ACTION (oDlgPvt:End())                               FONT oFontBtn PIXEL
+//@ 006, (nJanLarg/2-001)-(0052*03) BUTTON oBtnSalv  PROMPT "Guardar"        SIZE 050, 018 OF oDlgPvt ACTION (fSalvar(cCliente,cLoja,cDocumento,cSerie)) FONT oFontBtn PIXEL
+    //Grid dos grupos
+    oMsGetSBM := MsNewGetDados():New(    029,;                //nTop      - Linha Inicial
+        003,;                //nLeft     - Coluna Inicial
+        (nJanAltu/2)-3,;     //nBottom   - Linha Final
+        (nJanLarg/2)-3,;     //nRight    - Coluna Final
+        GD_UPDATE,;          //nStyle    - Estilos para edição da Grid (GD_INSERT = Inclusão de Linha; GD_UPDATE = Alteração de Linhas; GD_DELETE = Exclusão de Linhas)
+        "AllwaysTrue()",;    //cLinhaOk  - Validação da linha
+        ,;                   //cTudoOk   - Validação de todas as linhas
+        "",;                 //cIniCpos  - Função para inicialização de campos
+        {},;     			 //aAlter    - Colunas que podem ser alteradas
+        ,;                   //nFreeze   - Número da coluna que será congelada
+        9999,;               //nMax      - Máximo de Linhas
+        ,;                   //cFieldOK  - Validação da coluna
+        ,;                   //cSuperDel - Validação ao apertar '+'
+        ,;                   //cDelOk    - Validação na exclusão da linha
+        oDlgPvt,;            //oWnd      - Janela que é a dona da grid
+        aHeadSBM,;           //aHeader   - Cabeçalho da Grid
+        aColsSBM)            //aCols     - Dados da Grid
+    //oMsGetSBM:lActive := .F.
+    ACTIVATE MSDIALOG oDlgPvt CENTERED
+EndIf
+    RestArea(aArea)
+Return
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Programa: GenTerc      ||Data: 17/12/2022 ||Empresa: PROGEN         //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Autor: Juan Pablo Astorga||Empresa: TOTVS   ||Módulo: Facturacion   //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Descrição: P.E. Funcion para cargar los ACOLS						  //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+
+Static Function RCarAcols1(cCliente,cLoja,cDocumento,cSerie,ldatos)
+    
+	Local aArea  := GetArea()
+    Local cQry   := ""
+    Local nAtual := 0
+    Local nTotal := 0    
+
+    cQry := " SELECT        "             + CRLF
+    cQry += "  D1_ITEM,       "           + CRLF
+    cQry += "  D1_COD,    "           + CRLF
+    cQry += "  D1_XDESCRI,     "              + CRLF
+    cQry += "  D1_DOC,	      "           + CRLF
+    cQry += "  D1_SERIE,	  "           + CRLF
+    cQry += "  D1_QUANT,      "           + CRLF
+    cQry += "  D1_PEDIDO,	  "	          + CRLF
+    cQry += "  D1_EMISSAO,	  "	          + CRLF
+    cQry += "  D1_FORNECE,	  "	          + CRLF
+    cQry += "  D1_LOJA , 	  "	          + CRLF
+    cQry += "  D1_LOCAL,  	  "	          + CRLF
+    cQry += "  D1_VUNIT , 	  "	          + CRLF
+    cQry += "  D1_TOTAL  	  "	          + CRLF
+    cQry += "  FROM   " + RetSQLName('SD1') + " SD1 "      + CRLF
+    cQry += "  WHERE D_E_L_E_T_ <> '*'              "      + CRLF
+    cQry += "  AND D1_FORNECE = '"+cCliente+"' 		"      + CRLF
+    cQry += "  AND D1_LOJA    = '"+cLoja+"' 		"      + CRLF
+    cQry += "  AND D1_DOC     = '"+cDocumento+"' 	"      + CRLF
+    cQry += "  AND D1_SERIE   = '"+cSerie+"' 		"      + CRLF
+
+ 
+   TCQuery cQry New Alias "QRY_SBM"
+
+    //Setando o tamanho da régua
+    Count To nTotal
+    ProcRegua(nTotal)
+
+    //Enquanto houver dados
+    QRY_SBM->(DbGoTop())
+
+    If QRY_SBM->(EoF())
+        MsgInfo("No hay datos por Exhibir", "Aviso")
+        ldatos:=.F.
+        //oDlgPvt:End()
+        QRY_SBM->(DbSkip())
+        QRY_SBM->(DbCloseArea())
+        Return ldatos
+    Else
+        ldatos:=.T.
+        While !QRY_SBM->(EoF())
+            //  Atualizar régua de processamento
+            nAtual++
+            IncProc("Adicionando " + Alltrim(QRY_SBM->D1_COD) + " (" + cValToChar(nAtual) + " de " + cValToChar(nTotal) + ")...")
+            //Definindo a legenda padrão como preto
+            
+            //Adiciona o item no aCols
+            aAdd(aColsSBM, { ;
+                QRY_SBM->D1_FORNECE ,;
+                Posicione("SA2",1, xFilial("SA2")+QRY_SBM->D1_FORNECE+QRY_SBM->D1_LOJA,"A2_NOME"),;
+                QRY_SBM->D1_PEDIDO ,;
+                Posicione("SC7",1, xFilial("SC7")+QRY_SBM->D1_PEDIDO,"C7_EMISSAO"),;
+			 	QRY_SBM->D1_DOC ,;
+                QRY_SBM->D1_SERIE ,;
+                StoD(QRY_SBM->D1_EMISSAO),;
+                QRY_SBM->D1_ITEM,;
+                QRY_SBM->D1_COD,;
+                QRY_SBM->D1_XDESCRI,;
+                QRY_SBM->D1_LOCAL,;
+			    QRY_SBM->D1_QUANT,;
+                QRY_SBM->D1_VUNIT,;
+                QRY_SBM->D1_TOTAL,;
+                Posicione("SD1",10,xFilial("SD1")+QRY_SBM->D1_FORNECE+QRY_SBM->D1_LOJA+QRY_SBM->D1_SERIE+QRY_SBM->D1_DOC+QRY_SBM->D1_ITEM,"D1_DOC"),;                                                                                                      
+                Posicione("SD1",10,xFilial("SD1")+QRY_SBM->D1_FORNECE+QRY_SBM->D1_LOJA+QRY_SBM->D1_SERIE+QRY_SBM->D1_DOC+QRY_SBM->D1_ITEM,"D1_SERIE"),;                                                                                                    
+                Posicione("SD1",10,xFilial("SD1")+QRY_SBM->D1_FORNECE+QRY_SBM->D1_LOJA+QRY_SBM->D1_SERIE+QRY_SBM->D1_DOC+QRY_SBM->D1_ITEM,"D1_EMISSAO"),;                                                                                                  
+                })
+            QRY_SBM->(DbSkip())
+        EndDo
+        QRY_SBM->(DbCloseArea())
+    EndIF
+    RestArea(aArea)
+Return
