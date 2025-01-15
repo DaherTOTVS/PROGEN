@@ -3,6 +3,7 @@
 // desarrollo de Axel Diaz
 // Este fuente busca la TRM (Tasa de Cambio de USD vs COP) tasa de cambio colombia Dolares
 // Funcion para colocar en el APPSERVER como un servicio.
+// fUNCION	
 
 USER Function TRMCOL()
 	// Local cquery		:= ""

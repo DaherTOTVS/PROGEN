@@ -2,6 +2,16 @@
 	"version": "0.2.0",
 	"configurations": [
 		{
+			"type": "totvs_language_web_debug",
+			"request": "launch",
+			"name": "EXTRUCOL_PRD",
+			"cwb": "${workspaceFolder}",
+			"program": "${command:AskForProgramName}",
+			"isMultiSession": true,
+			"enableTableSync": true,
+			"smartclientUrl": "https://colombianade179333.protheus.cloudtotvs.com.br:7600/webapp/"
+		},
+		{
 			"type": "totvs_language_debug",
 			"request": "launch",
 			"name": "Depuración de lenguaje TOTVS",
