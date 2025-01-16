@@ -754,7 +754,7 @@ Static Function xCabec()
 		//³Imprime o cabecalho da empresa. !³
 		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 	   //	oPrint:SayBitmap(050,100,cFileLogo,1050,260) SayBitmap(030,100,cFileLogo,352,324)
-	    oPrint:SayBitmap(030,100,cFileLogo,1050,260)
+	    oPrint:SayBitmap(030,100,cFileLogo,600,260)
 		oPrint:Say(050,1300,AllTrim(Upper(SM0->M0_NOMECOM)),oFont16)
 		oPrint:Say(135,1300,AllTrim(SM0->M0_ENDCOB),oFont11)
 		oPrint:Say(180,1300,Capital(AllTrim(SM0->M0_CIDCOB))+'/'+AllTrim(SM0->M0_ESTCOB)+ '  -  ' + AllTrim(TransForm(SM0->M0_CEPCOB,'@R 99.999-999')) + '  -  ' + AllTrim(SM0->M0_TEL),oFont11)

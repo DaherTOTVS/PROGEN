@@ -67,6 +67,10 @@ Local cEspecie	:= ""
 Local nTotal	:= 0
 Local nTamData	:= Len(DTOC(MsDate()))
 
+Local cDocRDV    := ""
+Local cItemRDV   := ""
+Local cQuantRDV   := ""
+
 cAliasQry := GetNextAlias()
 
 //旼컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴커

@@ -283,9 +283,7 @@ Local aObs    := {}
             Else
                 MsgAlert("Processo Cancelado por usuário")	
                 return
-            EndIf
-        Else
-            msgAlert("El pedido "+cPedido+" ya se encuentra facturado en su totalidad","Proceso abortado")
+            EndIf  
         EndIf
     EndIf
 Return
@@ -331,17 +329,30 @@ static Function EstadoPed(cNumPed)
  	
 	Local lRet := .F.
 
-	Qryped := " SELECT  C9_PEDIDO  FROM   "+RetSQLName('SC9')+" WHERE "
+	Qryped := " SELECT  C9_PEDIDO,C9_NFISCAL,C9_SERIENF,C9_CLIENTE,C9_LOJA  FROM   "+RetSQLName('SC9')+" WHERE "
 	Qryped += " C9_PEDIDO = '"+cNumPed+"' "
 	// Qryped += " AND C9_REMITO    != ' ' "
-	Qryped += " AND C9_NFISCAL = ' '"
+	//Qryped += " AND C9_NFISCAL = ' '"
 	Qryped += " AND D_E_L_E_T_  != '*'"
 	TcQuery Qryped New Alias "_QRYPED"
 	dbSelectArea("_QRYPED")
 	IF !_QRYPED->(EOF())
 	    
-	    lRet := .T.
-	   
+        If !Empty(_QRYPED->(C9_NFISCAL))
+            DbSelectArea("SF2")
+			SF2->(DbSetOrder(1))
+			IF SF2->(DbSeek(xFilial("SF2") + _QRYPED->(C9_NFISCAL) + _QRYPED->(C9_SERIENF)+ _QRYPED->(C9_CLIENTE)+ _QRYPED->(C9_LOJA) ))
+                If SF2->F2_FLFTEX !='6'
+                    lRet := .T.
+                Else
+                    msgAlert("El pedido "+cNumPed+" ya se encuentra con factura transmitida.","Proceso abortado")
+                EndIF
+            EndIf
+        Else
+            lRet := .T.
+        EndIf
+	Else  
+        msgAlert("El pedido "+cNumPed+" No cuenta con Liberación.","Proceso abortado")
 	EndIf
 	("_QRYPED")->(DBCloseArea())
 
