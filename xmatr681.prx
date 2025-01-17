@@ -68,8 +68,10 @@ Local nTotal	:= 0
 Local nTamData	:= Len(DTOC(MsDate()))
 
 Local cDocRDV    := ""
+Local cSerieRDV    := ""
 Local cItemRDV   := ""
-Local cQuantRDV   := ""
+Local nQuantRDV   := 0
+Local dEmissaoRDV	:= ctod("  /  /  ")
 
 cAliasQry := GetNextAlias()
 
@@ -124,6 +126,15 @@ EndIf
 TRCell():New(oRelat1,"ITEM"		,"SD2",Substr(RetTitle("D2_ITEM"),1,2),PesqPict("SD2","D2_ITEM"		),TamSX3("D2_ITEM"	)[1],/*lPixel*/,{|| cItem 		})
 TRCell():New(oRelat1,"EMISSAO"	,"SD2",RetTitle("D2_EMISSAO"	),PesqPict("SD2","D2_EMISSAO"	),nTamData				,/*lPixel*/,{|| dEmissao 	})
 TRCell():New(oRelat1,"QUANT"	,"SD2",RetTitle("D2_QUANT"		),PesqPict("SD2","D2_QUANT"		),TamSX3("D2_QUANT"	)[1],/*lPixel*/,{|| nQuant 		},,,"RIGHT")
+
+// Remito de devolucion
+TRCell():New(oRelat1,"DOCRDV"	,"SD1","Remito de devolución"					 ,PesqPict("SD1","D1_DOC"		),TamSX3("D1_DOC"	)[1],/*lPixel*/,{|| cDocRDV 		})//RDV
+TRCell():New(oRelat1,"SERIERDV" ,"SD1",RetTitle("D1_SERIE"	)				,PesqPict("SD1","D1_SERIE"	),TamSX3("D1_SERIE"		)[1],/*lPixel*/,{|| cSerieRDV 	})//SERIE
+TRCell():New(oRelat1,"ITEMRDV"	,"SD1",RetTitle("D1_ITEM"),PesqPict("SD1","D1_ITEM"		),TamSX3("D1_ITEM"	)[1],/*lPixel*/,{|| cItemRDV 		})
+TRCell():New(oRelat1,"QUANTRDV"	,"SD1",RetTitle("D1_QUANT"		),PesqPict("SD1","D1_QUANT"		),TamSX3("D1_QUANT"	)[1],/*lPixel*/,{|| nQuantRDV 		},,,"RIGHT")
+TRCell():New(oRelat1,"EMISSAORDV"	,"SD1",RetTitle("D1_EMISSAO"	),PesqPict("SD1","D1_EMISSAO"	),nTamData				,/*lPixel*/,{|| dEmissaoRDV 	})
+
+
 // Informacoes da Fatura
 TRCell():New(oRelat1,SerieNfId("SD2",3,"D2_SERIE")	,"SD2",Substr(SerieNfId("SD2",7,"D2_SERIE"),1,3),PesqPict("SD2","D2_SERIE"),SerieNfId("SD2",6,"D2_SERIE"),/*lPixel*/,/*{|| code-block de impressao }*/)
 TRCell():New(oRelat1,"D2_DOC"		,"SD2",STR0024					 ,PesqPict("SD2","D2_DOC"		),TamSX3("D2_DOC"		)[1],/*lPixel*/,/*{|| code-block de impressao }*/) //"Factura"
@@ -159,6 +170,14 @@ TRCell():New(oRelat2,"D2_COD"		,/*Tabela*/,RetTitle("D2_COD"	)	,PesqPict("SD2","
 TRCell():New(oRelat2,"D2_UM"		,/*Tabela*/,RetTitle("D2_UM"	)	,PesqPict("SD2","D2_UM"		),TamSX3("D2_UM"		)[1],/*lPixel*/,{|| cUM 	})
 TRCell():New(oRelat2,"D2_GRUPO"		,/*Tabela*/,RetTitle("D2_GRUPO"	)	,PesqPict("SD2","D2_GRUPO"	),TamSX3("D2_GRUPO"		)[1],/*lPixel*/,{|| cGrupo })
 TRCell():New(oRelat2,"D2_QUANT"		,/*Tabela*/,RetTitle("D2_QUANT"	)	,PesqPict("SD2","D2_QUANT"	),TamSX3("D2_QUANT"		)[1],/*lPixel*/,{|| nQuant },,,"RIGHT")
+
+// Remito de devolucion
+TRCell():New(oRelat2,"DOCRDV"	,"SD1","Remito de devolución"					 ,PesqPict("SD1","D1_DOC"		),TamSX3("D1_DOC"	)[1],/*lPixel*/,{|| cDocRDV 		})//RDV
+TRCell():New(oRelat2,"SERIERDV" ,"SD1",RetTitle("D1_SERIE"	)				,PesqPict("SD1","D1_SERIE"	),TamSX3("D1_SERIE"		)[1],/*lPixel*/,{|| cSerieRDV 	})//SERIE
+TRCell():New(oRelat2,"ITEMRDV"	,"SD1",RetTitle("D1_ITEM"),PesqPict("SD1","D1_ITEM"		),TamSX3("D1_ITEM"	)[1],/*lPixel*/,{|| cItemRDV 		})
+TRCell():New(oRelat2,"QUANTRDV"	,"SD1",RetTitle("D1_QUANT"		),PesqPict("SD1","D1_QUANT"		),TamSX3("D1_QUANT"	)[1],/*lPixel*/,{|| nQuantRDV 		},,,"RIGHT")
+TRCell():New(oRelat2,"EMISSAORDV"	,"SD1",RetTitle("D1_EMISSAO"	),PesqPict("SD1","D1_EMISSAO"	),nTamData				,/*lPixel*/,{|| dEmissaoRDV 	})
+
 
 // Dados do Pedido de Vendas
 TRCell():New(oRelat2,"C6_NUM"		,"SC6",RetTitle("C6_NUM"	),PesqPict("SC6","C6_NUM"		),TamSX3("C6_NUM"	)[1],/*lPixel*/,/*{|| code-block de impressao }*/)
@@ -211,6 +230,14 @@ EndIf
 TRCell():New(oRelat3,"ITEM"			,"SD2",Substr(RetTitle("D2_ITEM"),1,2),PesqPict("SD2","D2_ITEM"		),TamSX3("D2_ITEM"		)[1],/*lPixel*/,{|| SD2->D2_ITEM 		})
 TRCell():New(oRelat3,"EMISSAO"		,"SD2",RetTitle("D2_EMISSAO"	),PesqPict("SD2","D2_EMISSAO"	),nTamData					,/*lPixel*/,{|| SD2->D2_EMISSAO	})
 TRCell():New(oRelat3,"QUANT"		,"SD2",RetTitle("D2_QUANT"		),PesqPict("SD2","D2_QUANT"		),TamSX3("D2_QUANT"		)[1],/*lPixel*/,{|| SD2->D2_QUANT 		},,,"RIGHT")
+
+// // Remito de devolucion
+// TRCell():New(oRelat3,"DOCRDV"	,"SD1","Remito de devolución"					 ,PesqPict("SD1","D1_DOC"		),TamSX3("D1_DOC"	)[1],/*lPixel*/,{|| cDocRDV 		})//RDV
+// TRCell():New(oRelat3,"SERIERDV" ,"SD1",RetTitle("D1_SERIE"	)				,PesqPict("SD1","D1_SERIE"	),TamSX3("D1_SERIE"		)[1],/*lPixel*/,{|| cSerieRDV 	})//SERIE
+// TRCell():New(oRelat3,"ITEMRDV"	,"SD1",RetTitle("D1_ITEM"),PesqPict("SD1","D1_ITEM"		),TamSX3("D1_ITEM"	)[1],/*lPixel*/,{|| cItemRDV 		})
+// TRCell():New(oRelat3,"QUANTRDV"	,"SD1",RetTitle("D1_QUANT"		),PesqPict("SD1","D1_QUANT"		),TamSX3("D1_QUANT"	)[1],/*lPixel*/,{|| nQuantRDV 		},,,"RIGHT")
+// TRCell():New(oRelat3,"EMISSAORDV"	,"SD1",RetTitle("D1_EMISSAO"	),PesqPict("SD1","D1_EMISSAO"	),nTamData				,/*lPixel*/,{|| dEmissaoRDV 	})
+
 
 // Dados do Pedido de Vendas
 TRCell():New(oRelat3,"C6_NUM"		,"SC6",RetTitle("C6_NUM"		),PesqPict("SC6","C6_NUM"		),TamSX3("C6_NUM"		)[1],/*lPixel*/,/*{|| code-block de impressao }*/)
@@ -281,6 +308,12 @@ Local dEmissao	:= CTOD("  /  /  ")
 Local nQuant	:= 0
 Local aRet		:= {}
 
+Local cDocRDV		:= ""
+Local cSerieRDV		:= ""
+Local cItemRDV		:= ""
+Local nQuantRDV		:= 0
+Local dEmissaoRDV	:= CTOD("  /  /  ")
+
 
 oReport:Section(1):Cell("DOC" 		):SetBlock({|| cDoc		})
 oReport:Section(1):Cell("ITEM" 		):SetBlock({|| cItem	})
@@ -290,6 +323,18 @@ cDoc	:= ""
 cItem	:= ""
 dEmissao:= ctod("  /  /  ")
 nQuant	:= 0
+
+oReport:Section(1):Cell("DOCRDV" 	):SetBlock({|| cDocRDV	})
+oReport:Section(1):Cell("SERIERDV" 	):SetBlock({|| cSerieRDV})
+oReport:Section(1):Cell("ITEMRDV" 	):SetBlock({|| cItemRDV	})
+oReport:Section(1):Cell("QUANTRDV" 	):SetBlock({|| nQuantRDV})
+oReport:Section(1):Cell("EMISSAORDV"	):SetBlock({|| dEmissaoRDV	})
+cDocRDV		:= ""
+cSerieRDV	:= ""
+cItemRDV	:= ""
+nQuantRDV	:= 0
+dEmissaoRDV	:= CTOD("  /  /  ")
+
 
 oReport:Section(2):disable()
 oReport:Section(3):disable()
@@ -383,6 +428,7 @@ While !oReport:Cancel() .And. !(cAliasQry)->(Eof())
 			Endif
 			If lImpr
 				cChRem:=xFilial("SD2")+SC6->C6_NUM+SC6->C6_ITEM
+				aRet := {}
 				// Pesquisa Remito (SD2) a partir do Pedido de Vendas
 				DbSelectArea("SD2")		// Itens da Nota de Saida
 				dbSetOrder(8) //D2_FILIAL+D2_PEDIDO+D2_ITEMPV
@@ -391,20 +437,27 @@ While !oReport:Cancel() .And. !(cAliasQry)->(Eof())
 					While !Eof() .and. D2_FILIAL+D2_PEDIDO+D2_ITEMPV==cChRem  //impressao das remisiones
 						If D2_ITEMPV==SC6->C6_ITEM  .and. IsRemito(1,"SD2->D2_TIPODOC") .and. D2_COD==SC6->C6_PRODUTO
 
-								aRet := validRDV(SD2->D2_DOC,SD2->D2_SERIE,SD2->D2_ITEM,SD2->D2_CLIENTE,SD2->D2_LOJA,SD2->D2_QUANT)
-								cCant := aRet[2]
-							
 								cChFat		:= xFilial("SD2")+SD2->D2_CLIENTE+SD2->D2_LOJA+SD2->D2_SERIE+SD2->D2_DOC+SD2->D2_ITEM
 								nReg 		:= Recno()
-								cDoc 		:= ""
-								cItem 		:= ""
-								dEmissao 	:= CTOD("  /  /  ")
-								nQuant		:= 0
+
+								cDoc 		:= SD2->D2_DOC
+								cItem 		:= SD2->D2_ITEM
+								dEmissao 	:= SD2->D2_EMISSAO
+								nQuant		:= SD2->D2_QUANT
+
+								aRet := validRDV(SD2->D2_DOC,SD2->D2_SERIE,SD2->D2_ITEM,SD2->D2_CLIENTE,SD2->D2_LOJA,SD2->D2_QUANT)
 								If aRet[1]
-									cDoc 		:= SD2->D2_DOC
-									cItem 		:= SD2->D2_ITEM
-									dEmissao 	:= SD2->D2_EMISSAO
-									nQuant		:= cCant
+									cDocRDV 		:= aRet[2]
+									cSerieRDV		:= aret[3]
+									cItemRDV 		:= aRet[4]
+									nQuantRDV		:= aRet[5]
+									dEmissaoRDV     := SToD(aRet[6])
+								Else
+									cDocRDV 		:= ""
+									cSerieRDV		:= ""
+									cItemRDV 		:= ""
+									nQuantRDV		:= 0
+									dEmissaoRDV     := CTOD("  /  /  ")
 								EndIf
 
 								// Pesquisa Fatura (SD2) a partir do Remito (SD2)
@@ -424,6 +477,13 @@ While !oReport:Cancel() .And. !(cAliasQry)->(Eof())
 									oReport:Section(1):Cell("ITEM"			):Show()
 									oReport:Section(1):Cell("EMISSAO"		):Show()
 									oReport:Section(1):Cell("QUANT"			):Show()
+									// Informacoes de RDV
+									oReport:Section(1):Cell("DOCRDV" 			):Show()
+									oReport:Section(1):Cell("SERIERDV"			):Show()
+									oReport:Section(1):Cell("ITEMRDV"			):Show()
+									oReport:Section(1):Cell("QUANTRDV"			):Show()
+									oReport:Section(1):Cell("EMISSAORDV"		):Show()
+
 									// Informacoes da Fatura
 									oReport:Section(1):Cell(SerieNfId("SD2",3,"D2_SERIE")):Show()
 									oReport:Section(1):Cell("D2_DOC"		):Show()
@@ -462,6 +522,12 @@ While !oReport:Cancel() .And. !(cAliasQry)->(Eof())
 									oReport:Section(1):Cell("ITEM"			):Show()
 									oReport:Section(1):Cell("EMISSAO"		):Show()
 									oReport:Section(1):Cell("QUANT"			):Show()
+									// Informacoes de RDV
+									oReport:Section(1):Cell("DOCRDV" 			):Show()
+									oReport:Section(1):Cell("SERIERDV"			):Show()
+									oReport:Section(1):Cell("ITEMRDV"			):Show()
+									oReport:Section(1):Cell("QUANTRDV"			):Show()
+									oReport:Section(1):Cell("EMISSAORDV"		):Show()
 
 									oReport:Section(1):PrintLine()
 								Endif
@@ -585,6 +651,12 @@ Local cSelect	:= ""
 Local cNOME     := ""
 Local xSERIE	:= ""
 
+Local cDocRDV		:= ""
+Local cSerieRDV		:= ""
+Local cItemRDV		:= ""
+Local nQuantRDV		:= 0
+Local dEmissaoRDV	:= CTOD("  /  /  ")
+
 MakeSqlExpr(oReport:uParam)
 
 oReport:SetTitle(STR0013 + cRetTitle + "/" +  STR0015 + "/" + STR0024) //"Relacao de remisiones/pedidos de venda/faturas
@@ -604,8 +676,11 @@ oReport:Section(2):Cell("D2_QUANT"		):SetBlock({|| nQuant	})
 oReport:Section(2):Cell("D2_NOME"		):SetBlock({|| cNOME	})
 oReport:Section(2):Cell("xcSerie"		):SetBlock({|| xSERIE	})
 
-
-
+oReport:Section(2):Cell("DOCRDV" 	):SetBlock({|| cDocRDV	})
+oReport:Section(2):Cell("SERIERDV" 	):SetBlock({|| cSerieRDV})
+oReport:Section(2):Cell("ITEMRDV" 	):SetBlock({|| cItemRDV	})
+oReport:Section(2):Cell("QUANTRDV" 	):SetBlock({|| nQuantRDV})
+oReport:Section(2):Cell("EMISSAORDV"	):SetBlock({|| dEmissaoRDV	})
 
 cDoc	:= ""
 cItem	:= ""
@@ -618,6 +693,12 @@ cUM 	:= ""
 cGrupo  := ""
 cNOME   := ""
 xSERIE	:= ""
+
+cDocRDV		:= ""
+cSerieRDV		:= ""
+cItemRDV		:= ""
+nQuantRDV		:= 0
+dEmissaoRDV	:= CTOD("  /  /  ")
 
 If oReport:Section(1):GetOrder() == 1		// Ordem: por Emissao
 	oReport:Section(2):Cell("D2_EMISSAOC"):Disable()
@@ -672,7 +753,7 @@ cWhere += "%"
 cSelect:= "%D2_FILIAL,"+ IIF(SerieNfId("SD2",3,"D2_SERIE")<>"D2_SERIE",SerieNfId("SD2",3,"D2_SERIE")+","," ")
 cSelect+= "D2_SERIE,D2_SERIE XSERIE,D2_DOC,D2_ITEM,D2_EMISSAO,D2_QUANT,D2_TOTAL,D2_ESPECIE,D2_COD,D2_UM,D2_GRUPO,D2_REMITO,D2_ITEMREM, "
 cSelect+= IIF(SerieNfId("SD2",3,"D2_SERIREM")<>"D2_SERIREM",SerieNfId("SD2",3,"D2_SERIREM")+","," ")+" D2_SERIREM,D2_PEDIDO,D2_ITEMPV, "
-cSelect+= "D2_CLIENTE,D2_LOJA,SD2.R_E_C_N_O_ RECNO, A1_NOME, D1_DOC, D1_QUANT%"
+cSelect+= "D2_CLIENTE,D2_LOJA,SD2.R_E_C_N_O_ RECNO, A1_NOME, D1_DOC, D1_QUANT, D1_ITEM, D1_SERIE, D1_EMISSAO %"
 
 oReport:Section(2):BeginQuery()	
 BeginSql Alias cAliasQry
@@ -764,23 +845,43 @@ While !oReport:Cancel() .And. !(cAliasQry)->(Eof())
 	oReport:Section(2):Cell("EMISSAO"		):Show()
 	oReport:Section(2):Cell("QUANT"			):Show()
 	oReport:Section(2):Cell("TOTAL"			):Show()
+	// Informacoes de RDV
+	oReport:Section(2):Cell("DOCRDV" 			):Show()
+	oReport:Section(2):Cell("SERIERDV"			):Show()
+	oReport:Section(2):Cell("ITEMRDV"			):Show()
+	oReport:Section(2):Cell("QUANTRDV"			):Show()
+	oReport:Section(2):Cell("EMISSAORDV"		):Show()
 	
 	cCliente	:= (cAliasQry)->D2_CLIENTE
 	cLoja		:= (cAliasQry)->D2_LOJA
 	dEmissao	:= (cAliasQry)->D2_EMISSAO
 	nQuant		:= (cAliasQry)->D2_QUANT
-	If ALLTRIM((cAliasQry)->D1_DOC) != ''
-		cDoc 		:= ''
-		If (cAliasQry)->D1_QUANT >= nQuant
-			nQuant := 0
-		ElseIf (cAliasQry)->D1_QUANT < nQuant
-			nQuant := nQuant - (cAliasQry)->D1_QUANT
-			cDoc 		:= (cAliasQry)->D2_DOC
-		EndIf
-	Else
-		cDoc 		:= (cAliasQry)->D2_DOC
 
+	If ALLTRIM((cAliasQry)->D1_DOC) != ''
+		cDocRDV 		:= (cAliasQry)->D1_DOC
+		cSerieRDV		:= (cAliasQry)->D1_SERIE
+		cItemRDV 		:= (cAliasQry)->D1_ITEM
+		nQuantRDV		:= (cAliasQry)->D1_QUANT
+		dEmissaoRDV     := (cAliasQry)->D1_EMISSAO
+	Else
+		cDocRDV 		:= ""
+		cSerieRDV		:= ""
+		cItemRDV 		:= ""
+		nQuantRDV		:= ""
+		dEmissaoRDV     := ""
 	EndIf
+	// If ALLTRIM((cAliasQry)->D1_DOC) != ''
+	// 	cDoc 		:= ''
+	// 	If (cAliasQry)->D1_QUANT >= nQuant
+	// 		nQuant := 0
+	// 	ElseIf (cAliasQry)->D1_QUANT < nQuant
+	// 		nQuant := nQuant - (cAliasQry)->D1_QUANT
+	// 		cDoc 		:= (cAliasQry)->D2_DOC
+	// 	EndIf
+	// Else
+	// 	cDoc 		:= (cAliasQry)->D2_DOC
+
+	// EndIf
 	cItem 		:= (cAliasQry)->D2_ITEM
 	cCod 		:= (cAliasQry)->D2_COD
 	cUM 		:= (cAliasQry)->D2_UM
@@ -885,8 +986,15 @@ Local cGrupo	:= ""
 Local nQuant	:= 0
 Local nTotal	:= 0
 Local cSelect	:= ""
-Local cNome     := ""
+Local cNOME     := ""
 Local xSERIE	:= ""
+
+// Local cDocRDV		:= ""
+// Local cSerieRDV	:= ""
+// Local cItemRDV	:= ""
+// Local nQuantRDV	:= 0
+// Local dEmissaoRDV	:= CTOD("  /  /  ")
+
 
 oReport:Section(3):Cell("D2_EMISSAOE"	):SetBlock({|| dEmissao		})
 oReport:Section(3):Cell("D2_CLIENTEE"	):SetBlock({|| cCliente		})
@@ -903,8 +1011,20 @@ oReport:Section(3):Cell("D2_UM"			):SetBlock({|| cUM		    })
 oReport:Section(3):Cell("D2_GRUPO"		):SetBlock({|| cGrupo		})
 oReport:Section(3):Cell("D2_QUANT"		):SetBlock({|| nQuant		})
 oReport:Section(3):Cell("D2_TOTAL"		):SetBlock({|| nTotal		})
-oReport:Section(3):Cell("D2_NOME"		):SetBlock({|| cNome		})
+oReport:Section(3):Cell("D2_NOME"		):SetBlock({|| cNOME		})
 oReport:Section(3):Cell("xcSerie"		):SetBlock({|| xSERIE		})
+
+// oReport:Section(3):Cell("DOCRDV" 	):SetBlock({|| cDocRDV	})
+// oReport:Section(3):Cell("SERIERDV" 	):SetBlock({|| cSerieRDV})
+// oReport:Section(3):Cell("ITEMRDV" 	):SetBlock({|| cItemRDV	})
+// oReport:Section(3):Cell("QUANTRDV" 	):SetBlock({|| nQuantRDV})
+// oReport:Section(3):Cell("EMISSAORDV"	):SetBlock({|| dEmissaoRDV	})
+
+// cDocRDV		:= ""
+// cSerieRDV	:= ""
+// cItemRDV	:= ""
+// nQuantRDV	:= 0
+// dEmissaoRDV	:= CTOD("  /  /  ")
 
 cDoc	 := ""
 cItem	 := ""
@@ -1148,11 +1268,17 @@ Return
 static function validRDV(cDoc,cSerie,CItem,cCliente,cLoja,cQuant)
 
 	Local aArea := getArea()
-	Local lRet  := .T.
+	Local aSvSD1     := SD1->(GetArea())
+	Local lRet  := .F.
 	Local _cAQuery := ""
+	Local cDocRdv  := ""
+	Local cSerieRdv := ""
+	Local cItemRdv := ""
+	Local nQuantRdv := 0
+	Local dEmissaoRdv := ""
 
 	If ALLTRIM(cSerie) == 'R'
-		_cAQuery := " SELECT D1_DOC,D1_SERIE,D1_QUANT FROM  "+RetSQLName('SD1')+"  SD1 "
+		_cAQuery := " SELECT D1_DOC,D1_SERIE,D1_QUANT,D1_ITEM,D1_EMISSAO FROM  "+RetSQLName('SD1')+"  SD1 "
 		_cAQuery += " WHERE D_E_L_E_T_ <> '*' "
 		_cAQuery += " AND D1_FILIAL =  '"+xFilial("SD1")+"' "
 		
@@ -1166,16 +1292,21 @@ static function validRDV(cDoc,cSerie,CItem,cCliente,cLoja,cQuant)
 		dbSelectArea("_aQRY")
 		If !_aQRY->(EOF())
 
-			If _aQRY->D1_QUANT >= cQuant
-				lRet := .F.
-			ElseIf _aQRY->D1_QUANT < cQuant
-				cQuant := cQuant - _aQRY->D1_QUANT
-			EndIf
+			// If _aQRY->D1_QUANT >= cQuant
+			lRet := .T.
+			// ElseIf _aQRY->D1_QUANT < cQuant
+			// 	cQuant := cQuant - _aQRY->D1_QUANT
+			// EndIf
+			cDocRdv     := _aQRY->D1_DOC
+			cSerieRdv   := _aQRY->D1_SERIE
+			cItemRdv    := _aQRY->D1_ITEM
+			nQuantRdv   := _aQRY->D1_QUANT
+			dEmissaoRdv := _aQRY->D1_EMISSAO
 		EndIf
 		_aQRY->(dbCloseArea())
 	EndIf
 
 
-
+	RestArea( aSvSD1 )
 	RestArea( aArea )
-Return ({lRet,cQuant})
+Return ({lRet,cDocRdv,cSerieRdv,cItemRdv,nQuantRdv,dEmissaoRdv})

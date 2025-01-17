@@ -576,13 +576,21 @@ Static Function AcmDtaiPR()
 			cRemision 		:= (cQueryx)->D2_DOC
 			cNumseq 		:= (cQueryx)->D2_NUMSEQ
 			cItem 			:= (cQueryx)->D2_ITEM
+			cDocRdv  := ""
+			cSerieRdv :=""
 
 
 			aRet := validRDV(Cremito,'R',cItem,Cclientex,Ctienda,(cQueryx)->D2_QUANT)
 			cCant := aRet[2]
+			cDocRdv  := aRet[5]
+			cSerieRdv := aRet[6]
 			If !aRet[1]
 				(cQueryx)->(dbSkip())
 				Loop
+			EndIf
+			If aRet[4]>0
+				MsgAlert("El producto "+aRet[3]+" esta pendiente por ubicación.","Operación abortada")
+				return
 			EndIf
 
 			LokforQry(condPedido,condProduto)
@@ -634,7 +642,7 @@ Static Function AcmDtaiPR()
 				endif
 
 
-				LookSerLot(condProduto,"A",cRemision)
+				LookSerLot(condProduto,"A",cRemision,cDocRdv,cSerieRdv)
 				cflagserie = Alltrim(aliaslookserie->DB_NUMSERI)
 				//Si existen series, se imprimen para los productos que las tengan. Esto depende de la cantidad de productos del pedido
 				if cflagserie <> ""
@@ -736,7 +744,7 @@ Static Function AcmDtaiPR()
 					endif
 						
 					
-					LookSerLot(Cproducto,Ccodigoop,"B")
+					LookSerLot(Cproducto,Ccodigoop,"B",cDocRdv,cSerieRdv)
 					cflagserie = Alltrim(aliaslookserie->DB_NUMSERI)
 
 					if cflagserie <> ""
@@ -807,12 +815,20 @@ Static Function AcmDtaiPR()
 			cRemision 		:= (cQueryx)->D2_DOC
 			cNumseq 		:= (cQueryx)->D2_NUMSEQ
 			cItem 			:= (cQueryx)->D2_ITEM
+			cDocRdv  := ""
+			cSerieRdv :=""
 
 			aRet := validRDV(Cremito,'R',cItem,Cclientex,Ctienda,(cQueryx)->D2_QUANT)
 			cCant := aRet[2]
+			cDocRdv  := aRet[5]
+			cSerieRdv := aRet[6]
 			If !aRet[1]
 				(cQueryx)->(dbSkip())
 				Loop
+			EndIf
+			If aRet[4]>0
+				MsgAlert("El producto "+aRet[3]+" esta pendiente por ubicación.","Operación abortada")
+				return
 			EndIf
 
 			LokforQry(condPedido,condProduto)
@@ -870,7 +886,7 @@ Static Function AcmDtaiPR()
 				endif
 
 
-				LookSerLot(condProduto,"A",cRemision)
+				LookSerLot(condProduto,"A",cRemision,cDocRdv,cSerieRdv)
 				cflagserie = Alltrim(aliaslookserie->DB_NUMSERI)
 				//Si existen series, se imprimen para los productos que las tengan. Esto depende de la cantidad de productos del pedido
 				if cflagserie <> ""
@@ -977,7 +993,7 @@ Static Function AcmDtaiPR()
 					endif
 						
 					
-					LookSerLot(Cproducto,Ccodigoop,"B")
+					LookSerLot(Cproducto,Ccodigoop,"B",cDocRdv,cSerieRdv)
 					cflagserie = Alltrim(aliaslookserie->DB_NUMSERI)
 
 					if cflagserie <> ""
@@ -1055,12 +1071,20 @@ Static Function AcmDtaiPR()
 			Cclientex 		= (cQueryx)->C6_CLI
 			cRemision 		= (cQueryx)->D2_DOC
 			cItem 			= (cQueryx)->D2_ITEM
+			cDocRdv  := ""
+			cSerieRdv :=""
 
 			aRet := validRDV(Cremito,'R',cItem,Cclientex,Ctienda,(cQueryx)->D2_QUANT)
 			cCant := aRet[2]
+			cDocRdv  := aRet[5]
+			cSerieRdv := aRet[6]
 			If !aRet[1]
 				(cQueryx)->(dbSkip())
 				Loop
+			EndIf
+			If aRet[4]>0
+				MsgAlert("El producto "+aRet[3]+" esta pendiente por ubicación.","Operación abortada")
+				return
 			EndIf
 			//Si el resultado es vacio, es decir que no hay op, el codigo muestra los productos normales o sin estructura
 			// if Empty(Cresultlook)  
@@ -1107,7 +1131,7 @@ Static Function AcmDtaiPR()
 			endif
 
 
-			LookSerLot(condProduto,"A",cRemision)
+			LookSerLot(condProduto,"A",cRemision,cDocRdv,cSerieRdv)
 			cflagserie = Alltrim(aliaslookserie->DB_NUMSERI)
 			//Si existen series, se imprimen para los productos que las tengan. Esto depende de la cantidad de productos del pedido
 			if cflagserie <> ""
@@ -1161,19 +1185,27 @@ Static Function AcmDtaiPR()
 	elseif MV_PAR01==2 .AND. MV_PAR02==2
 		While (!((cQueryx)->(EOF())) .and. MV_PAR01 == 2)
 
-			condPedido		= (cQueryx)->D2_PEDIDO
-			condProduto		= (cQueryx)->D2_COD
-			Cremito			= (cQueryx)->D2_DOC
-			Ctienda 		= (cQueryx)->D2_LOJA
-			Cclientex 		= (cQueryx)->C6_CLI
-			cRemision 		= (cQueryx)->D2_DOC
-			cItem 			= (cQueryx)->D2_ITEM
+			condPedido	:= (cQueryx)->D2_PEDIDO
+			condProduto	:= (cQueryx)->D2_COD
+			Cremito		:= (cQueryx)->D2_DOC
+			Ctienda 	:= (cQueryx)->D2_LOJA
+			Cclientex 	:= (cQueryx)->C6_CLI
+			cRemision 	:= (cQueryx)->D2_DOC
+			cItem 		:= (cQueryx)->D2_ITEM
+			cDocRdv  	:= ""
+			cSerieRdv   := ""
 
 			aRet := validRDV(Cremito,'R',cItem,Cclientex,Ctienda,(cQueryx)->D2_QUANT)
 			cCant := aRet[2]
+			cDocRdv  := aRet[5]
+			cSerieRdv := aRet[6]
 			If !aRet[1]
 				(cQueryx)->(dbSkip())
 				Loop
+			EndIf
+			If aRet[4]>0
+				MsgAlert("El producto "+aRet[3]+" esta pendiente por ubicación.","Operación abortada")
+				return
 			EndIf
 
  
@@ -1226,7 +1258,7 @@ Static Function AcmDtaiPR()
 				endif
 
 
-				LookSerLot(condProduto,"A",cRemision)
+				LookSerLot(condProduto,"A",cRemision,cDocRdv,cSerieRdv)
 				cflagserie = Alltrim(aliaslookserie->DB_NUMSERI)
 				//Si existen series, se imprimen para los productos que las tengan. Esto depende de la cantidad de productos del pedido
 				if cflagserie <> ""
@@ -1538,7 +1570,7 @@ Return
 /*/{CASE} LookSerLot
 Comprueba si existe el lote y la serie del producto, y trae la serie principalmente
 /*/
-Static Function LookSerLot(producto,nuop,remision)
+Static Function LookSerLot(producto,nuop,remision,cDocRdv,cSerieRdv)
 	Local Clookserie		:=""
 
 	if SELECT("aliaslookserie")>0
@@ -1554,6 +1586,7 @@ Static Function LookSerLot(producto,nuop,remision)
 	Clookserie+=" WHERE"+ CRLF
 	Clookserie+=" A.DB_PRODUTO='"+producto+"' AND A.DB_DOC='"+remision+"' AND A.D_E_L_E_T_ <> '*' "  + CRLF
 	Clookserie+=" AND A.DB_NUMSEQ='"+cSeqRem+"' "  + CRLF
+	Clookserie+=" AND A.DB_NUMSERI NOT IN (SELECT DB_NUMSERI FROM SDB010 D WHERE D.DB_DOC='"+cDocRdv+"' AND D.DB_SERIE='"+cSerieRdv+"' AND D.DB_ESTORNO='' AND D.DB_PRODUTO='"+producto+"' AND D.D_E_L_E_T_ <> '*' ) " + CRLF
 	Clookserie+=" ORDER BY DB_NUMSERI DESC"  + CRLF
 	//Clookserie+=" DC_PRODUTO='"+producto+"' AND DC_PEDIDO='"+ped+"' AND DC_NUMSERI <> '' "  + CRLF
 	
@@ -1565,6 +1598,7 @@ Static Function LookSerLot(producto,nuop,remision)
 	Clookserie+=" FROM "+ InitSqlName("SDB") +" A " + CRLF
 	Clookserie+=" WHERE"+ CRLF
 	Clookserie+=" A.DB_PRODUTO='"+producto+"' AND A.DB_DOC='"+nuop+"' AND A.D_E_L_E_T_ <> '*' "  + CRLF
+	Clookserie+=" AND A.DB_NUMSERI NOT IN (SELECT DB_NUMSERI FROM SDB010 D WHERE D.DB_DOC='"+cDocRdv+"' AND D.DB_SERIE='"+cSerieRdv+"' AND D.DB_ESTORNO='' AND D.DB_PRODUTO='"+producto+"' AND D.D_E_L_E_T_ <> '*' ) " + CRLF
 	//SDC.D_E_L_E_T_ <>'*' 
 	endif
 	
@@ -1872,10 +1906,22 @@ static function validRDV(cDoc,cSerie,CItem,cCliente,cLoja,cQuant)
 	Local aArea := getArea()
 	Local lRet  := .T.
 	Local _cAQuery := ""
+	Local cProd   := ""
+	Local nSaldo  := 0
+	Local cDocRdv := ""
+	Local cSerieRdv := ""
 
 	If ALLTRIM(cSerie) == 'R'
-		_cAQuery := " SELECT D1_DOC,D1_SERIE,D1_QUANT FROM  "+RetSQLName('SD1')+"  SD1 "
-		_cAQuery += " WHERE D_E_L_E_T_ <> '*' "
+		_cAQuery := " SELECT D1_DOC,D1_SERIE,D1_QUANT,DA_SALDO,D1_COD FROM  "+RetSQLName('SD1')+"  SD1 "
+		_cAQuery += " LEFT JOIN SDA010 SDA "
+		_cAQuery += " ON DA_FILIAL =  '"+xFilial("SDA")+"' "
+		_cAQuery += " AND D1_COD=DA_PRODUTO "
+		_cAQuery += " AND D1_LOCAL=DA_LOCAL "
+		_cAQuery += " AND D1_DOC=DA_DOC "
+		_cAQuery += " AND D1_SERIE=DA_SERIE "
+		_cAQuery += " AND D1_NUMSEQ=DA_NUMSEQ "
+		_cAQuery += " AND SDA.D_E_L_E_T_ <> '*' "
+		_cAQuery += " WHERE SD1.D_E_L_E_T_ <> '*' "
 		_cAQuery += " AND D1_FILIAL =  '"+xFilial("SD1")+"' "
 		
 		_cAQuery += " AND D1_NFORI =  '"+cDoc+"' "
@@ -1887,6 +1933,11 @@ static function validRDV(cDoc,cSerie,CItem,cCliente,cLoja,cQuant)
 		TcQuery _cAQuery New Alias "_aQRY"
 		dbSelectArea("_aQRY")
 		If !_aQRY->(EOF())
+
+			cProd   :=_aQRY->D1_COD
+			nSaldo  :=_aQRY->DA_SALDO
+			cDocRdv :=_aQRY->D1_DOC 
+			cSerieRdv :=_aQRY->D1_SERIE
 
 			If _aQRY->D1_QUANT >= cQuant
 				lRet := .F.
@@ -1900,4 +1951,4 @@ static function validRDV(cDoc,cSerie,CItem,cCliente,cLoja,cQuant)
 
 
 	RestArea( aArea )
-Return ({lRet,cQuant})
+Return ({lRet,cQuant,ALLTRIM(cProd),nSaldo,cDocRdv,cSerieRdv})
