@@ -429,6 +429,16 @@ While !oReport:Cancel() .And. !(cAliasQry)->(Eof())
 			If lImpr
 				cChRem:=xFilial("SD2")+SC6->C6_NUM+SC6->C6_ITEM
 				aRet := {}
+				cDoc 		:= ""
+				cItem 		:= ""
+				dEmissao 	:= CTOD("  /  /  ")
+				nQuant		:= 0
+
+				cDocRDV 		:= ""
+				cSerieRDV		:= ""
+				cItemRDV 		:= ""
+				nQuantRDV		:= 0
+				dEmissaoRDV     := CTOD("  /  /  ")
 				// Pesquisa Remito (SD2) a partir do Pedido de Vendas
 				DbSelectArea("SD2")		// Itens da Nota de Saida
 				dbSetOrder(8) //D2_FILIAL+D2_PEDIDO+D2_ITEMPV
