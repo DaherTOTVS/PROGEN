@@ -4,12 +4,20 @@
 		{
 			"type": "totvs_language_web_debug",
 			"request": "launch",
-			"name": "EXTRUCOL_PRD",
-			"cwb": "${workspaceFolder}",
+			"name": "PROGEN_HMG",
 			"program": "${command:AskForProgramName}",
 			"isMultiSession": true,
-			"enableTableSync": true,
-			"smartclientUrl": "https://colombianade179333.protheus.cloudtotvs.com.br:7600/webapp/"
+			"smartclientUrl": "https://producciones164470.protheus.cloudtotvs.com.br:1613/webapp/",
+			"enableTableSync": true
+		},
+		{
+			"type": "totvs_language_web_debug",
+			"request": "launch",
+			"name": "EXTRUCOL",
+			"program": "${command:AskForProgramName}",
+			"smartclientUrl": "https://colombianade179333.protheus.cloudtotvs.com.br:7600/webapp/",
+			"isMultiSession": true,
+			"enableTableSync": true
 		},
 		{
 			"type": "totvs_language_debug",
@@ -17,21 +25,10 @@
 			"name": "Depuración de lenguaje TOTVS",
 			"program": "${command:AskForProgramName}",
 			"cwb": "${workspaceFolder}",
-			"smartclientBin": "C:/TOTVS/ERPROOT/Protheus/BIN/SmartClient_2310/smartclient.exe",
+			"smartclientBin": "D:/TOTVS/smartclient_Progen/smartclient.exe",
 			"isMultiSession": true,
-			"enableTableSync": true,
-			// "enableMultiThread": true
+			"enableTableSync": true
 		}
-		// {
-		// 	"type": "totvs_Replay_debug",
-		// 	"request": "launch",
-		// 	"name": "TDS Replay Progen",
-		// 	"program": "${command:AskForProgramName}",
-		// 	"cwb": "${workspaceFolder}",
-		// 	"tdsReplayFile": "C:/Users/DUVAN.NINO/Downloads/replay_20240610_123757_without_lib.trplay",
-		// 	"ignoreFiles": false,
-		// 	"password": ""
-		// }
 	],
 	"lastPrograms": [
 		{
@@ -41,5 +38,6 @@
 			"label": "VTDEBUG"
 		}
 	],
-	"lastProgramExecuted": "SIGAMDI"
+	"lastProgramExecuted": "SIGAMDI",
+	"lastProgramArguments": []
 }

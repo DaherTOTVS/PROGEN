@@ -2,14 +2,14 @@
 #INCLUDE "apwebsrv.ch"
 
 /* ===============================================================================
-WSDL Location    http://testubl21.thefactoryhka.com.co/ws/v1.0/Service.svc?wsdl
-Generado en        09/12/19 13:49:24
+WSDL Location    http://demoemision21v4.thefactoryhka.com.co/ws/v1.0/Service.svc?wsdl
+Generado en        15/03/22 11:52:29
 Observaciones      Codigo Fuente generado por ADVPL WSDL Client 1.120703
                  Modificaciones en este archivo pueden causar funcionamiento incorrecto
                  y se perderan en caso de que se genere nuevamente el codigo fuente.
 =============================================================================== */
 
-User Function _LPNSRLN ; Return  // "dummy" function - Internal Use 
+User Function _DMQQKXS ; Return  // "dummy" function - Internal Use 
 
 /* -------------------------------------------------------------------------------
 WSDL Service WSNFECol
@@ -61,7 +61,7 @@ ENDWSCLIENT
 WSMETHOD NEW WSCLIENT WSNFECol
 ::Init()
 If !FindFunction("XMLCHILDEX")
-	UserException("O CÛdigo-Fonte Client atual requer os execut·veis do Protheus Build [7.00.131227A-20170816 NG] ou superior. Atualize o Protheus ou gere o CÛdigo-Fonte novamente utilizando o Build atual.")
+	UserException("O Cùdigo-Fonte Client atual requer os executùveis do Protheus Build [7.00.191205P-20211019] ou superior. Atualize o Protheus ou gere o Cùdigo-Fonte novamente utilizando o Build atual.")
 EndIf
 Return Self
 
@@ -133,7 +133,8 @@ Return oClone
 
 WSMETHOD Enviar WSSEND ctokenEmpresa,ctokenPassword,oWSfactura,cadjuntos WSRECEIVE oWSEnviarResult WSCLIENT WSNFECol
 Local cSoap := "" , oXmlRet
-Local cCFDICON := GetMv( "MV_CFDICON" , .F. ,  "")
+Local cSoapFE := GetMv( "MV_SOAPFE" , .F. ,  "")
+Local nHdl    := 0
 
 BEGIN WSMETHOD
 
@@ -142,16 +143,23 @@ cSoap += WSSoapValue("tokenEmpresa", ::ctokenEmpresa, ctokenEmpresa , "string", 
 cSoap += WSSoapValue("tokenPassword", ::ctokenPassword, ctokenPassword , "string", .F. , .F., 0 , NIL, .F.,.F.) 
 cSoap += WSSoapValue("factura", ::oWSfactura, oWSfactura , "FacturaGeneral", .F. , .F., 0 , "http://tempuri.org/", .F.,.F.) 
 cSoap += WSSoapValue("adjuntos", ::cadjuntos, cadjuntos , "string", .F. , .F., 0 , NIL, .F.,.F.) 
-cSoap += "</Enviar>"   // **** GAP Indicar punto de parada para retornar XML.
+cSoap += "</Enviar>"
 
-If cCFDICON == "1"   
-	conout("WSEnviar: " + cSoap)
+If cSoapFE == "1"
+	If isBlind() .And. Alltrim(FunName()) == "M486_AUTO"
+		nHdl := fCreate("\baseline\soap.txt")
+		fWrite(nHdl,cSoap)	
+		FClose(nHdl)
+	Else
+		conout("WSEnviar: " + cSoap)
+	EndIf	
 EndIf
+
 
 oXmlRet := SvcSoapCall(Self,cSoap,; 
 	"http://tempuri.org/IService/Enviar",; 
 	"DOCUMENT","http://tempuri.org/",,,; 
-	"http://testubl21.thefactoryhka.com.co/ws/v1.0/Service.svc")
+	"http://demoemision21v4.thefactoryhka.com.co/ws/v1.0/Service.svc")
 
 ::Init()
 ::oWSEnviarResult:SoapRecv( WSAdvValue( oXmlRet,"_ENVIARRESPONSE:_ENVIARRESULT","DocumentResponse",NIL,NIL,NIL,NIL,NIL,NIL) )
@@ -177,7 +185,7 @@ cSoap += "</EstadoDocumento>"
 oXmlRet := SvcSoapCall(Self,cSoap,; 
 	"http://tempuri.org/IService/EstadoDocumento",; 
 	"DOCUMENT","http://tempuri.org/",,,; 
-	"http://testubl21.thefactoryhka.com.co/ws/v1.0/Service.svc")
+	"http://demoemision21v4.thefactoryhka.com.co/ws/v1.0/Service.svc")
 
 ::Init()
 ::oWSEstadoDocumentoResult:SoapRecv( WSAdvValue( oXmlRet,"_ESTADODOCUMENTORESPONSE:_ESTADODOCUMENTORESULT","DocumentStatusResponse",NIL,NIL,NIL,NIL,NIL,NIL) )
@@ -189,7 +197,7 @@ Return .T.
 
 // WSDL Method EnvioCorreo of Service WSNFECol
 
-WSMETHOD EnvioCorreo WSSEND ctokenEmpresa,ctokenPassword,cdocumento,ccorreo WSRECEIVE oWSEnvioCorreoResult WSCLIENT WSNFECol
+WSMETHOD EnvioCorreo WSSEND ctokenEmpresa,ctokenPassword,cdocumento,ccorreo,cadjuntos WSRECEIVE oWSEnvioCorreoResult WSCLIENT WSNFECol
 Local cSoap := "" , oXmlRet
 
 BEGIN WSMETHOD
@@ -199,12 +207,13 @@ cSoap += WSSoapValue("tokenEmpresa", ::ctokenEmpresa, ctokenEmpresa , "string", 
 cSoap += WSSoapValue("tokenPassword", ::ctokenPassword, ctokenPassword , "string", .F. , .F., 0 , NIL, .F.,.F.) 
 cSoap += WSSoapValue("documento", ::cdocumento, cdocumento , "string", .F. , .F., 0 , NIL, .F.,.F.) 
 cSoap += WSSoapValue("correo", ::ccorreo, ccorreo , "string", .F. , .F., 0 , NIL, .F.,.F.) 
+cSoap += WSSoapValue("adjuntos", ::cadjuntos, cadjuntos , "string", .F. , .F., 0 , NIL, .F.,.F.) 
 cSoap += "</EnvioCorreo>"
 
 oXmlRet := SvcSoapCall(Self,cSoap,; 
 	"http://tempuri.org/IService/EnvioCorreo",; 
 	"DOCUMENT","http://tempuri.org/",,,; 
-	"http://testubl21.thefactoryhka.com.co/ws/v1.0/Service.svc")
+	"http://demoemision21v4.thefactoryhka.com.co/ws/v1.0/Service.svc")
 
 ::Init()
 ::oWSEnvioCorreoResult:SoapRecv( WSAdvValue( oXmlRet,"_ENVIOCORREORESPONSE:_ENVIOCORREORESULT","SendEmailResponse",NIL,NIL,NIL,NIL,NIL,NIL) )
@@ -230,7 +239,7 @@ cSoap += "</DescargaPDF>"
 oXmlRet := SvcSoapCall(Self,cSoap,; 
 	"http://tempuri.org/IService/DescargaPDF",; 
 	"DOCUMENT","http://tempuri.org/",,,; 
-	"http://testubl21.thefactoryhka.com.co/ws/v1.0/Service.svc")
+	"http://demoemision21v4.thefactoryhka.com.co/ws/v1.0/Service.svc")
 
 ::Init()
 ::oWSDescargaPDFResult:SoapRecv( WSAdvValue( oXmlRet,"_DESCARGAPDFRESPONSE:_DESCARGAPDFRESULT","DownloadPDFResponse",NIL,NIL,NIL,NIL,NIL,NIL) )
@@ -256,7 +265,7 @@ cSoap += "</DescargaXML>"
 oXmlRet := SvcSoapCall(Self,cSoap,; 
 	"http://tempuri.org/IService/DescargaXML",; 
 	"DOCUMENT","http://tempuri.org/",,,; 
-	"http://testubl21.thefactoryhka.com.co/ws/v1.0/Service.svc")
+	"http://demoemision21v4.thefactoryhka.com.co/ws/v1.0/Service.svc")
 
 ::Init()
 ::oWSDescargaXMLResult:SoapRecv( WSAdvValue( oXmlRet,"_DESCARGAXMLRESPONSE:_DESCARGAXMLRESULT","DownloadXMLResponse",NIL,NIL,NIL,NIL,NIL,NIL) )
@@ -281,7 +290,7 @@ cSoap += "</FoliosRestantes>"
 oXmlRet := SvcSoapCall(Self,cSoap,; 
 	"http://tempuri.org/IService/FoliosRestantes",; 
 	"DOCUMENT","http://tempuri.org/",,,; 
-	"http://testubl21.thefactoryhka.com.co/ws/v1.0/Service.svc")
+	"http://demoemision21v4.thefactoryhka.com.co/ws/v1.0/Service.svc")
 
 ::Init()
 ::oWSFoliosRestantesResult:SoapRecv( WSAdvValue( oXmlRet,"_FOLIOSRESTANTESRESPONSE:_FOLIOSRESTANTESRESULT","FoliosRemainingResponse",NIL,NIL,NIL,NIL,NIL,NIL) )
@@ -308,7 +317,7 @@ cSoap += "</CargarCertificado>"
 oXmlRet := SvcSoapCall(Self,cSoap,; 
 	"http://tempuri.org/IService/CargarCertificado",; 
 	"DOCUMENT","http://tempuri.org/",,,; 
-	"http://testubl21.thefactoryhka.com.co/ws/v1.0/Service.svc")
+	"http://demoemision21v4.thefactoryhka.com.co/ws/v1.0/Service.svc")
 
 ::Init()
 ::oWSCargarCertificadoResult:SoapRecv( WSAdvValue( oXmlRet,"_CARGARCERTIFICADORESPONSE:_CARGARCERTIFICADORESULT","LoadCertificateResponse",NIL,NIL,NIL,NIL,NIL,NIL) )
@@ -334,7 +343,7 @@ cSoap += "</GenerarEvento>"
 oXmlRet := SvcSoapCall(Self,cSoap,; 
 	"http://tempuri.org/IService/GenerarEvento",; 
 	"DOCUMENT","http://tempuri.org/",,,; 
-	"http://testubl21.thefactoryhka.com.co/ws/v1.0/Service.svc")
+	"http://demoemision21v4.thefactoryhka.com.co/ws/v1.0/Service.svc")
 
 ::Init()
 ::oWSGenerarEventoResult:SoapRecv( WSAdvValue( oXmlRet,"_GENERAREVENTORESPONSE:_GENERAREVENTORESULT","EventoResponse",NIL,NIL,NIL,NIL,NIL,NIL) )
@@ -361,7 +370,7 @@ cSoap += "</DescargarEventoXML>"
 oXmlRet := SvcSoapCall(Self,cSoap,; 
 	"http://tempuri.org/IService/DescargarEventoXML",; 
 	"DOCUMENT","http://tempuri.org/",,,; 
-	"http://testubl21.thefactoryhka.com.co/ws/v1.0/Service.svc")
+	"http://demoemision21v4.thefactoryhka.com.co/ws/v1.0/Service.svc")
 
 ::Init()
 ::oWSDescargarEventoXMLResult:SoapRecv( WSAdvValue( oXmlRet,"_DESCARGAREVENTOXMLRESPONSE:_DESCARGAREVENTOXMLRESULT","DescargarEventoResponse",NIL,NIL,NIL,NIL,NIL,NIL) )
@@ -387,7 +396,7 @@ cSoap += "</GenerarContenedor>"
 oXmlRet := SvcSoapCall(Self,cSoap,; 
 	"http://tempuri.org/IService/GenerarContenedor",; 
 	"DOCUMENT","http://tempuri.org/",,,; 
-	"http://testubl21.thefactoryhka.com.co/ws/v1.0/Service.svc")
+	"http://demoemision21v4.thefactoryhka.com.co/ws/v1.0/Service.svc")
 
 ::Init()
 ::oWSGenerarContenedorResult:SoapRecv( WSAdvValue( oXmlRet,"_GENERARCONTENEDORRESPONSE:_GENERARCONTENEDORRESULT","ContenedorResponse",NIL,NIL,NIL,NIL,NIL,NIL) )
@@ -426,11 +435,13 @@ WSSTRUCT Service_FacturaGeneral
 	WSDATA   cpropina                  AS string OPTIONAL
 	WSDATA   crangoNumeracion          AS string OPTIONAL
 	WSDATA   credondeoAplicado         AS string OPTIONAL
+	WSDATA   oWSsectorSalud            AS Service_SectorSalud OPTIONAL
 	WSDATA   oWStasaDeCambio           AS Service_TasaDeCambio OPTIONAL
 	WSDATA   oWStasaDeCambioAlternativa AS Service_TasaDeCambioAlternativa OPTIONAL
 	WSDATA   oWSterminosEntrega        AS Service_TerminosDeEntrega OPTIONAL
 	WSDATA   ctipoDocumento            AS string OPTIONAL
 	WSDATA   ctipoOperacion            AS string OPTIONAL
+	WSDATA   ctipoSector               AS string OPTIONAL
 	WSDATA   ctotalAnticipos           AS string OPTIONAL
 	WSDATA   ctotalBaseImponible       AS string OPTIONAL
 	WSDATA   ctotalBrutoConImpuesto    AS string OPTIONAL
@@ -479,11 +490,13 @@ WSMETHOD CLONE WSCLIENT Service_FacturaGeneral
 	oClone:cpropina             := ::cpropina
 	oClone:crangoNumeracion     := ::crangoNumeracion
 	oClone:credondeoAplicado    := ::credondeoAplicado
+	oClone:oWSsectorSalud       := IIF(::oWSsectorSalud = NIL , NIL , ::oWSsectorSalud:Clone() )
 	oClone:oWStasaDeCambio      := IIF(::oWStasaDeCambio = NIL , NIL , ::oWStasaDeCambio:Clone() )
 	oClone:oWStasaDeCambioAlternativa := IIF(::oWStasaDeCambioAlternativa = NIL , NIL , ::oWStasaDeCambioAlternativa:Clone() )
 	oClone:oWSterminosEntrega   := IIF(::oWSterminosEntrega = NIL , NIL , ::oWSterminosEntrega:Clone() )
 	oClone:ctipoDocumento       := ::ctipoDocumento
 	oClone:ctipoOperacion       := ::ctipoOperacion
+	oClone:ctipoSector          := ::ctipoSector
 	oClone:ctotalAnticipos      := ::ctotalAnticipos
 	oClone:ctotalBaseImponible  := ::ctotalBaseImponible
 	oClone:ctotalBrutoConImpuesto := ::ctotalBrutoConImpuesto
@@ -521,11 +534,13 @@ WSMETHOD SOAPSEND WSCLIENT Service_FacturaGeneral
 	cSoap += WSSoapValue("propina", ::cpropina, ::cpropina , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("rangoNumeracion", ::crangoNumeracion, ::crangoNumeracion , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("redondeoAplicado", ::credondeoAplicado, ::credondeoAplicado , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("sectorSalud", ::oWSsectorSalud, ::oWSsectorSalud , "SectorSalud", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("tasaDeCambio", ::oWStasaDeCambio, ::oWStasaDeCambio , "TasaDeCambio", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("tasaDeCambioAlternativa", ::oWStasaDeCambioAlternativa, ::oWStasaDeCambioAlternativa , "TasaDeCambioAlternativa", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("terminosEntrega", ::oWSterminosEntrega, ::oWSterminosEntrega , "TerminosDeEntrega", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("tipoDocumento", ::ctipoDocumento, ::ctipoDocumento , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("tipoOperacion", ::ctipoOperacion, ::ctipoOperacion , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("tipoSector", ::ctipoSector, ::ctipoSector , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("totalAnticipos", ::ctotalAnticipos, ::ctotalAnticipos , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("totalBaseImponible", ::ctotalBaseImponible, ::ctotalBaseImponible , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("totalBrutoConImpuesto", ::ctotalBrutoConImpuesto, ::ctotalBrutoConImpuesto , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
@@ -543,6 +558,7 @@ WSSTRUCT Service_DocumentResponse
 	WSDATA   cconsecutivoDocumento     AS string OPTIONAL
 	WSDATA   ccufe                     AS string OPTIONAL
 	WSDATA   lesValidoDian             AS boolean OPTIONAL
+	WSDATA   cfechaAceptacionDIAN      AS string OPTIONAL
 	WSDATA   cfechaRespuesta           AS string OPTIONAL
 	WSDATA   chash                     AS string OPTIONAL
 	WSDATA   cmensaje                  AS string OPTIONAL
@@ -573,6 +589,7 @@ WSMETHOD CLONE WSCLIENT Service_DocumentResponse
 	oClone:cconsecutivoDocumento := ::cconsecutivoDocumento
 	oClone:ccufe                := ::ccufe
 	oClone:lesValidoDian        := ::lesValidoDian
+	oClone:cfechaAceptacionDIAN := ::cfechaAceptacionDIAN
 	oClone:cfechaRespuesta      := ::cfechaRespuesta
 	oClone:chash                := ::chash
 	oClone:cmensaje             := ::cmensaje
@@ -587,34 +604,35 @@ WSMETHOD CLONE WSCLIENT Service_DocumentResponse
 Return oClone
 
 WSMETHOD SOAPRECV WSSEND oResponse WSCLIENT Service_DocumentResponse
-	Local oNode8
-	Local oNode11
+	Local oNode9
 	Local oNode12
+	Local oNode13
 	::Init()
 	If oResponse = NIL ; Return ; Endif 
 	::ncodigo            :=  WSAdvValue( oResponse,"_CODIGO","int",NIL,NIL,NIL,"N",NIL,NIL) 
 	::cconsecutivoDocumento :=  WSAdvValue( oResponse,"_CONSECUTIVODOCUMENTO","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::ccufe              :=  WSAdvValue( oResponse,"_CUFE","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::lesValidoDian      :=  WSAdvValue( oResponse,"_ESVALIDODIAN","boolean",NIL,NIL,NIL,"L",NIL,NIL) 
+	::cfechaAceptacionDIAN :=  WSAdvValue( oResponse,"_FECHAACEPTACIONDIAN","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::cfechaRespuesta    :=  WSAdvValue( oResponse,"_FECHARESPUESTA","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::chash              :=  WSAdvValue( oResponse,"_HASH","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::cmensaje           :=  WSAdvValue( oResponse,"_MENSAJE","string",NIL,NIL,NIL,"S",NIL,NIL) 
-	oNode8 :=  WSAdvValue( oResponse,"_MENSAJESVALIDACION","ArrayOfstring",NIL,NIL,NIL,"O",NIL,NIL) 
-	If oNode8 != NIL
+	oNode9 :=  WSAdvValue( oResponse,"_MENSAJESVALIDACION","ArrayOfstring",NIL,NIL,NIL,"O",NIL,NIL) 
+	If oNode9 != NIL
 		::oWSmensajesValidacion := Service_ArrayOfstring():New()
-		::oWSmensajesValidacion:SoapRecv(oNode8)
+		::oWSmensajesValidacion:SoapRecv(oNode9)
 	EndIf
 	::cnombre            :=  WSAdvValue( oResponse,"_NOMBRE","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::cqr                :=  WSAdvValue( oResponse,"_QR","string",NIL,NIL,NIL,"S",NIL,NIL) 
-	oNode11 :=  WSAdvValue( oResponse,"_REGLASNOTIFICACIONDIAN","ArrayOfstring",NIL,NIL,NIL,"O",NIL,NIL) 
-	If oNode11 != NIL
-		::oWSreglasNotificacionDIAN := Service_ArrayOfstring():New()
-		::oWSreglasNotificacionDIAN:SoapRecv(oNode11)
-	EndIf
-	oNode12 :=  WSAdvValue( oResponse,"_REGLASVALIDACIONDIAN","ArrayOfstring",NIL,NIL,NIL,"O",NIL,NIL) 
+	oNode12 :=  WSAdvValue( oResponse,"_REGLASNOTIFICACIONDIAN","ArrayOfstring",NIL,NIL,NIL,"O",NIL,NIL) 
 	If oNode12 != NIL
+		::oWSreglasNotificacionDIAN := Service_ArrayOfstring():New()
+		::oWSreglasNotificacionDIAN:SoapRecv(oNode12)
+	EndIf
+	oNode13 :=  WSAdvValue( oResponse,"_REGLASVALIDACIONDIAN","ArrayOfstring",NIL,NIL,NIL,"O",NIL,NIL) 
+	If oNode13 != NIL
 		::oWSreglasValidacionDIAN := Service_ArrayOfstring():New()
-		::oWSreglasValidacionDIAN:SoapRecv(oNode12)
+		::oWSreglasValidacionDIAN:SoapRecv(oNode13)
 	EndIf
 	::cresultado         :=  WSAdvValue( oResponse,"_RESULTADO","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::ctipoCufe          :=  WSAdvValue( oResponse,"_TIPOCUFE","string",NIL,NIL,NIL,"S",NIL,NIL) 
@@ -625,6 +643,10 @@ Return
 
 WSSTRUCT Service_DocumentStatusResponse
 	WSDATA   laceptacionFisica         AS boolean OPTIONAL
+	WSDATA   cacuseComentario          AS string OPTIONAL
+	WSDATA   cacuseEstatus             AS string OPTIONAL
+	WSDATA   cacuseResponsable         AS string OPTIONAL
+	WSDATA   cacuseRespuesta           AS string OPTIONAL
 	WSDATA   cambiente                 AS string OPTIONAL
 	WSDATA   ccadenaCodigoQR           AS string OPTIONAL
 	WSDATA   ccadenaCufe               AS string OPTIONAL
@@ -637,6 +659,7 @@ WSSTRUCT Service_DocumentStatusResponse
 	WSDATA   lesValidoDIAN             AS boolean OPTIONAL
 	WSDATA   nestatusDocumento         AS int OPTIONAL
 	WSDATA   oWSeventos                AS Service_ArrayOfEvento OPTIONAL
+	WSDATA   cfechaAceptacionDIAN      AS string OPTIONAL
 	WSDATA   cfechaDocumento           AS string OPTIONAL
 	WSDATA   oWShistorialDeEntregas    AS Service_ArrayOfHistorialDeEntrega OPTIONAL
 	WSDATA   cmensaje                  AS string OPTIONAL
@@ -664,6 +687,10 @@ Return
 WSMETHOD CLONE WSCLIENT Service_DocumentStatusResponse
 	Local oClone := Service_DocumentStatusResponse():NEW()
 	oClone:laceptacionFisica    := ::laceptacionFisica
+	oClone:cacuseComentario     := ::cacuseComentario
+	oClone:cacuseEstatus        := ::cacuseEstatus
+	oClone:cacuseResponsable    := ::cacuseResponsable
+	oClone:cacuseRespuesta      := ::cacuseRespuesta
 	oClone:cambiente            := ::cambiente
 	oClone:ccadenaCodigoQR      := ::ccadenaCodigoQR
 	oClone:ccadenaCufe          := ::ccadenaCufe
@@ -676,6 +703,7 @@ WSMETHOD CLONE WSCLIENT Service_DocumentStatusResponse
 	oClone:lesValidoDIAN        := ::lesValidoDIAN
 	oClone:nestatusDocumento    := ::nestatusDocumento
 	oClone:oWSeventos           := IIF(::oWSeventos = NIL , NIL , ::oWSeventos:Clone() )
+	oClone:cfechaAceptacionDIAN := ::cfechaAceptacionDIAN
 	oClone:cfechaDocumento      := ::cfechaDocumento
 	oClone:oWShistorialDeEntregas := IIF(::oWShistorialDeEntregas = NIL , NIL , ::oWShistorialDeEntregas:Clone() )
 	oClone:cmensaje             := ::cmensaje
@@ -690,12 +718,16 @@ WSMETHOD CLONE WSCLIENT Service_DocumentStatusResponse
 Return oClone
 
 WSMETHOD SOAPRECV WSSEND oResponse WSCLIENT Service_DocumentStatusResponse
-	Local oNode13
-	Local oNode15
+	Local oNode17
 	Local oNode20
+	Local oNode25
 	::Init()
 	If oResponse = NIL ; Return ; Endif 
 	::laceptacionFisica  :=  WSAdvValue( oResponse,"_ACEPTACIONFISICA","boolean",NIL,NIL,NIL,"L",NIL,NIL) 
+	::cacuseComentario   :=  WSAdvValue( oResponse,"_ACUSECOMENTARIO","string",NIL,NIL,NIL,"S",NIL,NIL) 
+	::cacuseEstatus      :=  WSAdvValue( oResponse,"_ACUSEESTATUS","string",NIL,NIL,NIL,"S",NIL,NIL) 
+	::cacuseResponsable  :=  WSAdvValue( oResponse,"_ACUSERESPONSABLE","string",NIL,NIL,NIL,"S",NIL,NIL) 
+	::cacuseRespuesta    :=  WSAdvValue( oResponse,"_ACUSERESPUESTA","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::cambiente          :=  WSAdvValue( oResponse,"_AMBIENTE","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::ccadenaCodigoQR    :=  WSAdvValue( oResponse,"_CADENACODIGOQR","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::ccadenaCufe        :=  WSAdvValue( oResponse,"_CADENACUFE","string",NIL,NIL,NIL,"S",NIL,NIL) 
@@ -707,25 +739,26 @@ WSMETHOD SOAPRECV WSSEND oResponse WSCLIENT Service_DocumentStatusResponse
 	::centregaMetodoDIAN :=  WSAdvValue( oResponse,"_ENTREGAMETODODIAN","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::lesValidoDIAN      :=  WSAdvValue( oResponse,"_ESVALIDODIAN","boolean",NIL,NIL,NIL,"L",NIL,NIL) 
 	::nestatusDocumento  :=  WSAdvValue( oResponse,"_ESTATUSDOCUMENTO","int",NIL,NIL,NIL,"N",NIL,NIL) 
-	oNode13 :=  WSAdvValue( oResponse,"_EVENTOS","ArrayOfEvento",NIL,NIL,NIL,"O",NIL,NIL) 
-	If oNode13 != NIL
+	oNode17 :=  WSAdvValue( oResponse,"_EVENTOS","ArrayOfEvento",NIL,NIL,NIL,"O",NIL,NIL) 
+	If oNode17 != NIL
 		::oWSeventos := Service_ArrayOfEvento():New()
-		::oWSeventos:SoapRecv(oNode13)
+		::oWSeventos:SoapRecv(oNode17)
 	EndIf
+	::cfechaAceptacionDIAN :=  WSAdvValue( oResponse,"_FECHAACEPTACIONDIAN","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::cfechaDocumento    :=  WSAdvValue( oResponse,"_FECHADOCUMENTO","string",NIL,NIL,NIL,"S",NIL,NIL) 
-	oNode15 :=  WSAdvValue( oResponse,"_HISTORIALDEENTREGAS","ArrayOfHistorialDeEntrega",NIL,NIL,NIL,"O",NIL,NIL) 
-	If oNode15 != NIL
+	oNode20 :=  WSAdvValue( oResponse,"_HISTORIALDEENTREGAS","ArrayOfHistorialDeEntrega",NIL,NIL,NIL,"O",NIL,NIL) 
+	If oNode20 != NIL
 		::oWShistorialDeEntregas := Service_ArrayOfHistorialDeEntrega():New()
-		::oWShistorialDeEntregas:SoapRecv(oNode15)
+		::oWShistorialDeEntregas:SoapRecv(oNode20)
 	EndIf
 	::cmensaje           :=  WSAdvValue( oResponse,"_MENSAJE","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::cmensajeDocumento  :=  WSAdvValue( oResponse,"_MENSAJEDOCUMENTO","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::lposeeAdjuntos     :=  WSAdvValue( oResponse,"_POSEEADJUNTOS","boolean",NIL,NIL,NIL,"L",NIL,NIL) 
 	::lposeeRepresentacionGrafica :=  WSAdvValue( oResponse,"_POSEEREPRESENTACIONGRAFICA","boolean",NIL,NIL,NIL,"L",NIL,NIL) 
-	oNode20 :=  WSAdvValue( oResponse,"_REGLASVALIDACIONDIAN","ArrayOfstring",NIL,NIL,NIL,"O",NIL,NIL) 
-	If oNode20 != NIL
+	oNode25 :=  WSAdvValue( oResponse,"_REGLASVALIDACIONDIAN","ArrayOfstring",NIL,NIL,NIL,"O",NIL,NIL) 
+	If oNode25 != NIL
 		::oWSreglasValidacionDIAN := Service_ArrayOfstring():New()
-		::oWSreglasValidacionDIAN:SoapRecv(oNode20)
+		::oWSreglasValidacionDIAN:SoapRecv(oNode25)
 	EndIf
 	::cresultado         :=  WSAdvValue( oResponse,"_RESULTADO","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::ctipoCufe          :=  WSAdvValue( oResponse,"_TIPOCUFE","string",NIL,NIL,NIL,"S",NIL,NIL) 
@@ -737,8 +770,6 @@ Return
 
 WSSTRUCT Service_SendEmailResponse
 	WSDATA   ncodigo                   AS int OPTIONAL
-	WSDATA   ccorreo                   AS string OPTIONAL
-	WSDATA   cdocumento                AS string OPTIONAL
 	WSDATA   cmensaje                  AS string OPTIONAL
 	WSDATA   cresultado                AS string OPTIONAL
 	WSMETHOD NEW
@@ -757,8 +788,6 @@ Return
 WSMETHOD CLONE WSCLIENT Service_SendEmailResponse
 	Local oClone := Service_SendEmailResponse():NEW()
 	oClone:ncodigo              := ::ncodigo
-	oClone:ccorreo              := ::ccorreo
-	oClone:cdocumento           := ::cdocumento
 	oClone:cmensaje             := ::cmensaje
 	oClone:cresultado           := ::cresultado
 Return oClone
@@ -767,8 +796,6 @@ WSMETHOD SOAPRECV WSSEND oResponse WSCLIENT Service_SendEmailResponse
 	::Init()
 	If oResponse = NIL ; Return ; Endif 
 	::ncodigo            :=  WSAdvValue( oResponse,"_CODIGO","int",NIL,NIL,NIL,"N",NIL,NIL) 
-	::ccorreo            :=  WSAdvValue( oResponse,"_CORREO","string",NIL,NIL,NIL,"S",NIL,NIL) 
-	::cdocumento         :=  WSAdvValue( oResponse,"_DOCUMENTO","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::cmensaje           :=  WSAdvValue( oResponse,"_MENSAJE","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::cresultado         :=  WSAdvValue( oResponse,"_RESULTADO","string",NIL,NIL,NIL,"S",NIL,NIL) 
 Return
@@ -1616,10 +1643,8 @@ Return cSoap
 
 WSMETHOD SOAPRECV WSSEND oResponse WSCLIENT Service_ArrayOfstring
 	Local oNodes1 :=  WSAdvValue( oResponse,"_B_STRING","string",{},NIL,.T.,"S",NIL,"a") 
-
 	::Init()
-	If oResponse = NIL ; Return ; Endif
-
+	If oResponse = NIL ; Return ; Endif 
 	aEval(oNodes1 , { |x| aadd(::cstring ,  x:TEXT  ) } )
 Return
 
@@ -1685,6 +1710,45 @@ Return oClone
 WSMETHOD SOAPSEND WSCLIENT Service_ArrayOfOrdenDeCompra
 	Local cSoap := ""
 	aEval( ::oWSOrdenDeCompra , {|x| cSoap := cSoap  +  WSSoapValue("OrdenDeCompra", x , x , "OrdenDeCompra", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.)  } ) 
+Return cSoap
+
+// WSDL Data Structure SectorSalud
+
+WSSTRUCT Service_SectorSalud
+	WSDATA   oWSBeneficiario           AS Service_BeneficiarioSalud OPTIONAL
+	WSDATA   cIdPersonalizacion        AS string OPTIONAL
+	WSDATA   oWSPacientes              AS Service_ArrayOfDatosPacienteSalud OPTIONAL
+	WSDATA   cTipoEscenario            AS string OPTIONAL
+	WSDATA   oWSextras                 AS Service_ArrayOfExtras OPTIONAL
+	WSMETHOD NEW
+	WSMETHOD INIT
+	WSMETHOD CLONE
+	WSMETHOD SOAPSEND
+ENDWSSTRUCT
+
+WSMETHOD NEW WSCLIENT Service_SectorSalud
+	::Init()
+Return Self
+
+WSMETHOD INIT WSCLIENT Service_SectorSalud
+Return
+
+WSMETHOD CLONE WSCLIENT Service_SectorSalud
+	Local oClone := Service_SectorSalud():NEW()
+	oClone:oWSBeneficiario      := IIF(::oWSBeneficiario = NIL , NIL , ::oWSBeneficiario:Clone() )
+	oClone:cIdPersonalizacion   := ::cIdPersonalizacion
+	oClone:oWSPacientes         := IIF(::oWSPacientes = NIL , NIL , ::oWSPacientes:Clone() )
+	oClone:cTipoEscenario       := ::cTipoEscenario
+	oClone:oWSextras            := IIF(::oWSextras = NIL , NIL , ::oWSextras:Clone() )
+Return oClone
+
+WSMETHOD SOAPSEND WSCLIENT Service_SectorSalud
+	Local cSoap := ""
+	cSoap += WSSoapValue("Beneficiario", ::oWSBeneficiario, ::oWSBeneficiario , "BeneficiarioSalud", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("IdPersonalizacion", ::cIdPersonalizacion, ::cIdPersonalizacion , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("Pacientes", ::oWSPacientes, ::oWSPacientes , "ArrayOfDatosPacienteSalud", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("TipoEscenario", ::cTipoEscenario, ::cTipoEscenario , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("extras", ::oWSextras, ::oWSextras , "ArrayOfExtras", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 Return cSoap
 
 // WSDL Data Structure TasaDeCambio
@@ -2407,6 +2471,8 @@ WSSTRUCT Service_FacturaDetalle
 	WSDATA   ccodigoProducto           AS string OPTIONAL
 	WSDATA   ccodigoTipoPrecio         AS string OPTIONAL
 	WSDATA   cdescripcion              AS string OPTIONAL
+	WSDATA   cdescripcion2             AS string OPTIONAL
+	WSDATA   cdescripcion3             AS string OPTIONAL
 	WSDATA   cdescripcionTecnica       AS string OPTIONAL
 	WSDATA   oWSdocumentosReferenciados AS Service_ArrayOfDocumentoReferenciado OPTIONAL
 	WSDATA   cestandarCodigo           AS string OPTIONAL
@@ -2417,6 +2483,7 @@ WSSTRUCT Service_FacturaDetalle
 	WSDATA   cestandarOrganizacion     AS string OPTIONAL
 	WSDATA   cestandarSubCodigoProducto AS string OPTIONAL
 	WSDATA   oWSextras                 AS Service_ArrayOfExtensible OPTIONAL
+	WSDATA   cidEsquema                AS string OPTIONAL
 	WSDATA   oWSimpuestosDetalles      AS Service_ArrayOfFacturaImpuestos OPTIONAL
 	WSDATA   oWSimpuestosTotales       AS Service_ArrayOfImpuestosTotales OPTIONAL
 	WSDATA   oWSinformacionAdicional   AS Service_ArrayOfLineaInformacionAdicional OPTIONAL
@@ -2463,6 +2530,8 @@ WSMETHOD CLONE WSCLIENT Service_FacturaDetalle
 	oClone:ccodigoProducto      := ::ccodigoProducto
 	oClone:ccodigoTipoPrecio    := ::ccodigoTipoPrecio
 	oClone:cdescripcion         := ::cdescripcion
+	oClone:cdescripcion2        := ::cdescripcion2
+	oClone:cdescripcion3        := ::cdescripcion3
 	oClone:cdescripcionTecnica  := ::cdescripcionTecnica
 	oClone:oWSdocumentosReferenciados := IIF(::oWSdocumentosReferenciados = NIL , NIL , ::oWSdocumentosReferenciados:Clone() )
 	oClone:cestandarCodigo      := ::cestandarCodigo
@@ -2473,6 +2542,7 @@ WSMETHOD CLONE WSCLIENT Service_FacturaDetalle
 	oClone:cestandarOrganizacion := ::cestandarOrganizacion
 	oClone:cestandarSubCodigoProducto := ::cestandarSubCodigoProducto
 	oClone:oWSextras            := IIF(::oWSextras = NIL , NIL , ::oWSextras:Clone() )
+	oClone:cidEsquema           := ::cidEsquema
 	oClone:oWSimpuestosDetalles := IIF(::oWSimpuestosDetalles = NIL , NIL , ::oWSimpuestosDetalles:Clone() )
 	oClone:oWSimpuestosTotales  := IIF(::oWSimpuestosTotales = NIL , NIL , ::oWSimpuestosTotales:Clone() )
 	oClone:oWSinformacionAdicional := IIF(::oWSinformacionAdicional = NIL , NIL , ::oWSinformacionAdicional:Clone() )
@@ -2508,6 +2578,8 @@ WSMETHOD SOAPSEND WSCLIENT Service_FacturaDetalle
 	cSoap += WSSoapValue("codigoProducto", ::ccodigoProducto, ::ccodigoProducto , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("codigoTipoPrecio", ::ccodigoTipoPrecio, ::ccodigoTipoPrecio , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("descripcion", ::cdescripcion, ::cdescripcion , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("descripcion2", ::cdescripcion2, ::cdescripcion2 , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("descripcion3", ::cdescripcion3, ::cdescripcion3 , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("descripcionTecnica", ::cdescripcionTecnica, ::cdescripcionTecnica , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("documentosReferenciados", ::oWSdocumentosReferenciados, ::oWSdocumentosReferenciados , "ArrayOfDocumentoReferenciado", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("estandarCodigo", ::cestandarCodigo, ::cestandarCodigo , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
@@ -2518,6 +2590,7 @@ WSMETHOD SOAPSEND WSCLIENT Service_FacturaDetalle
 	cSoap += WSSoapValue("estandarOrganizacion", ::cestandarOrganizacion, ::cestandarOrganizacion , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("estandarSubCodigoProducto", ::cestandarSubCodigoProducto, ::cestandarSubCodigoProducto , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("extras", ::oWSextras, ::oWSextras , "ArrayOfExtensible", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("idEsquema", ::cidEsquema, ::cidEsquema , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("impuestosDetalles", ::oWSimpuestosDetalles, ::oWSimpuestosDetalles , "ArrayOfFacturaImpuestos", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("impuestosTotales", ::oWSimpuestosTotales, ::oWSimpuestosTotales , "ArrayOfImpuestosTotales", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("informacionAdicional", ::oWSinformacionAdicional, ::oWSinformacionAdicional , "ArrayOfLineaInformacionAdicional", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
@@ -2546,13 +2619,16 @@ Return cSoap
 WSSTRUCT Service_DocumentoReferenciado
 	WSDATA   ccodigoEstatusDocumento   AS string OPTIONAL
 	WSDATA   ccodigoInterno            AS string OPTIONAL
+	WSDATA   cconceptoRecaudo          AS string OPTIONAL
 	WSDATA   ccufeDocReferenciado      AS string OPTIONAL
 	WSDATA   oWSdescripcion            AS Service_ArrayOfstring OPTIONAL
 	WSDATA   oWSextras                 AS Service_ArrayOfExtensible OPTIONAL
 	WSDATA   cfecha                    AS string OPTIONAL
 	WSDATA   cfechaFinValidez          AS string OPTIONAL
 	WSDATA   cfechaInicioValidez       AS string OPTIONAL
+	WSDATA   cmonto                    AS string OPTIONAL
 	WSDATA   cnumeroDocumento          AS string OPTIONAL
+	WSDATA   cnumeroIdentificacion     AS string OPTIONAL
 	WSDATA   ctipoCUFE                 AS string OPTIONAL
 	WSDATA   ctipoDocumento            AS string OPTIONAL
 	WSDATA   ctipoDocumentoCodigo      AS string OPTIONAL
@@ -2573,13 +2649,16 @@ WSMETHOD CLONE WSCLIENT Service_DocumentoReferenciado
 	Local oClone := Service_DocumentoReferenciado():NEW()
 	oClone:ccodigoEstatusDocumento := ::ccodigoEstatusDocumento
 	oClone:ccodigoInterno       := ::ccodigoInterno
+	oClone:cconceptoRecaudo     := ::cconceptoRecaudo
 	oClone:ccufeDocReferenciado := ::ccufeDocReferenciado
 	oClone:oWSdescripcion       := IIF(::oWSdescripcion = NIL , NIL , ::oWSdescripcion:Clone() )
 	oClone:oWSextras            := IIF(::oWSextras = NIL , NIL , ::oWSextras:Clone() )
 	oClone:cfecha               := ::cfecha
 	oClone:cfechaFinValidez     := ::cfechaFinValidez
 	oClone:cfechaInicioValidez  := ::cfechaInicioValidez
+	oClone:cmonto               := ::cmonto
 	oClone:cnumeroDocumento     := ::cnumeroDocumento
+	oClone:cnumeroIdentificacion := ::cnumeroIdentificacion
 	oClone:ctipoCUFE            := ::ctipoCUFE
 	oClone:ctipoDocumento       := ::ctipoDocumento
 	oClone:ctipoDocumentoCodigo := ::ctipoDocumentoCodigo
@@ -2589,13 +2668,16 @@ WSMETHOD SOAPSEND WSCLIENT Service_DocumentoReferenciado
 	Local cSoap := ""
 	cSoap += WSSoapValue("codigoEstatusDocumento", ::ccodigoEstatusDocumento, ::ccodigoEstatusDocumento , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("codigoInterno", ::ccodigoInterno, ::ccodigoInterno , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("conceptoRecaudo", ::cconceptoRecaudo, ::cconceptoRecaudo , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("cufeDocReferenciado", ::ccufeDocReferenciado, ::ccufeDocReferenciado , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("descripcion", ::oWSdescripcion, ::oWSdescripcion , "ArrayOfstring", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("extras", ::oWSextras, ::oWSextras , "ArrayOfExtensible", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("fecha", ::cfecha, ::cfecha , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("fechaFinValidez", ::cfechaFinValidez, ::cfechaFinValidez , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("fechaInicioValidez", ::cfechaInicioValidez, ::cfechaInicioValidez , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("monto", ::cmonto, ::cmonto , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("numeroDocumento", ::cnumeroDocumento, ::cnumeroDocumento , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("numeroIdentificacion", ::cnumeroIdentificacion, ::cnumeroIdentificacion , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("tipoCUFE", ::ctipoCUFE, ::ctipoCUFE , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("tipoDocumento", ::ctipoDocumento, ::ctipoDocumento , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("tipoDocumentoCodigo", ::ctipoDocumentoCodigo, ::ctipoDocumentoCodigo , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
@@ -2790,6 +2872,7 @@ WSSTRUCT Service_ImpuestosTotales
 	WSDATA   ccodigoTOTALImp           AS string OPTIONAL
 	WSDATA   oWSextras                 AS Service_ArrayOfExtensible OPTIONAL
 	WSDATA   cmontoTotal               AS string OPTIONAL
+	WSDATA   credondeoAplicado         AS string OPTIONAL
 	WSMETHOD NEW
 	WSMETHOD INIT
 	WSMETHOD CLONE
@@ -2808,6 +2891,7 @@ WSMETHOD CLONE WSCLIENT Service_ImpuestosTotales
 	oClone:ccodigoTOTALImp      := ::ccodigoTOTALImp
 	oClone:oWSextras            := IIF(::oWSextras = NIL , NIL , ::oWSextras:Clone() )
 	oClone:cmontoTotal          := ::cmontoTotal
+	oClone:credondeoAplicado    := ::credondeoAplicado
 Return oClone
 
 WSMETHOD SOAPSEND WSCLIENT Service_ImpuestosTotales
@@ -2815,6 +2899,7 @@ WSMETHOD SOAPSEND WSCLIENT Service_ImpuestosTotales
 	cSoap += WSSoapValue("codigoTOTALImp", ::ccodigoTOTALImp, ::ccodigoTOTALImp , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("extras", ::oWSextras, ::oWSextras , "ArrayOfExtensible", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("montoTotal", ::cmontoTotal, ::cmontoTotal , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("redondeoAplicado", ::credondeoAplicado, ::credondeoAplicado , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 Return cSoap
 
 // WSDL Data Structure MediosDePago
@@ -2923,6 +3008,68 @@ WSMETHOD SOAPSEND WSCLIENT Service_OrdenDeCompra
 	cSoap += WSSoapValue("tipoCUFE", ::ctipoCUFE, ::ctipoCUFE , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("tipoOrden", ::ctipoOrden, ::ctipoOrden , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("uuid", ::cuuid, ::cuuid , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+Return cSoap
+
+// WSDL Data Structure BeneficiarioSalud
+
+WSSTRUCT Service_BeneficiarioSalud
+	WSDATA   oWSDireccionResidencia    AS Service_Direccion OPTIONAL
+	WSDATA   cTipoIdentificacion       AS string OPTIONAL
+	WSMETHOD NEW
+	WSMETHOD INIT
+	WSMETHOD CLONE
+	WSMETHOD SOAPSEND
+ENDWSSTRUCT
+
+WSMETHOD NEW WSCLIENT Service_BeneficiarioSalud
+	::Init()
+Return Self
+
+WSMETHOD INIT WSCLIENT Service_BeneficiarioSalud
+Return
+
+WSMETHOD CLONE WSCLIENT Service_BeneficiarioSalud
+	Local oClone := Service_BeneficiarioSalud():NEW()
+	oClone:oWSDireccionResidencia := IIF(::oWSDireccionResidencia = NIL , NIL , ::oWSDireccionResidencia:Clone() )
+	oClone:cTipoIdentificacion  := ::cTipoIdentificacion
+Return oClone
+
+WSMETHOD SOAPSEND WSCLIENT Service_BeneficiarioSalud
+	Local cSoap := ""
+	cSoap += WSSoapValue("DireccionResidencia", ::oWSDireccionResidencia, ::oWSDireccionResidencia , "Direccion", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("TipoIdentificacion", ::cTipoIdentificacion, ::cTipoIdentificacion , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+Return cSoap
+
+// WSDL Data Structure ArrayOfDatosPacienteSalud
+
+WSSTRUCT Service_ArrayOfDatosPacienteSalud
+	WSDATA   oWSDatosPacienteSalud     AS Service_DatosPacienteSalud OPTIONAL
+	WSMETHOD NEW
+	WSMETHOD INIT
+	WSMETHOD CLONE
+	WSMETHOD SOAPSEND
+ENDWSSTRUCT
+
+WSMETHOD NEW WSCLIENT Service_ArrayOfDatosPacienteSalud
+	::Init()
+Return Self
+
+WSMETHOD INIT WSCLIENT Service_ArrayOfDatosPacienteSalud
+	::oWSDatosPacienteSalud := {} // Array Of  Service_DATOSPACIENTESALUD():New()
+Return
+
+WSMETHOD CLONE WSCLIENT Service_ArrayOfDatosPacienteSalud
+	Local oClone := Service_ArrayOfDatosPacienteSalud():NEW()
+	oClone:oWSDatosPacienteSalud := NIL
+	If ::oWSDatosPacienteSalud <> NIL 
+		oClone:oWSDatosPacienteSalud := {}
+		aEval( ::oWSDatosPacienteSalud , { |x| aadd( oClone:oWSDatosPacienteSalud , x:Clone() ) } )
+	Endif 
+Return oClone
+
+WSMETHOD SOAPSEND WSCLIENT Service_ArrayOfDatosPacienteSalud
+	Local cSoap := ""
+	aEval( ::oWSDatosPacienteSalud , {|x| cSoap := cSoap  +  WSSoapValue("DatosPacienteSalud", x , x , "DatosPacienteSalud", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.)  } ) 
 Return cSoap
 
 // WSDL Data Structure Evento
@@ -3039,6 +3186,9 @@ Return
 // WSDL Data Structure HistorialDeEntrega
 
 WSSTRUCT Service_HistorialDeEntrega
+	WSDATA   cLeidoEmailIPAddress      AS string OPTIONAL
+	WSDATA   cLeidoEstatus             AS string OPTIONAL
+	WSDATA   cLeidoFecha               AS string OPTIONAL
 	WSDATA   ccanalDeEntrega           AS string OPTIONAL
 	WSDATA   oWSemail                  AS Service_ArrayOfstring OPTIONAL
 	WSDATA   centregaEstatus           AS string OPTIONAL
@@ -3067,6 +3217,9 @@ Return
 
 WSMETHOD CLONE WSCLIENT Service_HistorialDeEntrega
 	Local oClone := Service_HistorialDeEntrega():NEW()
+	oClone:cLeidoEmailIPAddress := ::cLeidoEmailIPAddress
+	oClone:cLeidoEstatus        := ::cLeidoEstatus
+	oClone:cLeidoFecha          := ::cLeidoFecha
 	oClone:ccanalDeEntrega      := ::ccanalDeEntrega
 	oClone:oWSemail             := IIF(::oWSemail = NIL , NIL , ::oWSemail:Clone() )
 	oClone:centregaEstatus      := ::centregaEstatus
@@ -3083,14 +3236,17 @@ WSMETHOD CLONE WSCLIENT Service_HistorialDeEntrega
 Return oClone
 
 WSMETHOD SOAPRECV WSSEND oResponse WSCLIENT Service_HistorialDeEntrega
-	Local oNode2
+	Local oNode5
 	::Init()
 	If oResponse = NIL ; Return ; Endif 
+	::cLeidoEmailIPAddress :=  WSAdvValue( oResponse,"_LEIDOEMAILIPADDRESS","string",NIL,NIL,NIL,"S",NIL,NIL) 
+	::cLeidoEstatus      :=  WSAdvValue( oResponse,"_LEIDOESTATUS","string",NIL,NIL,NIL,"S",NIL,NIL) 
+	::cLeidoFecha        :=  WSAdvValue( oResponse,"_LEIDOFECHA","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::ccanalDeEntrega    :=  WSAdvValue( oResponse,"_CANALDEENTREGA","string",NIL,NIL,NIL,"S",NIL,NIL) 
-	oNode2 :=  WSAdvValue( oResponse,"_EMAIL","ArrayOfstring",NIL,NIL,NIL,"O",NIL,NIL) 
-	If oNode2 != NIL
+	oNode5 :=  WSAdvValue( oResponse,"_EMAIL","ArrayOfstring",NIL,NIL,NIL,"O",NIL,NIL) 
+	If oNode5 != NIL
 		::oWSemail := Service_ArrayOfstring():New()
-		::oWSemail:SoapRecv(oNode2)
+		::oWSemail:SoapRecv(oNode5)
 	EndIf
 	::centregaEstatus    :=  WSAdvValue( oResponse,"_ENTREGAESTATUS","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::centregaEstatusDescripcion :=  WSAdvValue( oResponse,"_ENTREGAESTATUSDESCRIPCION","string",NIL,NIL,NIL,"S",NIL,NIL) 
@@ -3349,6 +3505,33 @@ WSMETHOD SOAPSEND WSCLIENT Service_ArrayOfLineaInformacionAdicional
 	aEval( ::oWSLineaInformacionAdicional , {|x| cSoap := cSoap  +  WSSoapValue("LineaInformacionAdicional", x , x , "LineaInformacionAdicional", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.)  } ) 
 Return cSoap
 
+// WSDL Data Structure DatosPacienteSalud
+
+WSSTRUCT Service_DatosPacienteSalud
+	WSDATA   oWSCamposGenerales        AS Service_ArrayOfGeneralSalud OPTIONAL
+	WSMETHOD NEW
+	WSMETHOD INIT
+	WSMETHOD CLONE
+	WSMETHOD SOAPSEND
+ENDWSSTRUCT
+
+WSMETHOD NEW WSCLIENT Service_DatosPacienteSalud
+	::Init()
+Return Self
+
+WSMETHOD INIT WSCLIENT Service_DatosPacienteSalud
+Return
+
+WSMETHOD CLONE WSCLIENT Service_DatosPacienteSalud
+	Local oClone := Service_DatosPacienteSalud():NEW()
+	oClone:oWSCamposGenerales   := IIF(::oWSCamposGenerales = NIL , NIL , ::oWSCamposGenerales:Clone() )
+Return oClone
+
+WSMETHOD SOAPSEND WSCLIENT Service_DatosPacienteSalud
+	Local cSoap := ""
+	cSoap += WSSoapValue("CamposGenerales", ::oWSCamposGenerales, ::oWSCamposGenerales , "ArrayOfGeneralSalud", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+Return cSoap
+
 // WSDL Data Structure ArrayOfExtrasEvento
 
 WSSTRUCT Service_ArrayOfExtrasEvento
@@ -3445,6 +3628,7 @@ WSSTRUCT Service_LineaInformacionAdicional
 	WSDATA   cnombre                   AS string OPTIONAL
 	WSDATA   csecuencia                AS string OPTIONAL
 	WSDATA   ctipo                     AS string OPTIONAL
+	WSDATA   cunidadMedidaTransporte   AS string OPTIONAL
 	WSDATA   cvalor                    AS string OPTIONAL
 	WSMETHOD NEW
 	WSMETHOD INIT
@@ -3471,6 +3655,7 @@ WSMETHOD CLONE WSCLIENT Service_LineaInformacionAdicional
 	oClone:cnombre              := ::cnombre
 	oClone:csecuencia           := ::csecuencia
 	oClone:ctipo                := ::ctipo
+	oClone:cunidadMedidaTransporte := ::cunidadMedidaTransporte
 	oClone:cvalor               := ::cvalor
 Return oClone
 
@@ -3486,7 +3671,40 @@ WSMETHOD SOAPSEND WSCLIENT Service_LineaInformacionAdicional
 	cSoap += WSSoapValue("nombre", ::cnombre, ::cnombre , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("secuencia", ::csecuencia, ::csecuencia , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("tipo", ::ctipo, ::ctipo , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("unidadMedidaTransporte", ::cunidadMedidaTransporte, ::cunidadMedidaTransporte , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
 	cSoap += WSSoapValue("valor", ::cvalor, ::cvalor , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+Return cSoap
+
+// WSDL Data Structure ArrayOfGeneralSalud
+
+WSSTRUCT Service_ArrayOfGeneralSalud
+	WSDATA   oWSGeneralSalud           AS Service_GeneralSalud OPTIONAL
+	WSMETHOD NEW
+	WSMETHOD INIT
+	WSMETHOD CLONE
+	WSMETHOD SOAPSEND
+ENDWSSTRUCT
+
+WSMETHOD NEW WSCLIENT Service_ArrayOfGeneralSalud
+	::Init()
+Return Self
+
+WSMETHOD INIT WSCLIENT Service_ArrayOfGeneralSalud
+	::oWSGeneralSalud      := {} // Array Of  Service_GENERALSALUD():New()
+Return
+
+WSMETHOD CLONE WSCLIENT Service_ArrayOfGeneralSalud
+	Local oClone := Service_ArrayOfGeneralSalud():NEW()
+	oClone:oWSGeneralSalud := NIL
+	If ::oWSGeneralSalud <> NIL 
+		oClone:oWSGeneralSalud := {}
+		aEval( ::oWSGeneralSalud , { |x| aadd( oClone:oWSGeneralSalud , x:Clone() ) } )
+	Endif 
+Return oClone
+
+WSMETHOD SOAPSEND WSCLIENT Service_ArrayOfGeneralSalud
+	Local cSoap := ""
+	aEval( ::oWSGeneralSalud , {|x| cSoap := cSoap  +  WSSoapValue("GeneralSalud", x , x , "GeneralSalud", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.)  } ) 
 Return cSoap
 
 // WSDL Data Structure ExtrasEvento
@@ -3525,5 +3743,35 @@ WSMETHOD SOAPRECV WSSEND oResponse WSCLIENT Service_ExtrasEvento
 	::cnombre            :=  WSAdvValue( oResponse,"_NOMBRE","string",NIL,NIL,NIL,"S",NIL,NIL) 
 	::cvalor             :=  WSAdvValue( oResponse,"_VALOR","string",NIL,NIL,NIL,"S",NIL,NIL) 
 Return
+
+// WSDL Data Structure GeneralSalud
+
+WSSTRUCT Service_GeneralSalud
+	WSDATA   cNombre                   AS string OPTIONAL
+	WSDATA   cValor                    AS string OPTIONAL
+	WSMETHOD NEW
+	WSMETHOD INIT
+	WSMETHOD CLONE
+	WSMETHOD SOAPSEND
+ENDWSSTRUCT
+
+WSMETHOD NEW WSCLIENT Service_GeneralSalud
+	::Init()
+Return Self
+
+WSMETHOD INIT WSCLIENT Service_GeneralSalud
+Return
+
+WSMETHOD CLONE WSCLIENT Service_GeneralSalud
+	Local oClone := Service_GeneralSalud():NEW()
+	oClone:cNombre              := ::cNombre
+	oClone:cValor               := ::cValor
+Return oClone
+
+WSMETHOD SOAPSEND WSCLIENT Service_GeneralSalud
+	Local cSoap := ""
+	cSoap += WSSoapValue("Nombre", ::cNombre, ::cNombre , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+	cSoap += WSSoapValue("Valor", ::cValor, ::cValor , "string", .F. , .F., 0 , "http://schemas.datacontract.org/2004/07/ServiceSoap.UBL2._0.Models.Object", .F.,.F.) 
+Return cSoap
 
 
