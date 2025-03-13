@@ -338,7 +338,11 @@ User Function M486OWSCOL()
 			//Extra para 5170009
 			IF cTipDocT == "02"
 				oWSextra:=Service_Extras():new()
+<<<<<<< Updated upstream
 				oWSextra:ccontrolInterno1     := "COUNTRY OF EXPORT: COLOMBIA"
+=======
+				oWSextra:ccontrolInterno1     := "COUNTRY OF EXPORT: COLOMBIA "
+>>>>>>> Stashed changes
 				oWSextra:ccontrolInterno2     := "INCOTERM VERSION 2020: " + ALLTRIM(aCabDatos[1][13])+ " " + ALLTRIM(aCabDatos[1][14])
 				oWSextra:cnombre              := "5170009"
 				oWSextra:cpdf                 := "1"

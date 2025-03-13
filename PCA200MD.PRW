@@ -9,6 +9,7 @@ User Function PCA200MD()
     // Local oStrDet   := ParamixB[4] //Struct Detalhe
     Local cOrdem    := Iif(cOpcx == "VIEW",ParamixB[5],"0") //Ordem, somente enviado para view
  
+<<<<<<< HEAD
 
 	If cOpcx == "MODEL"  
 		oStrMaster:AddField("Revisión Bloq."									,;	// [01]  C   Titulo do campo  //"Quantidade Base"
@@ -47,6 +48,39 @@ User Function PCA200MD()
 	        NIL								,;	// [17]  C   Picture Variavel
 	        NIL								)	// [18]  L   Indica pulo de linha após o campo
 EndIf
+=======
+    If cOpcx == "MODEL"   
+	oStrMaster:AddField('STR0017'									,;	// [01]  C   Titulo do campo  //"Quantidade Base"
+	                    'STR0017'									,;	// [02]  C   ToolTip do campo //"Quantidade Base"
+	                    "NQTBASE1"								,;	// [03]  C   Id do Field
+	                    "N"										,;	// [04]  C   Tipo do campo
+	                    GetSx3Cache("B1_QB","X3_TAMANHO")		,;	// [05]  N   Tamanho do campo
+	                    GetSx3Cache("B1_QB","X3_DECIMAL")		,;	// [06]  N   Decimal do campo
+	                    {||VldBase()}							,;	// [07]  B   Code-block de validao do campo
+	                    NIL										,;	// [08]  B   Code-block de validao When do campo
+	                    NIL										,;	// [09]  A   Lista de valores permitido do campo
+	                    .F.										,;	// [10]  L   Indica se o campo tem preenchimento obrigatrio
+	                    {||IniBase()}							,;	// [11]  B   Code-block de inicializacao do campo
+	                    NIL										,;	// [12]  L   Indica se trata-se de um campo chave
+	                    NIL										,;	// [13]  L   Indica se o campo pode receber valor em uma operao de update.
+	                    .T.										)	// [14]  L   Indica se o campo  virtual
+
+							oStrCmp:AddField('STR0016'								,;	// [01]  C   Titulo do campo  //"Unidade"
+	                 'STR0016'								,;	// [02]  C   ToolTip do campo //"Unidade"
+	                 "CUMCMP1"								,;	// [03]  C   Id do Field
+	                 "C"									,;	// [04]  C   Tipo do campo
+	                 GetSx3Cache("B1_UM","X3_TAMANHO")		,;	// [05]  N   Tamanho do campo
+	                 0										,;	// [06]  N   Decimal do campo
+	                 NIL									,;	// [07]  B   Code-block de validao do campo
+	                 NIL									,;	// [08]  B   Code-block de validao When do campo
+	                 NIL									,;	// [09]  A   Lista de valores permitido do campo
+	                 .F.									,;	// [10]  L   Indica se o campo tem preenchimento obrigatrio
+	                 {||IniUm()}							,;	// [11]  B   Code-block de inicializacao do campo
+	                 NIL									,;	// [12]  L   Indica se trata-se de um campo chave
+	                 NIL									,;	// [13]  L   Indica se o campo pode receber valor em uma operao de update.
+	                 .T.									)	// [14]  L   Indica se o campo  virtual
+    EndIf
+>>>>>>> 1e362897c9910f546296ec47ddafc40110b7951c
  
 Return Nil
 
@@ -68,5 +102,21 @@ Static Function IniUm(cProduto)
 	Else
 		cUnidade := CriaVar('B1_UM')
 	EndIf
+<<<<<<< HEAD
 Return cUnidade
 
+=======
+Return lRet
+
+Static Function IniUm(cProduto)
+	Local cUnidade := ""
+	Default cProduto := SG1->G1_COD
+
+	SB1->(dbSetOrder(1))
+	If SB1->(MsSeek(xFilial("SB1")+cProduto))
+		cUnidade := SB1->B1_UM
+	Else
+		cUnidade := CriaVar('B1_UM')
+	EndIf
+Return cUnidade
+>>>>>>> 1e362897c9910f546296ec47ddafc40110b7951c

@@ -4,6 +4,7 @@
 		{
 			"type": "totvs_language_web_debug",
 			"request": "launch",
+<<<<<<< Updated upstream
 			"name": "PROGEN_HMG",
 			"program": "${command:AskForProgramName}",
 			"isMultiSession": true,
@@ -28,6 +29,25 @@
 			"smartclientBin": "D:/TOTVS/smartclient_Progen/smartclient.exe",
 			"isMultiSession": true,
 			"enableTableSync": true
+=======
+			"name": "LOCAL WS",
+			"program": "${command:AskForProgramName}",
+			"cwb": "${workspaceFolder}",
+			"isMultiSession": true,
+			"enableTableSync": true,
+			"enableMultiThread": true,
+			"smartclientUrl": "http://localhost:1315/webapp/"
+		},
+		{
+			"type": "totvs_language_web_debug",
+			"request": "launch",
+			"name": "EXTRUCOL_PRD",
+			"cwb": "${workspaceFolder}",
+			"program": "${command:AskForProgramName}",
+			"isMultiSession": true,
+			"enableTableSync": true,
+			"smartclientUrl": "https://colombianade179333.protheus.cloudtotvs.com.br:7600/webapp/"
+>>>>>>> Stashed changes
 		}
 	],
 	"lastPrograms": [

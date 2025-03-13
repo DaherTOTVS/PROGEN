@@ -1,0 +1,339 @@
+#INCLUDE 'msobject.ch'
+#INCLUDE 'tlpp-core.th'
+#INCLUDE 'tlpp-rest.th'
+#INCLUDE 'totvs.framework.treports.integratedprovider.th'
+#INCLUDE 'backoffice.sv.fat.proforma.ch'
+
+//-------------------------------------------------------------------------------
+/*{Protheus.doc} EtiquetaTReportsBusinessObject
+Classe para criação do Objeto de Negocio de faturamento para SmartView
+@author Leonardo Pereira
+@since 27/09/2023
+@version 1.0
+*/
+//-------------------------------------------------------------------------------
+namespace custom.faturamento.Etiqueta.integratedprovider
+
+// Annotation
+@totvsFrameworkTReportsIntegratedProvider( active=.T., team='SIGAFAT', tables='SC5,SA1,SC9,SF2', name='Etiqueta', country='ALL', initialRelease='12.1.2310', customTables='ALL' )
+class EtiquetaTReportsBusinessObject from totvs.framework.treports.integratedprovider.IntegratedProvider
+
+	public Method new() as object
+	public Method getData() as object
+	public Method getSchema() as object
+
+	protected data aFields as array
+	protected data aStruct as array
+
+endclass
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} NEW
+Método de instância da classe: Define a lista de importações que serão acessados no objeto de negocios
+@return object: self
+@author Leonardo Pereira
+@since 27/09/2023
+@version 1.0
+*/
+//------------------------------------------------------------------- 
+Method new() class EtiquetaTReportsBusinessObject
+
+	Local aCpos as array
+
+	aCpos := { }
+
+	_Super:new()
+
+	// Define a Área
+	self:appendArea( 'Personalizaciones' )
+
+	//Define o nome do Objeto de Negócio
+	self:setDisplayName( 'Etiquetas' ) 
+
+	//Define a descrição do Objeto de Negócio
+	self:setDescription( "Informe de Etiquetas" ) 
+
+	// Indica o pergunte que será utilizado no relatório
+	If !self:setPergunte( 'ETIQUETA' ) // Indica o pergunte que será utilizado
+		IIf(!self:setErrorStatus( 400, STR0002, STR0003 ),FwLogMsg( 'WARN',, 'Smart View',,,, STR0004,,, ),'') //'Sin Preguntas' //'¡Verifique el grupo de preguntas dado!' //'Código de error no válido, solo acepte códigos de error 4xx'
+		FwLogMsg( 'WARN',, 'Smart View',,,, STR0005 ,,, ) //'¡Grupo de preguntas no encontrado!'
+	EndIf
+
+	aAdd( aCpos, { 'X5_DESCSPA'    , 'Nom. Municipio', 'string', 'Nom. Municipio' } ) 
+	aAdd( aCpos, { 'A4_NOME'    , 'Nom. Transportador', 'string', 'Nom. Transportador' } )
+	aAdd( aCpos, { 'C9_XCONTAC'    , 'Contact.', 'string', 'Contacto Cli.' } )
+	
+	
+	// Define os campos que serão retornados no objeto de negocios
+	self:aFields := { 'C5_FILIAL','C5_NUM','C5_EMISSAO','C5_CLIENTE','C5_LOJACLI', 'A1_NOME', 'C9_REMITO','C9_DTREMIT','C9_XCELULA','C9_XDETDIR','C9_XCDMUNE','X5_DESCSPA','C9_XOBSMER','DAK_COD', 'DAK_SEQCAR', 'DAK_DATA', 'DAK_HORA', 'DAK_TRANSP','A4_NOME','C9_XCONTAC' }
+
+	self:aStruct := getStrutObj( self:aFields, aCpos, .T. )
+
+Return( self )
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} getSchema
+Retorna a estrutura de campos 
+@return object: self:oSchema 
+@author Leonardo Pereira
+@since 27/09/2023
+@version 1.0
+*/
+//------------------------------------------------------------------- 
+Method getSchema( ) as object class EtiquetaTReportsBusinessObject
+
+	Local n1 as numeric
+
+	// Adiciona as propriedades dos campos que serão retornados para o SMARTVIEW
+	For n1 := 1 To Len( self:aStruct )
+		self:addProperty( self:aStruct[n1][1], self:aStruct[n1][2], self:aStruct[n1][3], self:aStruct[n1][4], self:aStruct[n1][5] )
+	Next
+
+Return( self:oSchema )
+
+
+//-------------------------------------------------------------------
+/*{Protheus.doc} getData
+Retorna os datos do objeto de negócios
+@param oFilter, objeto, contém o filtro do SmartView
+@return object: self:oData
+@author Leonardo Pereira
+@since 27/09/2023
+@version 1.0
+*/
+//------------------------------------------------------------------- 
+Method getData( nPage as numeric, oFilter as object ) as object class EtiquetaTReportsBusinessObject
+
+	// Declaracao de variaveis
+	Local jParams as json
+	Local jItems as json
+
+	Local cQuery as character
+	Local cAliasA := GetNextAlias() as character
+	Local cDescMon as character
+	Local cFiltro as character
+	Local cExp as character
+	Local cFilSA1 as character
+	Local cFilSC5 as character
+	Local cFilSF2 as character
+
+	Local nX as numeric
+	Local nDecs as numeric
+	Local nMoeda as numeric
+	Local n1 as numeric
+	Local nPosMon as numeric
+	Local nPosExp as numeric
+	Local nQtMoedas as numeric
+	Local nTxMoeConv as numeric
+	Local nTOTCon1 as numeric
+	Local nTOTPed as numeric
+	Local nTOTDoc as numeric
+	Local nTOTPes1 as numeric
+	Local nTOTPes2 as numeric
+	Local nParMoe as numeric
+	Local nParOpc as numeric
+
+	Local aPDFields as array
+	Local aNomeMoed as array
+	Local aStatusPed as array
+	Local aFiltro as array
+
+	Local lObfuscated as logical
+
+	Local oQueryA		as object
+	cDescMon := ''
+	cFiltro := ''
+	cExp := ''
+	cFilSA1 := xFilial( 'SA1' )
+	cFilSC5 := xFilial( 'SC5' )
+	cFilSC9 := xFilial( 'SC9' )
+	cFilSF2 := xFilial( 'SF2' )
+
+	nPosMon := 0
+	nPosExp := 0
+	nDecs := MsDecimais( 1 )
+	nQtMoedas := Moedfin( )
+	nMoeda := 1
+	n1 := 0
+	nTxMoeConv := 0
+	nTOTCon1 := 0
+	nTOTPed := 0
+	nTOTDoc := 0
+	nTOTPes1 := 0
+	nTOTPes2 := 0
+
+	aPDFields := { }
+	aNomeMoed := { }
+	aStatusPed := { '', '' }
+	aFiltro := { }
+
+	lObfuscated := .F.
+
+	// Verifica se existem campos sensiveis na lista de campos a serem retornados
+	aPDFields := FwProtectedDataUtil():UsrAccessPDField( __cUserID, self:aFields )
+	lObfuscated := Len( aPDFields ) != Len( self:aFields )
+
+	// Coleta os dados dos parametros
+	jParams := oFilter:getParameters( )
+
+	If oFilter:hasFilter()
+		// Tratamento para conversão para moeda selecionada
+		cFiltro := oFilter:getSQLExpression( )
+
+		aFiltro := getParamToArr( cFiltro )
+
+		// Ordena os parametros
+		aSort( aFiltro,,, { |x, y| x[1] + x[3] < y[1] + y[3] } )
+	EndIf
+
+	nParMoe := 1
+	nParOpc := IIf(ValType(jParams['MV_PAR01'][1])=="C",Val(jParams['MV_PAR01'][1]),jParams['MV_PAR01'][1])
+
+
+		// Realiza a montagem da QUERY que será enviada para o banco de dados
+		cQuery  := "SELECT SC5.C5_FILIAL, SC5.C5_NOTA, SC5.C5_EMISSAO, SC5.C5_NUM, SC5.C5_CLIENTE, SC5.C5_LOJACLI,"
+		cQuery  += "SA1.A1_NOME, C9_REMITO,C9_DTREMIT, C9_XCELULA, C9_XDETDIR , C9_XCDMUNE, C9_XOBSMER, X5_DESCSPA,
+		cQuery  += "DAK.DAK_COD, DAK.DAK_SEQCAR, DAK.DAK_DATA, DAK.DAK_HORA, DAK.DAK_TRANSP, A4_NOME,C9_XCONTAC"
+		
+		cQuery  += "FROM " + RetSqlName("DAK") + " DAK "
+
+		cQuery  += "INNER JOIN " + RetSqlName("DAI") + " DAI "
+		cQuery  += "  ON DAI.DAI_FILIAL = ? " 
+		cQuery  += "  AND DAI.DAI_COD = DAK.DAK_COD "
+		cQuery  += "  AND DAI.D_E_L_E_T_ = ? "
+
+		cQuery  += "INNER JOIN " + RetSqlName("SC9") + " SC9 
+		cQuery += "    ON SC9.C9_FILIAL = DAI.DAI_FILPV 
+		cQuery += " 	 AND SC9.C9_PEDIDO = DAI.DAI_PEDIDO 
+		cQuery += " 	 AND SC9.C9_CARGA = DAI.DAI_COD 
+		cQuery += " 	 AND SC9.D_E_L_E_T_ = ? "
+
+		cQuery += "INNER JOIN  " + RetSQLName( 'SC5' ) + " SC5 "
+		cQuery += "   ON SC5.C5_FILIAL = ? "
+		cQuery += "      AND C5_NUM = C9_PEDIDO "
+		cQuery += "      AND SC5.D_E_L_E_T_ = ? "
+
+		cQuery += "INNER JOIN " + RetSQLName( 'SA1' ) + " SA1 "
+		cQuery += "   ON SA1.A1_FILIAL = ? "
+		cQuery += "      AND SA1.A1_COD = SC5.C5_CLIENTE "
+		cQuery += "      AND SA1.A1_LOJA = SC5.C5_LOJACLI "
+		cQuery += "      AND SA1.D_E_L_E_T_ = ? "
+		
+		cQuery += "LEFT JOIN  " + RetSQLName( 'SX5' ) + " X5 "
+		cQuery += "   ON X5.X5_FILIAL = ? "
+		cQuery += "      AND X5.X5_TABELA = 'XC' "
+		cQuery += "      AND X5.X5_CHAVE = SC9.C9_XCDMUNE "
+		cQuery += "      AND X5.D_E_L_E_T_ = ? "
+
+		cQuery += "LEFT JOIN  " + RetSQLName( 'SA4' ) + " SA4 "
+		cQuery += "   ON SA4.A4_FILIAL = ? "
+		cQuery += "      AND  SA4.A4_COD = DAK.DAK_TRANSP "
+		cQuery += "      AND SA4.D_E_L_E_T_ = ? "
+
+	
+
+		cQuery += "WHERE DAK.DAK_FILIAL = ? "
+		If ( nParOpc == 1 )
+			cQuery += "   AND SC5.C5_NUM BETWEEN ? AND ? "
+			cQuery += "   AND SC5.C5_EMISSAO BETWEEN ? AND ? "
+		ElseIF ( nParOpc == 2 )
+			cQuery += "   AND SC9.C9_REMITO BETWEEN ? AND ? "
+			cQuery += "   AND SC9.C9_DTREMIT BETWEEN ? AND ? "
+		ElseIf ( nParOpc == 3 )
+			cQuery += "   AND DAK.DAK_COD BETWEEN ? AND ? "
+			cQuery += "   AND DAK.DAK_DATA BETWEEN ? AND ? "
+		EndIf
+		cQuery += "   AND SC5.C5_CLIENTE BETWEEN ? AND ? "
+		cQuery += "   AND SC5.C5_LOJACLI BETWEEN ? AND ? "
+		cQuery += "   AND SC5.D_E_L_E_T_ = ? "
+		
+		cQuery += "  AND DAK.DAK_TRANSP BETWEEN ? AND ? "
+
+		// Agrega os filtros do SMARTVIEW na QUERY
+		For nX := 1 To Len( aFiltro )
+			cQuery += "AND " + aFiltro[nX, 1] + ' ' + aFiltro[nX, 2] + " " + aFiltro[nX, 3] + " "
+		Next
+
+
+		cQuery  += " GROUP BY C5_FILIAL, C5_NOTA, C5_EMISSAO, C5_NUM, C5_CLIENTE, C5_LOJACLI,"
+		cQuery  += " A1_NOME, C9_REMITO, C9_DTREMIT, C9_XCELULA, C9_XDETDIR , C9_XCDMUNE, C9_XOBSMER, X5_DESCSPA,
+		cQuery  += " DAK_COD, DAK_SEQCAR, DAK_DATA, DAK_HORA, DAK_TRANSP,A4_NOME,C9_XCONTAC"
+
+		
+		cQuery += "ORDER BY ? "
+
+		// Executa a QUERY e cria uma tabela temporaria com os dados retornados
+		cQuery := ChangeQuery( cQuery )
+
+		oQueryA := FwExecStatement():New()
+
+		//Define a consulta e os parâmetros
+		oQueryA:SetQuery( cQuery )
+
+		conout("cQuerydak",cQuery)
+
+		oQueryA:SetString( 1, FwxFilial( 'DAI' ) )
+		oQueryA:SetString( 2, ' ' )
+		oQueryA:SetString( 3, ' ' )
+		oQueryA:SetString( 4, FwxFilial( 'SC5' ) )
+		oQueryA:SetString( 5, ' ' )
+		oQueryA:SetString( 6, FwxFilial( 'SA1' ) )
+		oQueryA:SetString( 7, ' ' )
+		oQueryA:SetString( 8, FwxFilial( 'SX5' ) )
+		oQueryA:SetString( 9, ' ' )
+		oQueryA:SetString( 10, FwxFilial( 'SA4' ) )
+		oQueryA:SetString( 11, ' ' )
+		oQueryA:SetString( 12, FwxFilial( 'DAK' ) )
+		oQueryA:SetString( 13, jParams['MV_PAR02'][1] )
+		oQueryA:SetString( 14, jParams['MV_PAR03'][1] )
+		oQueryA:SetString( 15, DtoS( FwDateTimeToLocal( jParams['MV_PAR08'][1] )[1] ) )
+		oQueryA:SetString( 16, DtoS( FwDateTimeToLocal( jParams['MV_PAR09'][1] )[1] ) )
+		oQueryA:SetString( 17, jParams['MV_PAR04'][1] )
+		oQueryA:SetString( 18, jParams['MV_PAR06'][1] )
+		oQueryA:SetString( 19, jParams['MV_PAR05'][1] )
+		oQueryA:SetString( 20, jParams['MV_PAR07'][1] )
+		oQueryA:SetString( 21, ' ' )
+		oQueryA:SetString( 22, jParams['MV_PAR10'][1] )
+		oQueryA:SetString( 23, jParams['MV_PAR11'][1] )
+		oQueryA:SetUnsafe( 24, 'SC5.C5_FILIAL, SC5.C5_NUM' )
+
+		// cria alias
+		oQueryA:OpenAlias( cAliasA )
+
+		// Alimenta o objeto de dados da classe para retornar ao SmartView
+		DbSelectArea( cAliasA )
+		While !( cAliasA )->( EOF( ) )
+			jItems := JsonObject():new()
+
+			
+
+			// Alimenta o objeto de dados da classe para retornar ao SmartView
+			For nX := 1 To Len( self:aStruct )
+				If ( AllTrim( self:aStruct[nx][5] ) $ 'C5_FILIAL|C5_NOTA|C5_EMISSAO|C5_NUM|C5_CLIENTE|C5_LOJACLI|A1_NOME|C9_REMITO|C9_DTREMIT|C9_XCELULA|C9_XDETDIR|C9_XCDMUNE|C9_XOBSMER|X5_DESCSPA|DAK_COD|DAK_SEQCAR|DAK_DATA|DAK_HORA|DAK_TRANSP|A4_NOME|C9_XCONTAC' )
+					If lObfuscated .And. ( aScan( aPDFields, self:aStruct[nX][5] ) == 0 )
+						jItems[self:aStruct[nX][1]] := FwProtectedDataUtil():ValueAsteriskToAnonymize( ( cAliasA )->&( self:aStruct[nX][5] ) )
+					ElseIf ( self:aStruct[nX][3] == 'date' )
+						jItems[self:aStruct[nX][1]] := totvs.framework.treports.date.dateToTimeStamp(STOD(( cAliasA )->&( self:aStruct[nX][5] )))
+					Else
+						jItems[self:aStruct[nX][1]] := ( cAliasA )->&( self:aStruct[nX][5] )
+					EndIf				
+				EndIf
+			Next
+
+			// Inclui os dados no objeto paea retorno ao SmartView
+			self:oData:appendData( jItems )
+
+			
+			( cAliasA )->( DbSkip( ) )
+
+		End
+		( cAliasA )->( DbCloseArea( ) )
+
+	// fecha objeto
+	If oQueryA <> Nil
+		oQueryA:Destroy()
+		oQueryA := NIL
+		FwFreeObj(oQueryA)
+	EndIf
+
+Return( self:oData )
