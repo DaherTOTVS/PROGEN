@@ -101,7 +101,7 @@ Static Function ReportPrint(oReport)
 	cSql +="         C5_LOJAENT,  "
 	cSql +="         DB_DOC REMITO,  "
 	cSql +="         D2_DOC FACTURA,  "
-	cSql +="         C5_XNCLIEN  "
+	cSql +="         C5_XNCLIEN, DB_ESTORNO  "
 	cSql +="     FROM " + RetSqlName("SC9") + "  SC9 "
 
 	cSql +="     	INNER JOIN  " + RetSqlName("SC5") + "   SC5 ON C5_NUM = C9_PEDIDO  "
@@ -166,8 +166,9 @@ Static Function ReportPrint(oReport)
 
 
 	While !oReport:Cancel() .And. !(cAliasQry)->(Eof())
-		oReport:Section(1):PrintLine()
-
+		If Empty((cAliasQry)->DB_ESTORNO)
+			oReport:Section(1):PrintLine()
+		EndIf
 		dbSelectArea(cAliasQry)
 		dbSkip()
 	EndDo

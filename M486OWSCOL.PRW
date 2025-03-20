@@ -169,29 +169,39 @@ User Function M486OWSCOL()
 			IF ALLTRIM(cEspecie)=="NCC"
 				If aCabDatos[1][29]==1
 					aRetenc:=Retenciones(cNumDoc,cSerieDoc,cCodCli,cCodLoj,.F.)
-					cValor := TRANSFORM(aRetenc[2]+aRetenc[3]+aRetenc[4],"@E 999,999,999.99")
+					cValor := TRANSFORM(aRetenc[2]+aRetenc[3]+aRetenc[4],"@E 999,999,999,999.99")
 					If ALLTRIM(cValor)  != "0,00"
 						//oWS:oWSextras:=Service_ArrayOfExtras():new()
 						oWSextra:=Service_Extras():new()
-						oWSextra:ccontrolInterno1     := "TOTAL Retenciones"
+						oWSextra:ccontrolInterno1     := "TOTAL Retenciones COP"
 						oWSextra:ccontrolInterno2     := ""
 						oWSextra:cnombre              := "5170019"
 						oWSextra:cpdf                 := "1"
 						oWSextra:cvalor               := cValor
 						oWSextra:cxml                 := "0"
 						aAdd(oWS:oWSextras:oWSextras,oWSextra)
+
 					EndIf	
 				Else
 					aRetenc:=Retenciones(cNumDoc,cSerieDoc,cCodCli,cCodLoj,.F.)
-					cValor := TRANSFORM(aRetenc[2]+aRetenc[3]+aRetenc[4],"@E 999,999,999.99")
+					cValor := TRANSFORM(aRetenc[2]+aRetenc[3]+aRetenc[4],"@E 999,999,999,999.99")
 					If ALLTRIM(cValor)  != "0,00"
 						//oWS:oWSextras:=Service_ArrayOfExtras():new()
 						oWSextra:=Service_Extras():new()
-						oWSextra:ccontrolInterno1     := "TOTAL Retenciones USD"
+						oWSextra:ccontrolInterno1     := "TOTAL Retenciones COP"
 						oWSextra:ccontrolInterno2     := ""
 						oWSextra:cnombre              := "5170019"
 						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := cValor
+						oWSextra:cvalor               := TRANSFORM((aRetenc[2]+aRetenc[3]+aRetenc[4])*aCabDatos[1][28],"@E 999,999,999,999.99")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
+
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "TOTAL Retenciones USD"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170029"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := TRANSFORM((aRetenc[2]+aRetenc[3]+aRetenc[4]),"@E 999,999,999,999.99")
 						oWSextra:cxml                 := "0"
 						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 					EndIf
@@ -201,7 +211,7 @@ User Function M486OWSCOL()
 			IF ALLTRIM(cEspecie)=="NF"
 				If aCabDatos[1][29]==1
 					aRetenc:=Retenciones(cNumDoc,cSerieDoc,cCodCli,cCodLoj,.T.)
-					cValor := TRANSFORM(aRetenc[2]+aRetenc[3]+aRetenc[4],"@E 999,999,999.99")
+					cValor := TRANSFORM(aRetenc[2]+aRetenc[3]+aRetenc[4],"@E 999,999,999,999.99")
 					If ALLTRIM(cValor)  != "0,00"
 						//oWS:oWSextras:=Service_ArrayOfExtras():new()
 						oWSextra:=Service_Extras():new()
@@ -215,15 +225,24 @@ User Function M486OWSCOL()
 					EndIF
 				Else
 					aRetenc:=Retenciones(cNumDoc,cSerieDoc,cCodCli,cCodLoj,.T.)
-					cValor := TRANSFORM(aRetenc[2]+aRetenc[3]+aRetenc[4],"@E 999,999,999.99")
+					cValor := TRANSFORM(aRetenc[2]+aRetenc[3]+aRetenc[4],"@E 999,999,999,999.99")
 					//oWS:oWSextras:=Service_ArrayOfExtras():new()
 					If ALLTRIM(cValor)  != "0,00"
 						oWSextra:=Service_Extras():new()
-						oWSextra:ccontrolInterno1     := "TOTAL Retenciones USD"
+						oWSextra:ccontrolInterno1     := "TOTAL Retenciones COP"
 						oWSextra:ccontrolInterno2     := ""
 						oWSextra:cnombre              := "5170019"
 						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := cValor
+						oWSextra:cvalor               := TRANSFORM((aRetenc[2]+aRetenc[3]+aRetenc[4])*aCabDatos[1][28],"@E 999,999,999,999.99")
+						oWSextra:cxml                 := "0"
+						aAdd(oWS:oWSextras:oWSextras,oWSextra)
+
+						oWSextra:=Service_Extras():new()
+						oWSextra:ccontrolInterno1     := "TOTAL Retenciones USD"
+						oWSextra:ccontrolInterno2     := ""
+						oWSextra:cnombre              := "5170029"
+						oWSextra:cpdf                 := "1"
+						oWSextra:cvalor               := TRANSFORM(aRetenc[2]+aRetenc[3]+aRetenc[4],"@E 999,999,999,999.99")
 						oWSextra:cxml                 := "0"
 						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 					EndIf
@@ -237,11 +256,11 @@ User Function M486OWSCOL()
 			oWSextra:cnombre              := "5170001"
 			oWSextra:cpdf                 := "1"
 			if cTipDocT == "02"
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][12]*aCabDatos[1][28]),"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][12]*aCabDatos[1][28]),"@E 999,999,999,999.99")
 			ElseIf lActivador
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][12]*aCabDatos[1][28]),"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][12]*aCabDatos[1][28]),"@E 999,999,999,999.99")
 			else
-				oWSextra:cvalor               :=  TRANSFORM(aCabDatos[1][12],"@E 999,999,999.99") 
+				oWSextra:cvalor               :=  TRANSFORM(aCabDatos[1][12],"@E 999,999,999,999.99") 
 			EndIF
 			oWSextra:cxml                 := "0"
 			aAdd(oWS:oWSextras:oWSextras,oWSextra)
@@ -257,11 +276,11 @@ User Function M486OWSCOL()
 			oWSextra:cnombre              := "5170008"
 			oWSextra:cpdf                 := "1"
 			if cTipDocT == "02"
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][16]*aCabDatos[1][28]),"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][16]*aCabDatos[1][28]),"@E 999,999,999,999.99")
 			ElseIf lActivador
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][16]*aCabDatos[1][28]),"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][16]*aCabDatos[1][28]),"@E 999,999,999,999.99")
 			else
-				oWSextra:cvalor               := TRANSFORM(aCabDatos[1][16],"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM(aCabDatos[1][16],"@E 999,999,999,999.99")
 			endif
 			oWSextra:cxml                 := "0"
 			aAdd(oWS:oWSextras:oWSextras,oWSextra)
@@ -273,11 +292,11 @@ User Function M486OWSCOL()
 			oWSextra:cnombre              := "5170003"
 			oWSextra:cpdf                 := "1"
 			if cTipDocT == "02"
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][2]*aCabDatos[1][28]),"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][2]*aCabDatos[1][28]),"@E 999,999,999,999.99")
 			ElseIf lActivador
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][2]*aCabDatos[1][28]),"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][2]*aCabDatos[1][28]),"@E 999,999,999,999.99")
 			else
-				oWSextra:cvalor               := TRANSFORM(aCabDatos[1][2],"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM(aCabDatos[1][2],"@E 999,999,999,999.99")
 			endif
 			oWSextra:cxml                 := "0"
 			aAdd(oWS:oWSextras:oWSextras,oWSextra)
@@ -289,11 +308,11 @@ User Function M486OWSCOL()
 			oWSextra:cnombre              := "5170016"
 			oWSextra:cpdf                 := "1"
 			if cTipDocT == "02"
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][7]*aCabDatos[1][28]),"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][7]*aCabDatos[1][28]),"@E 999,999,999,999.99")
 			ElseIf lActivador
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][7]*aCabDatos[1][28]),"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][7]*aCabDatos[1][28]),"@E 999,999,999,999.99")
 			else
-				oWSextra:cvalor               := TRANSFORM(aCabDatos[1][7],"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM(aCabDatos[1][7],"@E 999,999,999,999.99")
 			endif
 			oWSextra:cxml                 := "0"
 			aAdd(oWS:oWSextras:oWSextras,oWSextra)
@@ -305,12 +324,12 @@ User Function M486OWSCOL()
 			oWSextra:cnombre              := "5170017"
 			oWSextra:cpdf                 := "1"
 			if cTipDocT == "02"
-				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][4]*aCabDatos[1][28]),"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM((aCabDatos[1][4]*aCabDatos[1][28]),"@E 999,999,999,999.99")
 			ElseIf lActivador
 				cValimp1 := POSICIONE("SF3",4,xfilial("SF3")+CCODCLI+CCODLOJ+CNUMDOC+CSERIEDOC,"F3_VALIMP1")
-				oWSextra:cvalor               := TRANSFORM(cValimp1,"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM(cValimp1,"@E 999,999,999,999.99")
 			else
-				oWSextra:cvalor               := TRANSFORM(aCabDatos[1][4],"@E 999,999,999.99")
+				oWSextra:cvalor               := TRANSFORM(aCabDatos[1][4],"@E 999,999,999,999.99")
 			endif
 			oWSextra:cxml                 := "0"
 			aAdd(oWS:oWSextras:oWSextras,oWSextra)
@@ -338,11 +357,7 @@ User Function M486OWSCOL()
 			//Extra para 5170009
 			IF cTipDocT == "02"
 				oWSextra:=Service_Extras():new()
-<<<<<<< Updated upstream
 				oWSextra:ccontrolInterno1     := "COUNTRY OF EXPORT: COLOMBIA"
-=======
-				oWSextra:ccontrolInterno1     := "COUNTRY OF EXPORT: COLOMBIA "
->>>>>>> Stashed changes
 				oWSextra:ccontrolInterno2     := "INCOTERM VERSION 2020: " + ALLTRIM(aCabDatos[1][13])+ " " + ALLTRIM(aCabDatos[1][14])
 				oWSextra:cnombre              := "5170009"
 				oWSextra:cpdf                 := "1"
@@ -461,7 +476,7 @@ User Function M486OWSCOL()
 					oWSextra:ccontrolInterno2     := ""
 					oWSextra:cnombre              := "5170024"
 					oWSextra:cpdf                 := "1"
-					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][16],"@E 999,999,999.99")
+					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][16],"@E 999,999,999,999.99")
 					oWSextra:cxml                 := "0"
 					aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -471,7 +486,7 @@ User Function M486OWSCOL()
 					oWSextra:ccontrolInterno2     := ""
 					oWSextra:cnombre              := "5170018"
 					oWSextra:cpdf                 := "1"
-					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][12],"@E 999,999,999.99")
+					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][12],"@E 999,999,999,999.99")
 					oWSextra:cxml                 := "0"
 					aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -481,7 +496,7 @@ User Function M486OWSCOL()
 					oWSextra:ccontrolInterno2     := ""
 					oWSextra:cnombre              := "5170030"
 					oWSextra:cpdf                 := "1"
-					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][2],"@E 999,999,999.99")
+					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][2],"@E 999,999,999,999.99")
 					oWSextra:cxml                 := "0"
 					aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -501,7 +516,7 @@ User Function M486OWSCOL()
 					oWSextra:ccontrolInterno2     := ""
 					oWSextra:cnombre              := "5170021"
 					oWSextra:cpdf                 := "1"
-					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][4],"@E 999,999,999.99")
+					oWSextra:cvalor               := TRANSFORM(aCabDatos[1][4],"@E 999,999,999,999.99")
 					oWSextra:cxml                 := "0"
 					aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -566,7 +581,7 @@ User Function M486OWSCOL()
 						oWSextra:ccontrolInterno2     := ""
 						oWSextra:cnombre              := "5170026"
 						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][12],"@E 999,999,999.99")
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][12],"@E 999,999,999,999.99")
 						oWSextra:cxml                 := "0"
 						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -576,7 +591,7 @@ User Function M486OWSCOL()
 						oWSextra:ccontrolInterno2     := ""
 						oWSextra:cnombre              := "5170024"
 						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][16],"@E 999,999,999.99")
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][16],"@E 999,999,999,999.99")
 						oWSextra:cxml                 := "0"
 						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -586,7 +601,7 @@ User Function M486OWSCOL()
 						oWSextra:ccontrolInterno2     := ""
 						oWSextra:cnombre              := "5170030"
 						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][2],"@E 999,999,999.99")
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][2],"@E 999,999,999,999.99")
 						oWSextra:cxml                 := "0"
 						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -597,7 +612,7 @@ User Function M486OWSCOL()
 						oWSextra:ccontrolInterno2     := ""
 						oWSextra:cnombre              := "5170027"
 						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][7],"@E 999,999,999.99")
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][7],"@E 999,999,999,999.99")
 						oWSextra:cxml                 := "0"
 						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -607,7 +622,7 @@ User Function M486OWSCOL()
 						oWSextra:ccontrolInterno2     := ""
 						oWSextra:cnombre              := "5170028"
 						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][4],"@E 999,999,999.99")
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][4],"@E 999,999,999,999.99")
 						oWSextra:cxml                 := "0"
 						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -633,7 +648,7 @@ User Function M486OWSCOL()
 						oWSextra:ccontrolInterno2     := ""
 						oWSextra:cnombre              := "5170026"
 						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][12],"@E 999,999,999.99")
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][12],"@E 999,999,999,999.99")
 						oWSextra:cxml                 := "0"
 						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -643,7 +658,7 @@ User Function M486OWSCOL()
 						oWSextra:ccontrolInterno2     := ""
 						oWSextra:cnombre              := "5170024"
 						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][16],"@E 999,999,999.99")
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][16],"@E 999,999,999,999.99")
 						oWSextra:cxml                 := "0"
 						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -653,7 +668,7 @@ User Function M486OWSCOL()
 						oWSextra:ccontrolInterno2     := ""
 						oWSextra:cnombre              := "5170030"
 						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][2],"@E 999,999,999.99")
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][2],"@E 999,999,999,999.99")
 						oWSextra:cxml                 := "0"
 						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -664,7 +679,7 @@ User Function M486OWSCOL()
 						oWSextra:ccontrolInterno2     := ""
 						oWSextra:cnombre              := "5170027"
 						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][7],"@E 999,999,999.99")
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][7],"@E 999,999,999,999.99")
 						oWSextra:cxml                 := "0"
 						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -674,7 +689,7 @@ User Function M486OWSCOL()
 						oWSextra:ccontrolInterno2     := ""
 						oWSextra:cnombre              := "5170028"
 						oWSextra:cpdf                 := "1"
-						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][4],"@E 999,999,999.99")
+						oWSextra:cvalor               := TRANSFORM(aCabDatos[1][4],"@E 999,999,999,999.99")
 						oWSextra:cxml                 := "0"
 						aAdd(oWS:oWSextras:oWSextras,oWSextra)
 
@@ -1061,17 +1076,17 @@ User Function M486OWSCOL()
 					SF2->(DbSetOrder(1))
 					IF SF2->(DbSeek(xFilial("SF2") + cNumDoc + cSerieDoc + cCodCli + cCodLoj ))
 						IF SF2->F2_MOEDA <> 1 .AND. SA1->A1_PAIS == "169"
-							oWSAdicion:cnombre 		:= TRANSFORM((SD2->D2_PRUNIT*SF2->F2_TXMOEDA),"@E 999,999,999.99")
+							oWSAdicion:cnombre 		:= TRANSFORM((SD2->D2_PRUNIT*SF2->F2_TXMOEDA),"@E 999,999,999,999.99")
 						elseif SF2->F2_MOEDA <> 1
-							oWSAdicion:cnombre 		:= TRANSFORM((SD2->D2_PRUNIT),"@E 999,999,999.99")
+							oWSAdicion:cnombre 		:= TRANSFORM((SD2->D2_PRUNIT),"@E 999,999,999,999.99")
 						else
-							oWSAdicion:cnombre 		:= TRANSFORM(SD2->D2_PRUNIT,"@E 999,999,999.99")
+							oWSAdicion:cnombre 		:= TRANSFORM(SD2->D2_PRUNIT,"@E 999,999,999,999.99")
 						endif
 						oWSAdicion:csecuencia 	:= "1"
 						IF SF2->F2_MOEDA <> 1
-							oWSAdicion:cvalor 		:= TRANSFORM((SD2->D2_PRUNIT*SD2->D2_QUANT)*(SF2->F2_TXMOEDA),"@E 999,999,999.99")
+							oWSAdicion:cvalor 		:= TRANSFORM((SD2->D2_PRUNIT*SD2->D2_QUANT)*(SF2->F2_TXMOEDA),"@E 999,999,999,999.99")
 						else
-							oWSAdicion:cvalor 		:= TRANSFORM((SD2->D2_PRUNIT*SD2->D2_QUANT),"@E 999,999,999.99")
+							oWSAdicion:cvalor 		:= TRANSFORM((SD2->D2_PRUNIT*SD2->D2_QUANT),"@E 999,999,999,999.99")
 						endif
 						aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
 						SF2->(dbCloseArea())
@@ -1122,9 +1137,9 @@ User Function M486OWSCOL()
 							// PARA Cantidad y Precio Dolar
 							oWSAdicion:=Service_LineaInformacionAdicional():New()
 							oWSAdicion:ccodigo 		:= "5175"
-							oWSAdicion:cnombre 		:= TRANSFORM((SD2->D2_PRUNIT*SD2->D2_QUANT),"@E 999,999,999.99")
+							oWSAdicion:cnombre 		:= TRANSFORM((SD2->D2_PRUNIT*SD2->D2_QUANT),"@E 999,999,999,999.99")
 							oWSAdicion:csecuencia 	:= "1"
-							oWSAdicion:cvalor 		:= TRANSFORM((SD2->D2_PRUNIT*SD2->D2_QUANT),"@E 999,999,999.99")
+							oWSAdicion:cvalor 		:= TRANSFORM((SD2->D2_PRUNIT*SD2->D2_QUANT),"@E 999,999,999,999.99")
 							aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
 						ENDIF
 
@@ -1137,9 +1152,9 @@ User Function M486OWSCOL()
 						IF lActivador
 							oWSAdicion:=Service_LineaInformacionAdicional():New()
 							oWSAdicion:ccodigo 		:= "5176"
-							oWSAdicion:cnombre 		:= TRANSFORM(SD2->D2_PRUNIT,"@E 999,999,999.99")
+							oWSAdicion:cnombre 		:= TRANSFORM(SD2->D2_PRUNIT,"@E 999,999,999,999.99")
 							oWSAdicion:csecuencia 	:= "1"
-							oWSAdicion:cvalor 		:= TRANSFORM((SD2->D2_PRUNIT),"@E 999,999,999.99")
+							oWSAdicion:cvalor 		:= TRANSFORM((SD2->D2_PRUNIT),"@E 999,999,999,999.99")
 							aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
 
 						ENDIF
@@ -1222,9 +1237,9 @@ User Function M486OWSCOL()
 
 					/*oWSAdicion:=Service_LineaInformacionAdicional():New()
 					oWSAdicion:ccodigo 		:= "5173"
-					oWSAdicion:cnombre 		:= TRANSFORM(nValunitSD1,"@E 999,999,999.99") 
+					oWSAdicion:cnombre 		:= TRANSFORM(nValunitSD1,"@E 999,999,999,999.99") 
 					oWSAdicion:csecuencia 	:= "1"
-					oWSAdicion:cvalor 		:= TRANSFORM((nValunitSD1*SD1->D1_QUANT),"@E 999,999,999.99")
+					oWSAdicion:cvalor 		:= TRANSFORM((nValunitSD1*SD1->D1_QUANT),"@E 999,999,999,999.99")
 					aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
 					*/
 					// Modificado Juan Pablo Astorga 11.03.2024	
@@ -1251,23 +1266,23 @@ User Function M486OWSCOL()
 					If lActivador
 						oWSAdicion:=Service_LineaInformacionAdicional():New()
 						oWSAdicion:ccodigo 		:= "5173"
-						oWSAdicion:cnombre 		:= TRANSFORM(cPreLista*SF1->F1_TXMOEDA,"@E 999,999,999.99")
+						oWSAdicion:cnombre 		:= TRANSFORM(cPreLista*SF1->F1_TXMOEDA,"@E 999,999,999,999.99")
 						oWSAdicion:csecuencia 	:= "1"
-						oWSAdicion:cvalor 		:= TRANSFORM(cValor1*SF1->F1_TXMOEDA,"@E 999,999,999.99")
+						oWSAdicion:cvalor 		:= TRANSFORM(cValor1*SF1->F1_TXMOEDA,"@E 999,999,999,999.99")
 						aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
 
 						oWSAdicion:=Service_LineaInformacionAdicional():New()
 						oWSAdicion:ccodigo 		:= "5175"
-						oWSAdicion:cnombre 		:= TRANSFORM((cValor1),"@E 999,999,999.99")
+						oWSAdicion:cnombre 		:= TRANSFORM((cValor1),"@E 999,999,999,999.99")
 						oWSAdicion:csecuencia 	:= "1"
-						oWSAdicion:cvalor 		:= TRANSFORM((cValor1),"@E 999,999,999.99")
+						oWSAdicion:cvalor 		:= TRANSFORM((cValor1),"@E 999,999,999,999.99")
 						aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
 
 						oWSAdicion:=Service_LineaInformacionAdicional():New()
 						oWSAdicion:ccodigo 		:= "5176"
-						oWSAdicion:cnombre 		:= TRANSFORM(cPreLista,"@E 999,999,999.99")
+						oWSAdicion:cnombre 		:= TRANSFORM(cPreLista,"@E 999,999,999,999.99")
 						oWSAdicion:csecuencia 	:= "1"
-						oWSAdicion:cvalor 		:= TRANSFORM((cPreLista),"@E 999,999,999.99")
+						oWSAdicion:cvalor 		:= TRANSFORM((cPreLista),"@E 999,999,999,999.99")
 						aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
 
 
@@ -1276,11 +1291,11 @@ User Function M486OWSCOL()
 					Else
 						oWSAdicion:=Service_LineaInformacionAdicional():New()
 						oWSAdicion:ccodigo 		:= "5173"
-						oWSAdicion:cnombre 		:= TRANSFORM(cPreLista,"@E 999,999,999.99") // VR UNITARIO Modificado 11.03.2024 JPA
-						//oWSAdicion:cnombre 	:= TRANSFORM((SD1->D1_TOTAL+SD1->D1_VALDESC)/SD1->D1_QUANT,"@E 999,999,999.99") // VR UNITARIO
+						oWSAdicion:cnombre 		:= TRANSFORM(cPreLista,"@E 999,999,999,999.99") // VR UNITARIO Modificado 11.03.2024 JPA
+						//oWSAdicion:cnombre 	:= TRANSFORM((SD1->D1_TOTAL+SD1->D1_VALDESC)/SD1->D1_QUANT,"@E 999,999,999,999.99") // VR UNITARIO
 						oWSAdicion:csecuencia 	:= "1"
-						oWSAdicion:cvalor 		:= TRANSFORM(cValor1,"@E 999,999,999.99") // VR. TOTAL LINEA Modificado 11.03.2024 JPA
-						//oWSAdicion:cvalor 	:= TRANSFORM((SD1->D1_TOTAL+SD1->D1_VALDESC),"@E 999,999,999.99") // VR. TOTAL LINEA
+						oWSAdicion:cvalor 		:= TRANSFORM(cValor1,"@E 999,999,999,999.99") // VR. TOTAL LINEA Modificado 11.03.2024 JPA
+						//oWSAdicion:cvalor 	:= TRANSFORM((SD1->D1_TOTAL+SD1->D1_VALDESC),"@E 999,999,999,999.99") // VR. TOTAL LINEA
 						aAdd(oWS:oWSinformacionAdicional:oWSLineaInformacionAdicional,oWSAdicion)
 					EndIf
 

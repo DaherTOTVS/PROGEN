@@ -298,13 +298,17 @@ Private aValor     := {}
 Private lValor     := .F.
 Private nOpcion    := nOpcx	// 2-Visulizar, 3-Incluir, 4-Alterar, 5-Excluir, 6-Generar documentos de entrada
 
+If Type("ACPOIMP") == "U"
+    Private ACPOIMP := {}
+EndIf
+
 //ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 //³ Habilita as HotKeys e botoes da barra de ferramentas         ³
 //ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
 If nOpcX == 3 .Or. nOpcX == 4
-	aButtons	:= {{"PEDIDO" ,{|| IIf(oFldInv:nOption==2,M143F5PO(),.F.)},STR0008+" - <F5> ",STR0044},; //"Selecionar Purchase Order"
+	aButtons	:= {{"PEDIDO" ,{|| IIf(oFldInv:nOption==2,M143F5PO(@oGetDad2),.F.)},STR0008+" - <F5> ",STR0044},; //"Selecionar Purchase Order"
 		{"SDUPROP",{|| IIf(oFldInv:nOption==2,M143F6PO(@oGetDad2),.F.)},STR0009+" - <F6> ",STR0045} } //"Selecionar Purchase Order ( por item )"
-	SetKey( VK_F5, { || IIf(oFldInv:nOption==2,M143F5PO()         ,.F.) } )
+	SetKey( VK_F5, { || IIf(oFldInv:nOption==2,M143F5PO(@oGetDad2)         ,.F.) } )
 	SetKey( VK_F6, { || IIf(oFldInv:nOption==2,M143F6PO(@oGetDad2),.F.) } )
 EndIf
 
@@ -677,7 +681,7 @@ If !lAutomato
 		EndIf
 	EndIf
 Else
-	If cPaisLoc $ "ARG|PER|COL|PAR"
+	If cPaisLoc $ "ARG|PER|COL|PAR|CHI"
 		If FindFunction("GetParAuto")
 			aRetAuto	:= GetParAuto("MATA143TESTCASE")
 			cActBoton	:= aRetAuto[1]
@@ -1121,7 +1125,6 @@ Local nPosDoc    := aScan(aHeader1,{|x| AllTrim(x[2]) == "DBB_ITEM"  })
 Local nPosTipo   := aScan(aHeader1,{|x| AllTrim(x[2]) == "DBB_TIPONF"})
 Local nPItDoc    := aScan(aHeader2,{|x| AllTrim(x[2]) == "DBC_ITDOC" })
 Local nPosProd   := aScan(aHeader2,{|x| AllTrim(x[2]) == "DBC_CODPRO"})
-Local nPosUnit   := aScan(aHeader2,{|x| AllTrim(x[2]) == "DBC_PRECO" })
 Local nPosTotal  := aScan(aHeader2,{|x| AllTrim(x[2]) == "DBC_TOTAL" })
 Local nPosNumPO  := aScan(aHeader2,{|x| AllTrim(x[2]) == "DBC_PEDIDO"})
 Local nPosItemPO := aScan(aHeader2,{|x| AllTrim(x[2]) == "DBC_ITEMPC"})
@@ -2311,12 +2314,12 @@ Case nOpcX == 4		//Alteracao
 
 	nDelet := 0
 
-	dbSelectArea("DBC")
 	For nCntItem := 1 To Len(aColsIt)
 		If ( !aCols1[nCntItem][Len(aHeader1)+1] )
 			For nX := 1 To Len(aColsIt[nCntItem])
 				If ( !aColsIt[nCntItem][nX][Len(aHeader2)+1] )
 					Reclock("DBC",.T.)
+					
 					For nY := 1 To Len(aHeader2)
 						If ( aHeader2[nY][10] != "V" )
 							FieldPut(FieldPos(aHeader2[nY][2]),aColsIt[nCntItem][nX][nY])
@@ -2489,7 +2492,7 @@ Return nRet
 ±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±±
 ßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßßß
 */
-Function M143F5PO()
+Function M143F5PO(oGetDad2)
 
 Local aArea      := GetArea()
 Local aAreaSA2   := SA2->(GetArea())
@@ -2550,6 +2553,8 @@ Local nZ		:= 0
 Local nY		:= 0
 Local nSalAct   := 0
 Local nTDisp    := 0
+
+Default oGetDad2 := Nil
 
 nMoedaDes     := aCols1[Val(aCols[1][nPosItDoc])][nPosMoeda]
 nMoedaPed := nMoedaDes
@@ -2713,6 +2718,12 @@ If lContinua .And. (cTipoNFe $ "5|8|A") // FOB // CIF
 
 		Processa({|| M143ProcPO(aF5Pc,nOpc,cFornece,cLoja,@nSalPed)})
 
+		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+		//³ Impede que o item obtido do PC seja deletado pela getdados do Despacho na mov das setas³
+		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+		If ValType( oGetDad2 ) == "O"
+			oGetDad2:lNewLine:=.F.
+		EndIf
 	Else
 		Help(" ",1,"A103F4")
 	EndIf
@@ -2762,7 +2773,9 @@ Local cFilialOri := ""
 Local cItDoc     := ""
 Local cItem		 := StrZero(1,Len(DBC->DBC_ITEM))
 Local lZeraCols  := .T.
+Local laColsVazia := .F.
 Local nPosItDoc	 := aScan(aHeader2,{|x| Alltrim(x[2]) == "DBC_ITDOC"  })
+Local nPosCodPro := aScan(aHeader2,{|x| Alltrim(x[2]) == "DBC_CODPRO" })
 Local nPosNumPo  := aScan(aHeader2,{|x| Alltrim(x[2]) == "DBC_PEDIDO" })
 Local nPosItemPo := aScan(aHeader2,{|x| Alltrim(x[2]) == "DBC_ITEMPC" })
 Local nPosQTD	 := aScan(aHeader2,{|x| Alltrim(x[2]) == "DBC_QUANT" })
@@ -2812,12 +2825,16 @@ If ( nOpc == 1 )
 					IF LEN(aCols)> 0
 						cItem:=SomaIt(aCols[Len(aCols),1])
 					ENDIF
-					
-
-				ELSE
-					aCols		:= {}
+				Else
+				    laColsVazia := .F.
+				    If len(aCols) == 1 .and. empty(aCols[1,nPosCodPro]) // aCols esta vazia
+					    laColsVazia := .T.
+					endif
+					// Verifica se a ultima linha esta vazia e deleta
+				    Iif (len(aCols) > 1 .and. empty(aCols[len(aCols),nPosCodPro]), eval({||(aDel(aCols, len(aCols)),aSize(aCols, Len(aCols)-1))}), nil)
+					Iif (laColsVazia, aCols := {}, cItem:=SomaIt(aCols[Len(aCols),1]))
 				ENDIF
-				lZeraCols	:= .F.
+				lZeraCols := .F.
 			EndIf
 			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 			//³Muda ordem para trazer ordenado por item                  ³
@@ -2839,8 +2856,8 @@ If ( nOpc == 1 )
 
 					nFreeQT := M143Cant(nNumInv,nPosInvOk,nPosNumPo,nPosItemPo,('SC7')->C7_NUM,('SC7')->C7_ITEM)
 
-					If !cPaisLoc $ "PER|COL|EQU|CHI"
-						If cPaisLoc $ "ARG|BOL|PAR|URU"
+					If !cPaisLoc $ "PER|COL|EQU"
+						If cPaisLoc $ "ARG|BOL|PAR|URU|CHI"
 							If ('SC7')->C7_QTDACLA > 0
 								nSalPed := SC7->C7_QUANT-SC7->C7_QUJE-('SC7')->C7_QTDACLA
 							Else
@@ -2855,8 +2872,8 @@ If ( nOpc == 1 )
 					EndIf
 
 					If (nSalPed > 0 .And. Empty(SC7->C7_RESIDUO))
-						
-						Po2Acols(SC7->(RecNo()),,nSalPed,cItem,cItDoc,.T.)
+
+					    Po2Acols(SC7->(RecNo()),,nSalPed,cItem,cItDoc,.T.)
 						cItem := SomaIt(cItem)
 						lSaldo := .T.
 					EndIf
@@ -2903,8 +2920,9 @@ Local aArrSldo		:= {}
 Local aArrayF4		:= {}
 Local aNewArray 	:= {}
 Local aF6PO			:= {}
-Local lChkPais		:= IIF(cPaisLoc == 'PER',.T.,.F.)
-Local aButtons		:= { {'PESQUISA',{||A103VisuPC(aArrSldo[IIF(lChkPais,oListBox:nAt ,oQual:nAt)][2])},STR0013,STR0094} } //"Purchase Orders", "Consultar Purchase Order"
+Local aButtons		:= { {'PESQUISA',{||A103VisuPC(aArrSldo[oListBox:nAt][2])},STR0013,STR0094} } //"Purchase Orders", "Consultar Purchase Order"
+Local aLinhaF4      := {}
+Local aCposSC7      := {'C7_LOJA', 'C7_NUM', 'C7_ITEM', 'C7_QUANT', 'C7_DATPRF', 'C7_PRODUTO', 'C7_DESCRI', 'C7_TIPO', 'C7_PRECO', 'C7_EMISSAO', 'C7_LOCAL', 'C7_OBS'}
 
 Local bSavKeyF5		:= SetKey(VK_F5,Nil)
 Local bSavKeyF6     := SetKey(VK_F6,Nil)
@@ -2930,12 +2948,14 @@ Local nZ     		:= 0
 Local nOpcA 		:= 0
 Local nSalPed     	:= 0
 Local cTipoNFe    	:= aCols1[nNumInv][nPosTipo]
-Local cSeek			:= If(oFldInv:nOption > 1,aCols1[nNumInv][nPosCF] + aCols1[nNumInv][nPosLoja],"")
+Local cSeek			:= If(oFldInv:nOption > 1,aCols1[nNumInv][nPosCF] + aCols1[nNumInv][nPosLoja],"") 
 Local cVar			:= If(oFldInv:nOption > 1,aCols[n][nPosPrd],"")
 Local cItDoc      	:= ""
 Local cItem       	:= ""
 Local cFornece   	:= aCols1[nNumInv][nPosCF]
 Local cLoja      	:= aCols1[nNumInv][nPosLoja]
+Local cX3_Tipo      := ""
+Local cX3_CAMPO     := ""
 
 Local oQual
 Local oDlg
@@ -2952,170 +2972,168 @@ Local bDesmTod 	:={||}
 Local bLine 	:={||}
 
 Local lAllPC        := .T.
+Local lAchoI := .T.
 Local l143POSel		:= ExistBlock("MT143POSEL")
+Local lMT143F6I := ExistBlock("MT143F6I")
+Local lMT143F6P := ExistBlock("MT143F6P")
 
 Local nW:= 0
 Local nQtdUti:= 0
 Local nAchoN := 0
 Local nAchoI := 0
-Local lAchoI := .T.
+Local nCpo := 0
+Local nTotalCpo := 0
 
-If lChkPais
-	bMarcTod 	:={||(MarcProd( oListBox , @aArrayF4 , @oDlg , "M" ),oListBox:nColPos := 1,oListBox:Refresh())}
-	bDesmTod 	:={||(MarcProd( oListBox , @aArrayF4 , @oDlg , "D" ),oListBox:nColPos := 1,oListBox:Refresh())}
-Endif
+If lMT143F6P
+	Help(" ", 1, "MT143F6P", , STR0110, 2, 0,,,,,, {STR0111}) //"El punto de entrada MT143F6P fue descontinuado. Usar el punto de entrada MT143F6I." "Usar el punto de entrada MT143F6I."
+EndIf
+
+bMarcTod 	:={||(MarcProd( oListBox , @aArrayF4 , @oDlg , "M" ),oListBox:nColPos := 1,oListBox:Refresh())}
+bDesmTod 	:={||(MarcProd( oListBox , @aArrayF4 , @oDlg , "D" ),oListBox:nColPos := 1,oListBox:Refresh())}
 
 If cTipoNFe == "5" .Or. cTipoNFe == "8"  // FOB // CIF
-	nMoedaDes        := aCols1[nNumInv][nPosMoeda]
-	dbSelectArea("SC7")
-	If Empty(cVar) .OR. lChkPais
-		dbSetOrder(9) //C7_FILENT+C7_FORNECE+C7_LOJA+C7_NUM+C7_ITEM
-	Else
-		dbSetOrder(6)  //C7_FILENT+C7_PRODUTO+C7_FORNECE+C7_LOJA+C7_NUM+C7_ITEM+C7_ITEMGRD
-		cSeek := cVar + cSeek
-	EndIf
-
-	MsSeek(xFilEnt(xFilial("SC7"))+cSeek)
-
-	If cPaisLoc == "CHI" .And. Len(Acols) >= 1 .And. ! Empty(aCols[n][nPosPrd]) .And. Acols[n][nPosQTD] <> 0
-		cVar := aCols[n][nPosPrd]
-	Endif
-
-	If !Eof()
-
-		If Empty(cVar) .OR. lChkPais
-			cCond := "C7_FILENT+C7_FORNECE+C7_LOJA"
-		Else
-			cCond := "C7_FILENT+C7_PRODUTO+C7_FORNECE+C7_LOJA"
+		If lMT143F6I
+			aNewArray := ExecBlock( "MT143F6I", .F., .F., {aCposSC7} )
+			If ValType(aNewArray) == 'A' .And. Len(aNewArray) > 0
+				aCposSC7 := aClone(aNewArray)
+			EndIf
 		EndIf
 
-		While !Eof() .And. xFilEnt(cFilial)+cSeek == &(cCond)
-			If lChkPais
+		aCab := aClone(GetColTitl(aCposSC7))
+
+		nMoedaDes := aCols1[nNumInv][nPosMoeda]
+		dbSelectArea("SC7")
+		If Empty(cVar)
+			dbSetOrder(9) //C7_FILENT+C7_FORNECE+C7_LOJA+C7_NUM+C7_ITEM
+		Else
+			dbSetOrder(6)  //C7_FILENT+C7_PRODUTO+C7_FORNECE+C7_LOJA+C7_NUM+C7_ITEM+C7_ITEMGRD
+			cSeek := cVar + cSeek
+		EndIf
+		MsSeek(xFilEnt(xFilial("SC7"))+cSeek)
+		If !Eof()
+
+			If Empty(cVar)
+				cCond := "C7_FILENT+C7_FORNECE+C7_LOJA"
+			Else
+				cCond := "C7_FILENT+C7_PRODUTO+C7_FORNECE+C7_LOJA"
+			EndIf
+
+			While !Eof() .And. xFilEnt(cFilial)+cSeek == &(cCond)
 				nRsMark := 0
 				aEval(aCols,{|x,y| IIf(aCols[y,nPosNumPo]==SC7->C7_NUM .AND. aCols[y,nPosItemPo]==SC7->C7_ITEM .AND. aCols[y,nPosQTD]==SC7->C7_QUANT .AND. aCols[y,len(aCols[y])] == .F. ,nRsMark++,.F.)})
-			EndIf
-			//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-			//³ Filtra os Purchase Order                                 ³
-			//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-			If (GetMV("MV_RESTNFE") == "S" .And. C7_CONAPRO == "B") .Or. C7_TPOP == "P" .Or. C7_TIPO <> 3 .Or. SC7->C7_MOEDA <> nMoedaDes;
-			.OR. nRsMark > 0
-				dbSkip()
-				Loop
-			EndIf
 
-			lAchoI := .T.
-
-			If Empty(SC7->C7_RESIDUO)
-
-				nFreeQT := 0
-				nQtdUti:= 0
 				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-				//³ Pesquisa a Quantidade utilizada em outras invoices       ³
+				//³ Filtra os Purchase Order                                 ³
 				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-				For nZ := 1 To Len(aColsIt)
-					For nY := 1 to Len(aColsIt[nZ])
-						If !aColsIt[nZ][nY][Len(aColsIt[nZ][nY])] .And. nZ <> Val(aCols[1,nPosItDoc]) .And. aCols1[nZ][nPosInvOk] != "S"
-							If aColsIt[nZ][nY][nPosNumPo] == ('SC7')->C7_NUM .And. aColsIt[nZ][nY][nPosItemPo] == ('SC7')->C7_ITEM
-								nFreeQT += aColsIt[nZ][nY][nPosQTD]
+				If (GetMV("MV_RESTNFE") == "S" .And. C7_CONAPRO == "B") .Or. C7_TPOP == "P" .Or. C7_TIPO <> 3 .Or. SC7->C7_MOEDA <> nMoedaDes;
+				.OR. nRsMark > 0
+					dbSkip()
+					Loop
+				EndIf
+
+				lAchoI := .T.
+
+				If Empty(SC7->C7_RESIDUO)
+
+					nFreeQT := 0
+					nQtdUti:= 0
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Pesquisa a Quantidade utilizada em outras invoices       ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					For nZ := 1 To Len(aColsIt)
+						For nY := 1 to Len(aColsIt[nZ])
+							If !aColsIt[nZ][nY][Len(aColsIt[nZ][nY])] .And. nZ <> Val(aCols[1,nPosItDoc]) .And. aCols1[nZ][nPosInvOk] != "S"
+								If aColsIt[nZ][nY][nPosNumPo] == ('SC7')->C7_NUM .And. aColsIt[nZ][nY][nPosItemPo] == ('SC7')->C7_ITEM
+									nFreeQT += aColsIt[nZ][nY][nPosQTD]
+								EndIf
 							EndIf
+						Next nY
+					Next nZ
+
+					For nW:= 1 to Len(aColsIt)
+						If SC7->C7_NUM == aColsIt[nW][1][nPosNumPo] .And. SC7->C7_PRODUTO == aColsIt[nW][1][nPosPrd] .And. SC7->C7_QUANT <> aColsIt[nW][1][nPosQTD]
+							nQtdUti+= aColsIt[nW][1][nPosQTD]
 						EndIf
-					Next nY
-				Next nZ
+					Next nW
 
-				For nW:= 1 to Len(aColsIt)
-					If SC7->C7_NUM == aColsIt[nW][1][nPosNumPo] .And. SC7->C7_PRODUTO == aColsIt[nW][1][nPosPrd] .And. SC7->C7_QUANT <> aColsIt[nW][1][nPosQTD]
-						nQtdUti+= aColsIt[nW][1][nPosQTD]
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Pesquisa a Quantidade utilizada na Invoice Atual         ³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					For nX := 1 To Len( aCols )
+						If !ATail(aCols[nX]) .And.  aCols[nX,nPosPrd] == C7_PRODUTO .And. aCols[nX,nPosNumPo] == C7_NUM .And. aCols[nX,nPosItemPo] == C7_ITEM
+							nFreeQT += aCols[ nX,nPosQTD ]
+						EndIf
+					Next
+
+					If cPaisLoc $ 'PER|COL'
+						nFreeQT := (SC7->C7_QUANT - SC7->C7_QUJE - nFreeQT - M143CantBD(SC7->C7_NUM,SC7->C7_PRODUTO,M->DBA_HAWB, SC7->C7_ITEM))
+					Elseif cPaisLoc $ "ARG|CHI|PAR"
+						nFreeQT := (SC7->C7_QUANT - SC7->C7_QUJE - nFreeQT - (SC7->C7_QTDACLA - nQtdUti) - M143CantBD(SC7->C7_NUM,SC7->C7_PRODUTO,M->DBA_HAWB))
+					Else
+						nFreeQT := (SC7->C7_QUANT - SC7->C7_QUJE - (SC7->C7_QTDACLA - nQtdUti) - nFreeQT)
 					EndIf
-				Next nW
 
-				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-				//³ Pesquisa a Quantidade utilizada na Invoice Atual         ³
-				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-				For nX := 1 To Len( aCols )
-					If !ATail(aCols[nX]) .And.  aCols[nX,nPosPrd] == C7_PRODUTO .And. aCols[nX,nPosNumPo] == C7_NUM .And. aCols[nX,nPosItemPo] == C7_ITEM
-						nFreeQT += aCols[ nX,nPosQTD ]
-					EndIf
-				Next
+					If (nFreeQT > 0)
 
-				If cPaisLoc $ 'PER|COL|CHI'
-					nFreeQT := (SC7->C7_QUANT - SC7->C7_QUJE - nFreeQT - M143CantBD(SC7->C7_NUM,SC7->C7_PRODUTO,M->DBA_HAWB, SC7->C7_ITEM))
-				Elseif cPaisLoc == "ARG"
-					nFreeQT := (SC7->C7_QUANT - SC7->C7_QUJE - nFreeQT - (SC7->C7_QTDACLA - nQtdUti) - M143CantBD(SC7->C7_NUM,SC7->C7_PRODUTO,M->DBA_HAWB))
-				Else
-					nFreeQT := (SC7->C7_QUANT - SC7->C7_QUJE - (SC7->C7_QTDACLA - nQtdUti) - nFreeQT)
-				EndIf
+						nAchoN := aScan(aCols,{|x| Alltrim(x[12]) == &("C7_NUM")})
+						nAchoI := aScan(aCols,{|x| Alltrim(x[13]) == &("C7_ITEM")})
 
-				If (nFreeQT > 0)
-
-					nAchoN := aScan(aCols,{|x| Alltrim(x[12]) == &("C7_NUM")})
-					nAchoI := aScan(aCols,{|x| Alltrim(x[13]) == &("C7_ITEM")})
-
-					IF nAchoN > 0
-						IF nAchoI > 0
-							IF nFreeQT == 0
-								lAchoI := .F.
-							EndIF
+						IF nAchoN > 0
+							IF nAchoI > 0
+								IF nFreeQT == 0
+									lAchoI := .F.
+								EndIF
+							ENDIF
 						ENDIF
-					ENDIF
 
-					If lAchoI
-						If lChkPais
-							AAdd( aArrayF4,{.F., SC7->C7_LOJA,;
-							SC7->C7_NUM,;
-							SC7->C7_ITEM,;
-							TransForm(nFreeQT,PesqPict("SC7","C7_QUANT")),;
-							DTOC(SC7->C7_DATPRF),;
-							Substr(C7_PRODUTO,1,15),;
-							Substr(C7_DESCRI,1,20),;
-							"PO",;
-							TransForm(SC7->C7_PRECO,PesqPict("SC7","C7_PRECO")) ,;
-							DTOC(SC7->C7_EMISSAO) ,;
-							SC7->C7_Local ,;
-							SC7->C7_OBS } )
-						Else
-							AAdd( aArrayF4,{SC7->C7_LOJA,;
-							SC7->C7_NUM,;
-							SC7->C7_ITEM,;
-							TransForm(nFreeQT,PesqPict("SC7","C7_QUANT")),;
-							DTOC(SC7->C7_DATPRF),;
-							Substr(C7_PRODUTO,1,15),;
-							Substr(C7_DESCRI,1,20),;
-							"PO",;
-							TransForm(SC7->C7_PRECO,PesqPict("SC7","C7_PRECO")) ,;
-							DTOC(SC7->C7_EMISSAO) ,;
-							SC7->C7_Local ,;
-							SC7->C7_OBS } )
-						Endif
-						
-						AAdd( aArrSldo,{nFreeQT,SuperRecno()} )
+						If lAchoI
+							aLinhaF4 := {}
+							aAdd(aLinhaF4, .F.)
+
+							For nCpo := 1 To Len(aCposSC7)
+								cX3_Tipo := GetSX3Cache(aCposSC7[nCpo], "X3_TIPO") 
+								If GetSX3Cache(aCposSC7[nCpo], "X3_ARQUIVO") == "SC7" .and.  GetSX3Cache(aCposSC7[nCpo], "X3_CONTEXT") <> "V"
+									cX3_CAMPO := "SC7->" + aCposSC7[nCpo]
+									If aCposSC7[nCpo] == "C7_QUANT"
+										aAdd(aLinhaF4, TransForm(nFreeQT,PesqPict("SC7","C7_QUANT")))
+									ElseIf cX3_TIPO == "C" .or. cX3_TIPO == "M"
+										aAdd(aLinhaF4, &(cX3_CAMPO))
+									ElseIf cX3_TIPO = "D"
+										aAdd(aLinhaF4, DTOC(&(cX3_CAMPO)))
+									ElseIf cX3_TIPO = "N"
+										aAdd(aLinhaF4, TransForm(&(cX3_CAMPO),PesqPict("SC7",aCposSC7[nCpo])))
+									Endif
+								Endif
+							Next nCpo
+							
+							aAdd (aArrayF4, aLinhaF4)
+							AAdd( aArrSldo,{nFreeQT,SuperRecno()} )
+
+						EndIf
 
 					EndIf
 
 				EndIf
 
-			EndIf
+				dbSkip()
 
-			dbSkip()
+			EndDo
 
-		EndDo
+			If !Empty(aArrayF4)
 
-		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-		//³ Efetua a chamada do ponto de entrada                     ³
-		//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-		If ExistBlock( "MT143F6P" )
-			aNewArray := ExecBlock( "MT143F6P", .F., .F.,{aArrayF4} )
-			If ValType(aNewArray) == 'A'
-				aArrayF4 := aNewArray
-			Endif
-		EndIf
+				nTotalCpo := Len(aCab)
+				For nCpo := 1 To nTotalCpo
+					If nCpo == 1
+						cLine := "{If(aArrayF4[oListBox:nAt,1],oOk,oNo)"
+					Else
+						cLine += "," + "aArrayF4[oListBox:nAT]["+Alltrim(Str(nCpo))+"]"
+						If nCpo == nTotalCpo
+							cLine += "} "
+						EndIf
+					EndIf
+				Next nCpo
 
-		If !Empty(aArrayF4)
-			
-			If lChkPais
-
-				cLine := "{If(aArrayF4[oListBox:nAt,1],oOk,oNo),aArrayF4[oListBox:nAT][2],aArrayF4[oListBox:nAT][3],aArrayF4[oListBox:nAT][4],aArrayF4[oListBox:nAT][5],aArrayF4[oListBox:nAT][6],aArrayF4[oListBox:nAT][7],aArrayF4[oListBox:nAT][8],aArrayF4[oListBox:nAT][9],aArrayF4[oListBox:nAT][10],aArrayF4[oListBox:nAT][11],aArrayF4[oListBox:nAT][12] } "
 				bLine := &( "{ || " + cLine + " }" )
-				aCab := {" ",STR0014,STR0044,STR0015,STR0016,STR0017,STR0018,STR0019,STR0020,STR0021,STR0022,STR0023} //"Loja"###"Purchase"###"Item"###"Saldo"###"Entrega"###"Produto"###"Descricao"###"Tipo"###"Valor Unit."###"Emissao"###"Local"###"Local"
 
 				DEFINE MSDIALOG oDlg FROM 050,040  TO 300,541 TITLE STR0013+" - <F4> " Of oMainWnd PIXEL //"Item Purchase Order"
 
@@ -3126,69 +3144,38 @@ If cTipoNFe == "5" .Or. cTipoNFe == "8"  // FOB // CIF
 				oCheck1 := TCheckBox():New(108,20,STR0107 ,{|x| If(PCount()>0, lCheck:=x, lCheck) },oDlg,220,21,,,,,,,,.T.,,,) //"Marcar / Desmarcar todos los ítems"
 				oCheck1:bChange := {||Iif(lCheck, Eval(bMarcTod), Eval(bDesmTod)) }
 			
-				If !Empty(cVar)
-					@ 015,004 SAY STR0018 Of oDlg PIXEL SIZE 047,009 //"Produto"
-					@ 014,030 MSGET cVar PICTURE PesqPict('SB1','B1_COD') When .F. Of oDlg PIXEL SIZE 080,009
-				Else
-					@ 015,004 SAY STR0024 Of oDlg PIXEL SIZE 120,009 //'Selecione o Purchase Order'
-				EndIf
+				@ 015,004 SAY STR0024 Of oDlg PIXEL SIZE 120,009 //'Selecione o Purchase Order'
 
 				ACTIVATE MSDIALOG oDlg CENTERED ON INIT EnchoiceBar(oDlg,{||(nOpca:=1,nSavQual:=oListBox:nAt, oDlg:End())},{||(nOpc := 1,nSavQual := oListBox:nAt,oDlg:End())},,aButtons)
 
-			Else
+				If nOpca == 1
+					dbSelectArea("SC7")
+					MsGoto(aArrSldo[nSavQual][2])
+					nSalPed:= aArrSldo[nSavQual][1]
+					lAllPC := SC7->C7_QUANT == nSalPed
+					cItem  := If( Len(aCols) == 1 , Nil , Soma1(aCols[Len(aCols)-1][nPosItem]) )
+					cItDoc := aCols[1,nPosItDoc]
 
-				DEFINE MSDIALOG oDlg FROM 30,20  TO 265,521 TITLE STR0013 Of oMainWnd PIXEL //"Purchase Orders"
+					// Ponto de entrada que permite visualizar POs marcadas
+					If l143POSel
+						// Cria aF6PO semelhante ao aF5PC para que os arrays fiquem iguais tanto no vinculo por item quanto por documento
+						aF6PO := {.T.,SC7->C7_FILIAL,SC7->C7_NUM,SC7->C7_EMISSAO,"PO"}
+						ExecBlock("MT143POSEL",.F.,.F.,{aF6PO,cFornece,cLoja})
+					EndIf
 
-				aCab := {STR0014,STR0008,STR0015,STR0016,STR0017,STR0018,STR0019,STR0020,STR0021,STR0022,STR0023,STR0023} //"Loja"###"Purchase"###"Item"###"Saldo"###"Entrega"###"Produto"###"Descricao"###"Tipo"###"Valor Unit."###"Emissao"###"Local"###"Local"
-
-				oQual := TWBrowse():New( 29,4,243,76,,aCab,{15,30,15,40,30,60,70,15,40,30},oDlg,,,,,,,,,,,,.F.,,.T.,,.F.,,,)
-				oQual:SetArray(aArrayF4)
-				oQual:bLine := { || aArrayF4[oQual:nAT] }
-
-				If !Empty(cVar)
-					@ 015,004 SAY STR0018 Of oDlg PIXEL SIZE 047,009 //"Produto"
-					@ 014,030 MSGET cVar PICTURE PesqPict('SB1','B1_COD') When .F. Of oDlg PIXEL SIZE 080,009
-				Else
-					@ 015,004 SAY STR0024 Of oDlg PIXEL SIZE 120,009 //'Selecione o Purchase Order'
-				EndIf
-
-				ACTIVATE MSDIALOG oDlg ON INIT EnchoiceBar(oDlg,{|| nSavQual:=oQual:nAT,nOpca:=1,oDlg:End()},{||oDlg:End()},,aButtons)
-			
-			EndIf
-
-			If nOpca == 1
-				dbSelectArea("SC7")
-				MsGoto(aArrSldo[nSavQual][2])
-				nSalPed:= aArrSldo[nSavQual][1]
-				lAllPC := SC7->C7_QUANT == nSalPed
-				cItem  := If( Len(aCols) == 1 , Nil , Soma1(aCols[Len(aCols)-1][nPosItem]) )
-				cItDoc := aCols[1,nPosItDoc]
-
-				// Ponto de entrada que permite visualizar POs marcadas
-				If l143POSel
-					// Cria aF6PO semelhante ao aF5PC para que os arrays fiquem iguais tanto no vinculo por item quanto por documento
-					aF6PO := {.T.,SC7->C7_FILIAL,SC7->C7_NUM,SC7->C7_EMISSAO,"PO"}
-					ExecBlock("MT143POSEL",.F.,.F.,{aF6PO,cFornece,cLoja})
-				EndIf
-
-				If lChkPais 
 					Processa({|| M143SelPO(aArrayF4,nOpca,cFornece,cLoja,@nSalPed)})
-				Else
-					Po2Acols(SC7->(RecNo()),,nSalPed,cItem,cItDoc,.F.)
-				EndIf
-				//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
-				//³ Impede que o item obtido do PC seja deletado pela getdados do Despacho na mov das setas³
-				//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
-				If ValType( oGetDad2 ) == "O"
-					oGetDad2:lNewLine:=.F.
+
+					//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
+					//³ Impede que o item obtido do PC seja deletado pela getdados do Despacho na mov das setas³
+					//ÀÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÙ
+					If ValType( oGetDad2 ) == "O"
+						oGetDad2:lNewLine:=.F.
+					EndIf
 				EndIf
 			EndIf
 		Else
 			Help(" ",1,"A103F4")
 		EndIf
-	Else
-		Help(" ",1,"A103F4")
-	EndIf
 
 	//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 	//³ Efetua a chamada do ponto de entrada                     ³
@@ -3256,7 +3243,7 @@ If nItem == Nil .Or. nItem > Len(aCols)
 	EndIf
 	For nX := 1 to Len(aHeader)
 		If Trim(aHeader[nX][2]) == "DBC_ITEM"
-			aCols[Len(aCols)][nX] 	:= IIF(cItem<>Nil,cItem,StrZero(1,Len(DBC->DBC_ITEM)))
+		    aCols[Len(aCols)][nX] 	:= IIF(cItem<>Nil,cItem,StrZero(1,Len(DBC->DBC_ITEM)))
 		ElseIf Trim(aHeader[nX][2]) == "DBC_ITDOC"
 			aCols[Len(aCols)][nX] 	:= cItDoc
 		ElseIf Trim(aHeader[nX][2]) == "DBC_ALI_WT"
@@ -4263,7 +4250,7 @@ If nOpcion == 4
 	EndIf
 EndIf
 
-If nOrigem == 2 .and. cPaisLoc == 'PER'
+If nOrigem == 2
 	lItemDel :=  aCols[n,Len(aCols[n])]
 	If lItemDel
 		lRsMark := MT143VLDEL(aCols, aCols[n,nPosNumPo], aCols[n,nPosItemPo], aCols[n,nPosQTD], .F. )// validacion para borrado
@@ -4555,6 +4542,8 @@ Local nTotDupl := 0
 Local lIVCPAR :=  (cPaisLoc == "PAR" .AND. FindFunction("fM143VCH") )
 Local lUpVCPAR := (cPaisLoc == "PAR" .AND. FindFunction("fIVC143") )
 Local aAuxImp:= {}
+Local cCodMunC := ""
+Local lIntGC   := SuperGetMV("MV_VEICULO",,"N") == "S" .AND. ExistFunc('VX0000055_A143GeraNF') // DMS - Veiculos/Auto-Pecas/Oficina
 
 Private nTotalNf:= 0
 Private nTotalMerc:=0
@@ -5287,6 +5276,9 @@ If lRet .And. (DBA->DBA_OK <> "3")
 							If DBB->(ColumnPos("DBB_SERIE2")) > 0
 								aAdd(aCabs, {"F1_SERIE2"  ,	DBB->DBB_SERIE2 ,  Nil})
 							EndIf
+							If DBB->(ColumnPos("DBB_DIACTB")) > 0
+								aAdd(aCabs, {"F1_DIACTB"  ,	DBB->DBB_DIACTB ,  Nil})
+							EndIf
 						EndIF
 						lProvDom:=iif(cPaisLoc=="PER",ProvDomicil(),.F.)
 
@@ -5314,6 +5306,10 @@ If lRet .And. (DBA->DBA_OK <> "3")
 							If DBB->(FieldPos("DBB_NUMDES"))>0 .And. !Empty(DBB->DBB_NUMDES)
 								aAdd(aCabs, {"F1_NUMDES" , DBB->DBB_NUMDES ,  Nil})
 							EndIf
+						EndIf
+						If cPaisLoc == "COL"
+							cCodMunC:= lxColCodMun()
+							aAdd(aCabs, {"F1_CODMUN", cCodMunC,  Nil})
 						EndIf
 				Else
 						dbSelectArea("DBC")
@@ -5567,6 +5563,9 @@ If lRet .And. (DBA->DBA_OK <> "3")
 						If DBB->(ColumnPos("DBB_SERIE2")) > 0
 							aAdd(aCabs, {"F1_SERIE2"  ,	DBB->DBB_SERIE2 ,  Nil})
 						EndIf
+						If DBB->(ColumnPos("DBB_DIACTB")) > 0
+								aAdd(aCabs, {"F1_DIACTB"  ,	DBB->DBB_DIACTB ,  Nil})
+							EndIf
 					EndIF
 					If DBB->DBB_TIPONF $ "67D" // Frete // Seguro // DUA
 						aAdd(aCabs, {"F1_TIPODOC" , "14"        ,  Nil})
@@ -5623,6 +5622,10 @@ If lRet .And. (DBA->DBA_OK <> "3")
 					Next nY
 					If cPaisLoc == "EQU"
 						aAdd(aCabs, {"F1_NUMREF", DBA->DBA_NUMREF,  Nil})
+					EndIf
+					If cPaisLoc == "COL"
+						cCodMunC:= lxColCodMun()
+						aAdd(aCabs, {"F1_CODMUN", cCodMunC,  Nil})
 					EndIf
 					EndIf
 					aTesValRat := {}
@@ -6485,6 +6488,10 @@ If lRet .And. (DBA->DBA_OK <> "3")
 						Mata143Met(DBB->DBB_TIPONF)
 					ElseIf cPaisLoc $ "COL|PER"
 						nDocNoGer++
+					EndIf
+
+					If lIntGC
+						VX0000055_A143GeraNF(cTipoNFE,lGerou,SF1->F1_DOC,SF1->F1_SERIE,SF1->F1_FORNECE,SF1->F1_LOJA)
 					EndIf
 
 				EndIf
@@ -9428,7 +9435,7 @@ Function M143CantBD(cPedido,cCodPro,cDesp, cItemPO)
 	dbSelectArea("DBCQT")
 	DBCQT->(dbGoTop())
 	While !DBCQT->(Eof())
-		If cPaisLoc$"PER|COL|EQU|ARG" .And. (IsInCallStack("M143F6PO") .Or. IsInCallStack("M143ProcPO") .Or. IsInCallStack("M143SelPO"))
+		If cPaisLoc$"PER|COL|EQU|ARG|CHI|PAR" .And. (IsInCallStack("M143F6PO") .Or. IsInCallStack("M143ProcPO") .Or. IsInCallStack("M143SelPO"))
 			If DBB->(MsSeek(cFilDBB+DBCQT->(DBC_HAWB+DBC_ITDOC))) .And. IIF(cPaisLoc$"PER|COL|EQU",DBB->DBB_OK == "S",.T.)
 				DBCQT->(dbSkip())
 				Loop
@@ -9820,6 +9827,9 @@ If ( nOpc == 1 )
 
 						nCantBD := M143CantBD(SC7->C7_NUM,SC7->C7_PRODUTO,M->DBA_HAWB,SC7->C7_ITEM)
 						nSalPed := SC7->C7_QUANT-SC7->C7_QUJE-nFreeQT-nCantBD
+						IF cPaisLoc $ "ARG|CHI|PAR"
+							nSalPed := SC7->C7_QUANT-SC7->C7_QUJE -SC7->C7_QTDACLA-nFreeQT-nCantBD
+						ENDIF
 						
 						If (nSalPed > 0 .And. Empty(SC7->C7_RESIDUO)) .and. aArrayF4[nX][1]
 							Po2Acols(SC7->(RecNo()),,nSalPed,cItem,cItDoc, lZeraCols)
@@ -9914,3 +9924,105 @@ Local lRet := .T.
 SC7->(dbCloseArea())
 RestArea(aArea)
 Return lRet
+
+/*/{Protheus.doc} lxColCodMun
+Obtiene el código de municipio del proveedor para asignarlo a la factura de gastos 
+@author Alfredo Medrano
+@since 29/01/2024
+@version 1.0
+@param  cCodmun, caracter, código municipio
+@type function
+@return cCodmun
+/*/
+Function lxColCodMun()
+	Local aAreaMun := GetArea()
+	Local cCodMun := ""
+
+	DbSelectArea("SA2")
+	SA2->(dbSetOrder(1)) // A2_FILIAL+A2_FORNEC+A2_LOJA
+	
+	If SA2->(dbSeek(xFilial("SA2") + DBB->DBB_FORNEC + DBB->DBB_LOJA))
+		cCodMun := SA2->A2_COD_MUN
+	Endif
+
+	RestArea(aAreaMun)
+
+Return cCodMun
+
+/*/{Protheus.doc} GetColTitl
+	Recupera el título de la tabla SX3 para los campos del array aCpos.
+	@type  Static Function
+	@author luis.samaniego
+	@since date
+	@version 1.0
+	@param aCpos, array, Array con información de campos de SX3.
+	@return aTitlCpos, Array, Array con los títulos de los campos.
+	/*/
+Static Function GetColTitl(aCpos)
+Local aAuxCpos  := {}
+Local aTitlCpos := {}
+Local nCpo      := 0
+
+Default aCpos := {}
+
+	aAuxCpos := aClone(aCpos)
+	aAdd(aTitlCpos, "")
+	For nCpo := 1 To Len(aAuxCpos)
+		If GetSX3Cache(aAuxCpos[nCpo], "X3_ARQUIVO") == "SC7" .And.  GetSX3Cache(aAuxCpos[nCpo], "X3_CONTEXT") <> "V"
+			aAdd(aTitlCpos, Alltrim(FWX3Titulo(aAuxCpos[nCpo])))
+		EndIf
+	Next nCpo
+
+Return aTitlCpos 
+
+/*/{Protheus.doc} VerifDoc
+	Verifica se existe Invoice Gastos em Despacho e posiciona corretamente no Doc. Origem
+	@type  Function
+	@author pedro.candido
+	@since 16/10/2024
+	@version 1.0
+	@param aHeader, array, Array con información de encabezado SD1.
+	@param aCols, array, Array que contiene los Items SD1.
+	@param aHeader1, array, Array con información de encabezado del grid DBB.
+	@param aCols1, Array que contiene los Items del grid( Invoices DBB).
+	@param cForOriDBB, caracter, código Proveedor Origem.
+	@param cLojOriDBB, caracter, código Tienda proveedor Origem.
+	@return NIL
+	/*/
+Function VerifDoc(aHeader,aCols,aHeader1,aCols1,cForOriDBB,cLojOriDBB)
+Local lMat143    := IIf(Funname()=="MATA143", .T., .F.)
+Local nX         := 0
+Local nPosTipoNF := 0
+Local nPosNfOri  := 0
+Local nPosSerOri := 0
+Local lValid	 := .F.
+
+Default aHeader    := {}
+Default aCols      := {}
+Default aHeader1   := {}
+Default aCols1     := {}
+Default cForOriDBB := ""
+Default cLojOriDBB := ""
+
+If lMat143
+	lValid := !((Empty(aHeader) .Or. Empty(aCols) .Or. Empty(aHeader1) .Or. Empty(aCols1) .Or. Empty(cForOriDBB) .Or. Empty(cLojOriDBB)))
+
+	If lValid
+		nPosTipoNF := aScan(aHeader1,{|x| AllTrim(x[2]) == "DBB_TIPONF"} )
+		nPosNfOri  := aScan(aHeader,{|x| AllTrim(x[2]) == "D1_NFORI"} )
+		nPosSerOri := aScan(aHeader,{|x| AllTrim(x[2]) == "D1_SERIORI"} )
+	EndIf
+
+	lValid := lValid .And. (nPosTipoNF * nPosNfOri * nPosSerOri) > 0
+EndIf
+
+If ( lValid .And. FindFunction("buscaRegCH"))
+	For nX:= 1 To len(aCols1) //aCols1 = tabela DBB (Invoices Despacho)
+		If (aCols1[nX][nPosTipoNF] == "A") // Verifica se Invoice é Doc.Gastos
+			buscaRegCH(xFilial("SF1"),aCols[n][nPosNfOri],aCols[n][nPosSerOri],cForOriDBB,cLojOriDBB,lMat143,aCols[n][nPosSerOri])
+			Exit
+		EndIf
+	Next nX	
+EndIf
+
+Return
