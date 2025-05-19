@@ -152,6 +152,18 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 		Endif   */
 		
 		lViewPDF := !lEmail
+
+		If ExistDir("V:")
+			If !ExistDir("V:\spool\")
+				MakeDir("V:\spool\")
+			EndIf
+			cPath := "V:\spool\"
+		ElseIf ExistDir("C:")
+			If !ExistDir("C:\spool\")
+				MakeDir("C:\spool\")
+			EndIf
+			cPath := "C:\spool\"
+		EndIf
 		
 		//ÚÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄÄ¿
 		//³Define que a impressao deve ser RETRATO³
@@ -159,13 +171,16 @@ Private	_nQtdReg	:= 0,;		// Numero de registros para intruir a regua
 		lAdjustToLegacy := .T.   //.F.
 		lDisableSetup  := .F.
 		cFilename := Criatrab(Nil,.F.)
-		oPrint := FWMSPrinter():New(cFilename, IMP_PDF, lAdjustToLegacy, , lDisableSetup,,,,,,,lViewPDF)
+		cFilename := "PC"+cNumPed+"_"+time()+".pdf"
+		// oPrint := FWMSPrinter():New(cFilename, IMP_PDF, lAdjustToLegacy,     , lDisableSetup,   ,,,   ,,,lViewPDF)
+		oPrint := FWMsPrinter():New(cFilename, IMP_PDF, lAdjustToLegacy,cPath,.T.           ,.T.,,,.T.,,,.T.,)
+
 	//	oPrint:Setup()
 		oPrint:SetResolution(78)
 		oPrint:SetPortrait() // ou SetLandscape()
 		oPrint:SetPaperSize(DMPAPER_A4) 
 		oPrint:SetMargin(10,10,10,10) // nEsquerda, nSuperior, nDireita, nInferior 
-		oPrint:cPathPDF := "C:\TEMP\" // Caso seja utilizada impressão em IMP_PDF 
+		oPrint:cPathPDF := cPath // Caso seja utilizada impressão em IMP_PDF 
 		cDiretorio := oPrint:cPathPDF
         //oPrint		:= TMSPrinter():New(OemToAnsi('Pedido de Compras')),;
 		

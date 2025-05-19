@@ -110,7 +110,7 @@ User Function TFBANC()
         cQuery += "WHERE " +cSEK+".EK_FILIAL = '" + xFilial("SEK") + "'  AND "
         cQuery += cSEK+".EK_ORDPAGO BETWEEN '" + mv_par07 + "' AND '" + mv_par08 + "' AND "
         cQuery += cSEK+".EK_TIPO = 'TF ' AND "+cSEK+".EK_BANCO = '" + mv_par02 + "' AND "
-        cQuery += cSek+".EK_LA <> 'C' AND "
+        cQuery += cSek+".EK_LA <> 'C' AND  " +cSEK+".EK_CANCEL='F' AND "
         cQuery += cSEK+".EK_AGENCIA = '" + mv_par03 + "' AND "+cSEK+".EK_CONTA = '" + mv_par04 + "' AND "
         cQuery += cSEK+".EK_EMISSAO BETWEEN '"+dTos(mv_par05)+"' AND '"+dTos(mv_par06) + "' AND "
         cQuery += cSEK+".D_E_L_E_T_ <> '*' AND "
@@ -207,7 +207,7 @@ User Function GenPago
                 if empty(Posicione("SA2",1, xFilial("SA2") + TRB->EK_FORNECE + TRB->EK_LOJA, "A2_CGC"))
                     cNit        := StrZero(Val(Alltrim(Posicione("SA2",1, xFilial("SA2") + TRB->EK_FORNECE + TRB->EK_LOJA, "A2_PFISICA"))),15)			//cNit	 	:= Posicione("SA2",1, xFilial("SA2") + TRB->EK_FORNECE + TRB->EK_LOJA, "A2_CGC")
                 elseif empty(Posicione("SA2",1, xFilial("SA2") + TRB->EK_FORNECE + TRB->EK_LOJA, "A2_PFISICA"))
-                    cNit        := StrZero(Val(Substr(Alltrim(Posicione("SA2",1, xFilial("SA2") + TRB->EK_FORNECE + TRB->EK_LOJA,"A2_CGC")),1,9)),15)
+                    cNit        := StrZero(Val(Substr(Alltrim(Posicione("SA2",1, xFilial("SA2") + TRB->EK_FORNECE + TRB->EK_LOJA,"A2_CGC")),1,10)),15)   // se cambia de 9 a 10 JPA 20.12.2024
                 EndIF
             cCodCtaB 	:= Posicione("SA2",1, xFilial("SA2") + TRB->EK_FORNECE + TRB->EK_LOJA, "A2_XCDBNCO")	 //A2_XCDBNCO		//codigo banco del proveedor de acuerdo a las tablas de bancolombia
             cBcoDest 	:= Posicione("SA2",1, xFilial("SA2") + TRB->EK_FORNECE + TRB->EK_LOJA, "A2_NUMCON")	     //A2_XNUMCON
@@ -226,7 +226,7 @@ User Function GenPago
             if empty(Posicione("SA2",1, xFilial("SA2") + cProvBenf + cLoja2, "A2_CGC"))
                 cNit        := StrZero(Val(Alltrim(Posicione("SA2",1, xFilial("SA2") + cProvBenf + cLoja2,"A2_PFISICA"))),15)	//cNit	 	:= Posicione("SA2",1, xFilial("SA2") + TRB->EK_FORNECE + TRB->EK_LOJA, "A2_CGC")
             elseif empty(Posicione("SA2",1, xFilial("SA2") + cProvBenf + cLoja2, "A2_PFISICA"))
-                cNit        := StrZero(Val(Substr(Alltrim(Posicione("SA2",1, xFilial("SA2") + cProvBenf + cLoja2, "A2_CGC")),1,9)),15)
+                cNit        := StrZero(Val(Substr(Alltrim(Posicione("SA2",1, xFilial("SA2") + cProvBenf + cLoja2, "A2_CGC")),1,10)),15)  // se cambia de 9 a 10 JPA 20.12.2024
             EndIF
         cCodCtaB 	:= Posicione("SA2",1, xFilial("SA2") + cProvBenf + cLoja2, "A2_XCDBNCO") //A2_XCDBNCO		//codigo banco del proveedor de acuerdo a las tablas de bancolombia
         cBcoDest 	:= Posicione("SA2",1, xFilial("SA2") + cProvBenf + cLoja2, "A2_NUMCON")	 //A2_XNUMCON

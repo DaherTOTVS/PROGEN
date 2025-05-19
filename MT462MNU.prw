@@ -36,6 +36,9 @@ EndiF
 iF  Funname()=="MATA102N"
         AADD(AROTINA,{ 'Seguimiento Guia','u_SD1SEGG(SF1->F1_FORNECE,SF1->F1_LOJA,SF1->F1_DOC,SF1->F1_SERIE)',0,5})	
 EndiF
+iF  Funname()=="MATA465N"
+        AADD(AROTINA,{ 'Seguimiento Nota','u_SD1SEGNC(SF1->F1_FORNECE,SF1->F1_LOJA,SF1->F1_DOC,SF1->F1_SERIE)',0,2})	
+EndiF
 
 
 Return
@@ -804,6 +807,242 @@ Static Function RCarAcols1(cCliente,cLoja,cDocumento,cSerie,ldatos)
                 Posicione("SD1",10,xFilial("SD1")+QRY_SBM->D1_FORNECE+QRY_SBM->D1_LOJA+QRY_SBM->D1_SERIE+QRY_SBM->D1_DOC+QRY_SBM->D1_ITEM,"D1_SERIE"),;                                                                                                    
                 Posicione("SD1",10,xFilial("SD1")+QRY_SBM->D1_FORNECE+QRY_SBM->D1_LOJA+QRY_SBM->D1_SERIE+QRY_SBM->D1_DOC+QRY_SBM->D1_ITEM,"D1_EMISSAO"),;                                                                                                  
                 })
+            QRY_SBM->(DbSkip())
+        EndDo
+        QRY_SBM->(DbCloseArea())
+    EndIF
+    RestArea(aArea)
+Return
+
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Programa: GenTerc      ||Data: 15/05/2023 ||Empresa: PROGEN         //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Autor: Duvan Hernandez ||Empresa: TOTVS   ||Módulo: Facturacion   //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Descrição: P.E. Seguimiento de NCC                  //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+
+User Function SD1SEGNC(cCliente,cLoja,cDocumento,cSerie)
+
+Local aArea := GetArea()
+Private aHeadSBM := {}
+Private aColsSBM := {}
+Private oDlgPvt
+Private oMsGetSBM
+Private oBtnFech
+Private oBtnLege
+Private nJanLarg   := 1100
+Private nJanAltu   := 600
+Private cFontUti   := "Tahoma"
+Private oFontAno   := TFont():New(cFontUti,,-38)
+Private oFontSub   := TFont():New(cFontUti,,-20)
+Private oFontSubN  := TFont():New(cFontUti,,-20,,.T.)
+Private oFontBtn   := TFont():New(cFontUti,,-14)
+Private ldatos     := .F. 
+
+aAdd(aHeadSBM, {"Numero Nota",       "NCC",       "",                             TamSX3("D1_DOC")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Serie ",        "SER_NCC",     "",                             TamSX3("D1_SERIE")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Emision ",      "EMI_NCC",   "",                             TamSX3("D1_EMISSAO")[01],     	0,                        ".T.",              ".T.", "D", "",    ""} )
+aAdd(aHeadSBM, {"Item",          	 "IT_NCC",      "",                             TamSX3("D1_ITEM")[01],      	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Producto",          "DESP_NCC",       "",                          	 TamSX3("D1_COD")[01],   	    0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Desc Prod",         "DESP_NCC",      "",                          TamSX3("D1_XDESCRI")[01],     	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Cantidad",          "QTD_NCC",     "",      		 TamSX3("D1_QUANT")[01],     	0,                        ".T.",              ".T.", "N", "",    ""} )
+
+aAdd(aHeadSBM, {"Numero RDV",    "RDV",       "",                             TamSX3("D1_DOC")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Serie RDV",     "SER_RDV",     "",                             TamSX3("D1_SERIE")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Emision RDV",    "EMI_RDV",   "",                             TamSX3("D1_EMISSAO")[01],     	0,                        ".T.",              ".T.", "D", "",    ""} )
+aAdd(aHeadSBM, {"Item RDV.",          	 "IT_RDV",      "",                             TamSX3("D1_ITEM")[01],      	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Cantidad RDV",          "QTD_RDV",     "",      		 TamSX3("D1_QUANT")[01],     	0,                        ".T.",              ".T.", "N", "",    ""} )
+
+aAdd(aHeadSBM, {"Numero Rem. Sal.",    "REM",       "",                             TamSX3("D1_DOC")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Serie Rem. Sal.",     "SER_REM",     "",                             TamSX3("D1_SERIE")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Emision Rem. Sal.",    "EMI_REM",   "",                             TamSX3("D1_EMISSAO")[01],     	0,                        ".T.",              ".T.", "D", "",    ""} )
+aAdd(aHeadSBM, {"Item Rem. Sal.",          	 "IT_REM",      "",                             TamSX3("D1_ITEM")[01],      	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Cantidad Rem. Sal.",          "QTD_REM",     "",      		 TamSX3("D1_QUANT")[01],     	0,                        ".T.",              ".T.", "N", "",    ""} )
+
+aAdd(aHeadSBM, {"Numero FEV",    "FVE",       "",                             TamSX3("D1_DOC")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Serie FEV",     "SER_FVE",     "",                             TamSX3("D1_SERIE")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Emision FEV",    "EMI_FVE",   "",                             TamSX3("D1_EMISSAO")[01],     	0,                        ".T.",              ".T.", "D", "",    ""} )
+aAdd(aHeadSBM, {"Item FVE",          	 "IT_FVE",      "",                             TamSX3("D1_ITEM")[01],      	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Cantidad FEV",          "QTD_FVE",     "",      		 TamSX3("D1_QUANT")[01],     	0,                        ".T.",              ".T.", "N", "",    ""} )
+
+aAdd(aHeadSBM, {"Numero PV",    "PEDIDO",       "",                             TamSX3("D1_DOC")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Emision PV",    "EMI_PEDIDO",   "",                             TamSX3("D1_EMISSAO")[01],     	0,                        ".T.",              ".T.", "D", "",    ""} )
+aAdd(aHeadSBM, {"Item PV",          	 "IT_PEDIDO",      "",                             TamSX3("D1_ITEM")[01],      	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Cantidad PV",          "QTD_PEDIDO",     "",      		 TamSX3("D1_QUANT")[01],     	0,                        ".T.",              ".T.", "N", "",    ""} )
+
+
+Processa({|| RCarAcolsNC(cCliente,cLoja,cDocumento,cSerie,@ldatos)}, "Processando ... Por favor espere ...")
+if ldatos=.F.
+    Return
+else   
+
+DEFINE MSDIALOG oDlgPvt TITLE "Proceso para consulta relacionada" FROM 000, 000  TO nJanAltu, nJanLarg COLORS 0, 16777215 PIXEL
+@ 004, 003 SAY "Proceso Seguimiento" SIZE 200, 030 FONT oFontAno  OF oDlgPvt COLORS RGB(149,179,215) PIXEL
+//@ 004, 150 SAY "Seguimiento"       SIZE 200, 030 FONT oFontSub  OF oDlgPvt COLORS RGB(031,073,125) PIXEL
+//@ 014, 150 SAY "SC9" 					    SIZE 200, 030 FONT oFontSubN OF oDlgPvt COLORS RGB(031,073,125) PIXEL
+@ 006, (nJanLarg/2-001)-(0052*01) BUTTON oBtnFech  PROMPT "Salir"  SIZE 050, 018 OF oDlgPvt ACTION (oDlgPvt:End())                               FONT oFontBtn PIXEL
+//@ 006, (nJanLarg/2-001)-(0052*03) BUTTON oBtnSalv  PROMPT "Guardar"        SIZE 050, 018 OF oDlgPvt ACTION (fSalvar(cCliente,cLoja,cDocumento,cSerie)) FONT oFontBtn PIXEL
+    //Grid dos grupos
+    oMsGetSBM := MsNewGetDados():New(    029,;                //nTop      - Linha Inicial
+        003,;                //nLeft     - Coluna Inicial
+        (nJanAltu/2)-3,;     //nBottom   - Linha Final
+        (nJanLarg/2)-3,;     //nRight    - Coluna Final
+        GD_UPDATE,;          //nStyle    - Estilos para edição da Grid (GD_INSERT = Inclusão de Linha; GD_UPDATE = Alteração de Linhas; GD_DELETE = Exclusão de Linhas)
+        "AllwaysTrue()",;    //cLinhaOk  - Validação da linha
+        ,;                   //cTudoOk   - Validação de todas as linhas
+        "",;                 //cIniCpos  - Função para inicialização de campos
+        {},;     			 //aAlter    - Colunas que podem ser alteradas
+        ,;                   //nFreeze   - Número da coluna que será congelada
+        9999,;               //nMax      - Máximo de Linhas
+        ,;                   //cFieldOK  - Validação da coluna
+        ,;                   //cSuperDel - Validação ao apertar '+'
+        ,;                   //cDelOk    - Validação na exclusão da linha
+        oDlgPvt,;            //oWnd      - Janela que é a dona da grid
+        aHeadSBM,;           //aHeader   - Cabeçalho da Grid
+        aColsSBM)            //aCols     - Dados da Grid
+    //oMsGetSBM:lActive := .F.
+    ACTIVATE MSDIALOG oDlgPvt CENTERED
+EndIf
+    RestArea(aArea)
+Return
+
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Programa: GenTerc      ||Data: 17/12/2022 ||Empresa: PROGEN         //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Autor: Juan Pablo Astorga||Empresa: TOTVS   ||Módulo: Facturacion   //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+//Descrição: P.E. Funcion para cargar los ACOLS						  //
+//%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%//
+
+Static Function RCarAcolsNC(cCliente,cLoja,cDocumento,cSerie,ldatos)
+    
+	Local aArea  := GetArea()
+    Local cQry   := ""
+    Local nAtual := 0
+    Local nTotal := 0    
+
+cQry := " SELECT   "             + CRLF                            
+cQry += " SD1.D1_DOC NCC, "             + CRLF
+cQry += " SD1.D1_SERIE SER_NCC, "             + CRLF
+cQry += " SD1.D1_EMISSAO EMI_NCC, "             + CRLF
+cQry += " SD1.D1_ITEM IT_NCC, "             + CRLF
+cQry += " SD1.D1_COD PROD_NCC, "             + CRLF
+cQry += " SD1.D1_XDESCRI DESP_NCC, "             + CRLF
+cQry += " SD1.D1_QUANT QTD_NCC, "             + CRLF
+cQry += " D1R.D1_DOC RDV, "             + CRLF
+cQry += " D1R.D1_SERIE SER_RDV, "             + CRLF
+cQry += " D1R.D1_EMISSAO EMI_RDV, "             + CRLF
+cQry += " D1R.D1_ITEM IT_RDV, "             + CRLF
+cQry += " D1R.D1_QUANT QTD_RDV, "             + CRLF
+cQry += " D2R.D2_DOC REM, "             + CRLF
+cQry += " D2R.D2_SERIE SER_REM, "             + CRLF
+cQry += " D2R.D2_EMISSAO EMI_REM, "             + CRLF
+cQry += " D2R.D2_ITEM IT_REM, "             + CRLF
+cQry += " D2R.D2_QUANT QTD_REM, "             + CRLF
+cQry += " D2F.D2_DOC FVE, "             + CRLF
+cQry += " D2F.D2_SERIE SER_FVE, "             + CRLF
+cQry += " D2F.D2_EMISSAO EMI_FVE, "             + CRLF
+cQry += " D2F.D2_ITEM IT_FVE, "             + CRLF
+cQry += " D2F.D2_QUANT QTD_FVE, "             + CRLF
+cQry += " SC5.C5_NUM PEDIDO, "             + CRLF
+cQry += " SC5.C5_EMISSAO EMI_PEDIDO, "             + CRLF
+cQry += " SC6.C6_ITEM IT_PEDIDO, "             + CRLF
+cQry += " SC6.C6_QTDVEN QTD_PEDIDO"             + CRLF
+cQry += " FROM " + RetSQLName('SD1') + " SD1"             + CRLF
+cQry += " INNER JOIN " + RetSQLName('SD1') + " D1R"             + CRLF
+cQry += " ON D1R.D1_DOC=SD1.D1_REMITO"             + CRLF
+cQry += " AND D1R.D1_SERIE=SD1.D1_SERIREM"             + CRLF
+cQry += " AND D1R.D1_ITEM=SD1.D1_ITEMREM"             + CRLF
+cQry += " AND D1R.D1_FORNECE=SD1.D1_FORNECE"             + CRLF
+cQry += " AND D1R.D1_LOJA=SD1.D1_LOJA"             + CRLF
+cQry += " AND D1R.D1_ESPECIE='RFD'"             + CRLF
+cQry += " AND D1R.D_E_L_E_T_!='*' "             + CRLF
+cQry += " INNER JOIN " + RetSQLName('SD2') + " D2R"             + CRLF
+cQry += " ON D2R.D2_DOC=D1R.D1_NFORI"             + CRLF
+cQry += " AND D2R.D2_SERIE=D1R.D1_SERIORI"             + CRLF
+cQry += " AND D2R.D2_ITEM=D1R.D1_ITEMORI"             + CRLF
+cQry += " AND D2R.D2_CLIENTE=D1R.D1_FORNECE"             + CRLF
+cQry += " AND D2R.D2_LOJA=D1R.D1_LOJA"             + CRLF
+cQry += " AND D2R.D2_ESPECIE='RFN'"             + CRLF
+cQry += " AND D2R.D_E_L_E_T_!='*'"             + CRLF
+cQry += " INNER JOIN " + RetSQLName('SD2') + " D2F"             + CRLF
+cQry += " ON D2F.D2_REMITO=D2R.D2_DOC"             + CRLF
+cQry += " AND D2F.D2_SERIREM=D2R.D2_SERIE"             + CRLF
+cQry += " AND D2F.D2_ITEMREM=D2R.D2_ITEM"             + CRLF
+cQry += " AND D2F.D2_CLIENTE=D2R.D2_CLIENTE"             + CRLF
+cQry += " AND D2F.D2_LOJA=D2R.D2_LOJA"             + CRLF
+cQry += " AND D2F.D2_ESPECIE='NF'"             + CRLF
+cQry += " AND D2F.D_E_L_E_T_!='*'"             + CRLF
+cQry += " INNER JOIN " + RetSQLName('SC5') + " SC5"             + CRLF
+cQry += " ON SC5.C5_NUM=D2F.D2_PEDIDO"             + CRLF
+cQry += " AND SC5.D_E_L_E_T_!='*' "             + CRLF
+cQry += " INNER JOIN " + RetSQLName('SC6') + " SC6"             + CRLF
+cQry += " ON SC6.C6_NUM=SC5.C5_NUM"             + CRLF
+cQry += " AND SC6.C6_ITEM=D2F.D2_ITEMPV"             + CRLF
+cQry += " AND SC6.D_E_L_E_T_!='*'"             + CRLF
+cQry += " WHERE SD1.D_E_L_E_T_!='*' "             + CRLF
+cQry += " AND SD1.D1_ESPECIE='NCC'    "             + CRLF               
+cQry += "  AND SD1.D1_FORNECE = '"+cCliente+"' 		"      + CRLF
+cQry += "  AND SD1.D1_LOJA    = '"+cLoja+"' 		"      + CRLF
+cQry += "  AND SD1.D1_DOC     = '"+cDocumento+"' 	"      + CRLF
+cQry += "  AND SD1.D1_SERIE   = '"+cSerie+"' 		"      + CRLF
+
+ 
+   TCQuery cQry New Alias "QRY_SBM"
+
+    //Setando o tamanho da régua
+    Count To nTotal
+    ProcRegua(nTotal)
+
+    //Enquanto houver dados
+    QRY_SBM->(DbGoTop())
+
+    If QRY_SBM->(EoF())
+        MsgInfo("No hay datos por Exhibir", "Aviso")
+        ldatos:=.F.
+        //oDlgPvt:End()
+        QRY_SBM->(DbSkip())
+        QRY_SBM->(DbCloseArea())
+        Return ldatos
+    Else
+        ldatos:=.T.
+        While !QRY_SBM->(EoF())
+            //  Atualizar régua de processamento
+            nAtual++
+            IncProc("Adicionando " + Alltrim(QRY_SBM->NCC) + " (" + cValToChar(nAtual) + " de " + cValToChar(nTotal) + ")...")
+            //Definindo a legenda padrão como preto
+            
+            //Adiciona o item no aCols
+            aAdd(aColsSBM, { ;
+                QRY_SBM->NCC ,;
+                QRY_SBM->SER_NCC ,;
+                StoD(QRY_SBM->EMI_NCC) ,;
+                QRY_SBM->IT_NCC ,;
+                QRY_SBM->PROD_NCC,;
+                QRY_SBM->DESP_NCC,;
+                QRY_SBM->QTD_NCC,;
+                QRY_SBM->RDV,;
+                QRY_SBM->SER_RDV,;
+                StoD(QRY_SBM->EMI_RDV) ,;
+                QRY_SBM->IT_RDV,;
+                QRY_SBM->QTD_RDV,;
+                QRY_SBM->REM,;
+                QRY_SBM->SER_REM,;
+                StoD(QRY_SBM->EMI_REM) ,;
+                QRY_SBM->IT_REM,;
+                QRY_SBM->QTD_REM,;
+                QRY_SBM->FVE,;
+                QRY_SBM->SER_FVE,;
+                StoD(QRY_SBM->EMI_FVE) ,;
+                QRY_SBM->IT_FVE,;
+                QRY_SBM->QTD_FVE,;
+                QRY_SBM->PEDIDO,;
+                StoD(QRY_SBM->EMI_PEDIDO) ,;
+                QRY_SBM->IT_PEDIDO,;
+                QRY_SBM->QTD_PEDIDO,;    
+            })
             QRY_SBM->(DbSkip())
         EndDo
         QRY_SBM->(DbCloseArea())
