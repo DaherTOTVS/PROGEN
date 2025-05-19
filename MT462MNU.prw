@@ -515,6 +515,19 @@ aAdd(aHeadSBM, {"Numero Guia",       "D2_DOC",       "",                        
 aAdd(aHeadSBM, {"Serie Guia",        "D2_SERIE",     "",                             TamSX3("D2_SERIE")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
 aAdd(aHeadSBM, {"Emision Guia",      "D2_EMISSAO",   "",                             TamSX3("D2_EMISSAO")[01],     	0,                        ".T.",              ".T.", "D", "",    ""} )
 
+aAdd(aHeadSBM, {"Cantidad Guia",          "D2_QUANT",     "@E 999,999,999.99",      		 TamSX3("D2_QUANT")[01],     	0,                        ".T.",              ".T.", "N", "",    ""} )
+
+aAdd(aHeadSBM, {"Numero RDV",       "D2_DOC",       "",                             TamSX3("D2_DOC")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Serie RDV",        "D2_SERIE",     "",                             TamSX3("D2_SERIE")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Item RDV",          	 "D2_ITEM",      "",                             TamSX3("D2_ITEM")[01],      	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Cantidad RDV",          "D2_QUANT",     "@E 999,999,999.99",      		 TamSX3("D2_QUANT")[01],     	0,                        ".T.",              ".T.", "N", "",    ""} )
+
+aAdd(aHeadSBM, {"Numero NCC",       "D2_DOC",       "",                             TamSX3("D2_DOC")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Serie NCC",        "D2_SERIE",     "",                             TamSX3("D2_SERIE")[01],       	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Emision NCC",      "D2_EMISSAO",   "",                             TamSX3("D2_EMISSAO")[01],     	0,                        ".T.",              ".T.", "D", "",    ""} )
+aAdd(aHeadSBM, {"Cantidad NCC",          "D2_QUANT",     "@E 999,999,999.99",      		 TamSX3("D2_QUANT")[01],     	0,                        ".T.",              ".T.", "N", "",    ""} )
+
+       
 
 Processa({|| fCarAcols2(cCliente,cLoja,cDocumento,cSerie,@ldatos)}, "Processando ... Por favor espere ...")
 if ldatos=.F.
@@ -565,26 +578,64 @@ Static Function fCarAcols2(cCliente,cLoja,cDocumento,cSerie,ldatos)
     Local cHora6 := ""
     
 
-    cQry := " SELECT        "             + CRLF
-    cQry += "  D2_ITEM,       "           + CRLF
-    cQry += "  D2_COD,    "           + CRLF
-    cQry += "  (SELECT B1_DESC FROM " + RetSQLName('SB1') + " SB1 WHERE SB1.D_E_L_E_T_ <> '*' AND B1_COD =   D2_COD  ) AS B1_DESC,     "              + CRLF
-    cQry += "  D2_DOC,	      "           + CRLF
-    cQry += "  D2_SERIE,	  "           + CRLF
-    cQry += "  D2_QUANT,      "           + CRLF
-    cQry += "  D2_ORDSEP,	  "	          + CRLF
-    cQry += "  D2_PEDIDO,	  "	          + CRLF
-    cQry += "  D2_EMISSAO,	  "	          + CRLF
-    cQry += "  D2_CLIENTE,	  "	          + CRLF
-    cQry += "  D2_LOJA,  	  "	          + CRLF
-    cQry += "  D2_REMITO,  	  "	          + CRLF
-    cQry += "  D2_SERIREM  	  "	          + CRLF
+   cQry := "  SELECT    "      + CRLF   
+    cQry += "  SD2.D2_ITEM,"      + CRLF     
+    cQry += "  SD2.D2_COD,"      + CRLF    
+    cQry += "  SB1.B1_DESC,"      + CRLF 
+    cQry += "  SD2.D2_DOC,"      + CRLF	     
+    cQry += "  SD2.D2_SERIE,"      + CRLF	 
+    cQry += "  SD2.D2_QUANT,"      + CRLF    
+    cQry += "  SD2.D2_ORDSEP,"      + CRLF	 
+    cQry += "  SD2.D2_PEDIDO,"      + CRLF	 
+    cQry += "  SD2.D2_EMISSAO,"      + CRLF	 
+    cQry += "  SD2.D2_CLIENTE,"      + CRLF	 
+    cQry += "  SD2.D2_LOJA,"      + CRLF  	 
+    cQry += "  D2R.D2_DOC DOC_REM,"      + CRLF  
+    cQry += "  D2R.D2_SERIE SER_REM,"      + CRLF
+    cQry += "  D2R.D2_EMISSAO EMI_REM,"      + CRLF
+    cQry += "  D2R.D2_QUANT QTD_REM,"      + CRLF
+    cQry += "  D1R.D1_DOC DOC_RDV,"      + CRLF
+    cQry += "  D1R.D1_SERIE SER_RDV,"      + CRLF
+    cQry += "  D1R.D1_ITEM IT_RDV,"      + CRLF
+    cQry += "  D1R.D1_QUANT QTD_RDV,"      + CRLF
+    cQry += "  D1N.D1_DOC DOC_NCC,"      + CRLF
+    cQry += "  D1N.D1_SERIE SER_NCC,"      + CRLF
+    cQry += "  D1N.D1_EMISSAO EMI_NCC,"      + CRLF
+    cQry += "  D1N.D1_QUANT QTD_NCC"      + CRLF
     cQry += "  FROM   " + RetSQLName('SD2') + " SD2 "      + CRLF
-    cQry += "  WHERE D_E_L_E_T_ <> '*'              "      + CRLF
-    cQry += "  AND D2_CLIENTE = '"+cCliente+"' 		"      + CRLF
-    cQry += "  AND D2_LOJA    = '"+cLoja+"' 		"      + CRLF
-    cQry += "  AND D2_DOC     = '"+cDocumento+"' 	"      + CRLF
-    cQry += "  AND D2_SERIE   = '"+cSerie+"' 		"      + CRLF
+    cQry += "  INNER JOIN " + RetSQLName('SB1') + " SB1"      + CRLF
+    cQry += "  ON SB1.B1_COD=D2_COD"      + CRLF
+    cQry += "  AND SB1.D_E_L_E_T_ <> '*'"      + CRLF
+    cQry += "  LEFT JOIN " + RetSQLName('SD2') + " D2R"      + CRLF
+    cQry += "  ON D2R.D2_DOC=SD2.D2_REMITO"      + CRLF
+    cQry += "  AND D2R.D2_SERIE=SD2.D2_SERIREM"      + CRLF
+    cQry += "  AND D2R.D2_ITEM=SD2.D2_ITEMREM"      + CRLF
+    cQry += "  AND D2R.D2_CLIENTE=SD2.D2_CLIENTE"      + CRLF
+    cQry += "  AND D2R.D2_LOJA=SD2.D2_LOJA"      + CRLF
+    cQry += "  AND D2R.D2_ESPECIE='RFN'"      + CRLF
+    cQry += "  AND D2R.D_E_L_E_T_!='*'"      + CRLF
+    cQry += "  LEFT JOIN " + RetSQLName('SD1') + " D1R"      + CRLF
+    cQry += "  ON  D1R.D1_NFORI = D2R.D2_DOC   "      + CRLF  
+    cQry += "  AND D1R.D1_SERIORI = D2R.D2_SERIE "      + CRLF 
+    cQry += "  AND D1R.D1_ITEMORI = D2R.D2_ITEM  "      + CRLF 
+    cQry += "  AND D1R.D1_FORNECE = D2R.D2_CLIENTE"      + CRLF
+    cQry += "  AND D1R.D1_LOJA = D2R.D2_LOJA "      + CRLF  
+    cQry += "  AND D1R.D1_ESPECIE='RFD'"      + CRLF
+    cQry += "  AND D1R.D_E_L_E_T_!='*' "      + CRLF
+    cQry += "  LEFT JOIN " + RetSQLName('SD1') + " D1N"      + CRLF
+    cQry += "  ON D1R.D1_DOC=D1N.D1_REMITO"      + CRLF
+    cQry += "  AND D1R.D1_SERIE=D1N.D1_SERIREM"      + CRLF
+    cQry += "  AND D1R.D1_ITEM=D1N.D1_ITEMREM"      + CRLF
+    cQry += "  AND D1R.D1_FORNECE=D1N.D1_FORNECE"      + CRLF
+    cQry += "  AND D1R.D1_LOJA=D1N.D1_LOJA"      + CRLF
+    cQry += "  AND D1N.D1_ESPECIE='NCC'"      + CRLF
+    cQry += "  AND D1N.D_E_L_E_T_!='*' "      + CRLF
+    cQry += "  WHERE SD2.D_E_L_E_T_ <> '*'              "      + CRLF
+    cQry += "  AND SD2.D2_CLIENTE = '"+cCliente+"' 		"      + CRLF
+    cQry += "  AND SD2.D2_LOJA    = '"+cLoja+"' 		"      + CRLF
+    cQry += "  AND SD2.D2_DOC     = '"+cDocumento+"' 	"      + CRLF
+    cQry += "  AND SD2.D2_SERIE   = '"+cSerie+"' 		"      + CRLF
+
 
  
    TCQuery cQry New Alias "QRY_SBM"
@@ -635,9 +686,18 @@ Static Function fCarAcols2(cCliente,cLoja,cDocumento,cSerie,ldatos)
                 cHora4+":"+cHora5+":"+cHora6,;
                 Posicione("CB7",1, xFilial("SC5")+QRY_SBM->D2_ORDSEP,"CB7_DTFIMS"),;
               	cHora1+":"+cHora2+":"+cHora3,;
-                QRY_SBM->D2_REMITO ,;
-                QRY_SBM->D2_SERIREM ,;
-                Posicione("SD2",3,xFilial("SD2")+QRY_SBM->D2_REMITO+QRY_SBM->D2_SERIREM+QRY_SBM->D2_CLIENTE+QRY_SBM->D2_LOJA,"D2_EMISSAO"),;       // D2_FILIAL+D2_CLIENTE+D2_LOJA+D2_SERIREM+D2_REMITO+D2_ITEMREM                                                                                                    
+                QRY_SBM->DOC_REM ,;
+                QRY_SBM->SER_REM ,;
+                StoD(QRY_SBM->EMI_REM),; 
+                QRY_SBM->QTD_REM ,;
+                QRY_SBM->DOC_RDV ,;
+                QRY_SBM->SER_RDV ,;
+                QRY_SBM->IT_RDV ,;
+                QRY_SBM->QTD_RDV ,;
+                QRY_SBM->DOC_NCC ,;
+                QRY_SBM->SER_NCC ,;
+                StoD(QRY_SBM->EMI_NCC) ,;
+                QRY_SBM->QTD_NCC ,;                                                                                              
                 })
             QRY_SBM->(DbSkip())
         EndDo
