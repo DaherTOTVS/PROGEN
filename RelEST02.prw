@@ -413,77 +413,38 @@ Static function filas(cab,nLinha)
 
 Return nLinha
 
-Static function detalle(Ini,Long)
-    Local nLinha := 0180
-    Local ix := 0
-    Local ca := 1
-    Local LongT:=0
-    // local res:=0
-    Local fil:=10
-    LongT=Long
-    if( Long==1 .or. Long<=fil)
-        LongT+=1
-    endif
-    for ix := Ini to LongT
+Static Function detalle(nIni, nFin)
+    Local ix      := 0
+    Local nLinha  := 0
+    Local nTotc   := 0
+    Local nTotp   := 0
 
-        if ix <=11
-
-            filas(ca,nLinha)
-            if  ca==1
-                nLinha-=10
-            endif
-            ca:=0
-            nLinha +=35
-        ENDIF
-    next ix
-
-    nLinha := 0205
-    for ix := Ini to Long
-        //1 PRODUCTO, 2 CANTIDAD, 3 OP (VACIO), 4 PESO, 5 TEMP, 6 VENCIMIENTO
-        if alltrim(str(Long)) $ '100200300400500600700800900' .AND. Long > 9
-
-            if ix <fil
-                relleno(ix,nLinha)
-                nLinha += 35
-            ENDIF
-
-        else
-
-            if ix <=fil
-                relleno(ix,nLinha)
-                nLinha += 35
-            ENDIF
-
+    For ix := nIni To nFin
+        nLinha := 0170 + ((ix-1) * 50)
+        If (ix > 10)
+            oPrinter:EndPage()
+            oPrinter:StartPage()
+            nPagatu += 1
+            Encab()
+            nLinha := 0170
         EndIf
 
+        oPrinter:Box(nLinha, 0110, nLinha+50, 0285, "-4")
+        oPrinter:Box(nLinha, 0285, nLinha+50, 0480, "-4")
+        oPrinter:Box(nLinha, 0480, nLinha+50, 0560, "-4")
+        oPrinter:Box(nLinha, 0560, nLinha+50, 0650, "-4")
 
-    next ix
+        oPrinter:Say(nLinha+10, 0120, UPPER("Código"), oFont08, 1400, CLR_BLACK)
+        oPrinter:Say(nLinha+10, 0295, UPPER("Descripción"), oFont08, 1400, CLR_BLACK)
+        oPrinter:Say(nLinha+10, 0490, UPPER("Cantidad"), oFont08, 1400, CLR_BLACK)
+        oPrinter:Say(nLinha+10, 0570, UPPER("Unidad"), oFont08, 1400, CLR_BLACK)
 
-
-    if Long>fil
-        nLinha:=pagadi(11,Long,Long)
-
-        fil+=11
-    endif
-
-    while fil<=Long
-
-        nLinha=pagadi(fil,Long,1)
-
-        fil+=10
-
-    ENDDO
-
-    if nLinha>=0510
-        Encab()
-        Pie()
-    else
-        Pie()
-    endif
-
-
-    // nLinha := 0415
-Return
+        oPrinter:Say(nLinha+30, 0120, aDet[ix][1], oFont08, 1400, CLR_BLACK)
+        oPrinter:Say(nLinha+30, 0295, aDet[ix][2], oFont08, 1400, CLR_BLACK)
+        oPrinter:Say(nLinha+30, 0490, aDet[ix][4], oFont08, 1400, CLR_BLACK)
+        oPrinter:Say(nLinha+30, 0570, aDet[ix][3], oFont08, 1400, CLR_BLACK)
+    Next ix
+Return(NIL)
 
 Static function pagadi(id,Long,falt)
 
@@ -531,93 +492,72 @@ Static function pagadi(id,Long,falt)
 return nLinha
 
 
-Static function consdat()  //CONSULTA DATOS ENCABEZADO TRANSFERENCIA: EMISION Y USUARIO
-    Local aRet := {}
+Static function consdat()
     Local cSql := ""
     Local cAlias := GetNextAlias()
+    Local aRet := {}
+    Local aDatos := {}
 
-    X31UpdTable("NNS")
+    cSql := " SELECT  NNT.*,NNRD.NNR_DESCRI DESTINO, NNRL.NNR_DESCRI BLOCAL,SB1.B1_LOCPAD LOCPAD,SMO.MO_DESC EMPRESA,SMO.MO_END EMPDIR,SMO.MO_BAIRRO EMPCIU   "
+    cSql += " FROM "+RetSqlName("NNT")+" NNT "
+    cSql += " LEFT JOIN "+RetSqlName("NNR")+" NNRL ON NNRL.NNR_FILIAL = NNT.NNT_FILIAL AND NNRL.NNR_COD = NNT.NNT_LOCAL AND NNRL.D_E_L_E_T_ = ' ' "
+    cSql += " LEFT JOIN "+RetSqlName("NNR")+" NNRD ON NNRD.NNR_FILIAL = NNT.NNT_FILIAL AND NNRD.NNR_COD = NNT.NNT_LOCDL AND NNRD.D_E_L_E_T_ = ' ' "
+    cSql += " LEFT JOIN "+RetSqlName("SB1")+" SB1 ON SB1.B1_FILIAL = NNT.NNT_FILIAL AND SB1.B1_COD = NNT.NNT_PROD AND SB1.D_E_L_E_T_ = ' ' "
+    cSql += " LEFT JOIN "+RetSqlName("SMO")+" SMO ON SMO.MO_FILIAL = NNT.NNT_FILIAL AND SMO.D_E_L_E_T_ = ' ' "
+    cSql += " WHERE NNT.NNT_FILIAL = '"+xFilial("NNT")+"' "
+    cSql += " AND NNT.NNT_NUM = '"+cNroTran+"' "
+    cSql += " AND NNT.D_E_L_E_T_ = ' ' "
 
-    cSql := " SELECT *  "
-    cSql += " FROM " + RetSqlName("NNS") + " NNS "
-    cSql += " WHERE NNS.D_E_L_E_T_=''  "
-    cSql += " AND NNS_COD = '" + cvaltochar(cNroTran) + "' "
-
-    TCQUERY cSql NEW ALIAS &cAlias
-    DbSelectArea((cAlias))
-    (cAlias)->(DbGoTop())
-    While 	(cAlias)->( ! Eof() )
-        //ORIGEN, DESTINO, FECHA, SOLICITANTE, TIPO VEHICULO, CONDUCTOR, PLACA, TEMP, SELLO, OBS
-        aadd(aRet,{(cAlias)->NNS_XDESTI, ;
-            (cAlias)->NNS_XDESTI, ;
-            (cAlias)->NNS_DATA, ;
-            UsrFullName((cAlias)->NNS_SOLICT), ;
-            (cAlias)->NNS_XDESTI, ;
-            (cAlias)->NNS_XDESTI, ;
-            (cAlias)->NNS_XDESTI, ;
-            (cAlias)->NNS_XDESTI, ;
-            (cAlias)->NNS_XDESTI, ;
-            (cAlias)->NNS_XOBS})
-
-        (cAlias)->(DbSkip())
-    End
-
-    DbSelectArea((cAlias))
-    (cAlias)->(DbCloseArea())
+    TcQuery cSql New Alias (cAlias)
+    aadd(aDatos,{;
+        cvaltochar((cAlias)->NNT_NUM),;
+        cvaltochar((cAlias)->NNT_LOCAL),;
+        cvaltochar((cAlias)->NNT_LOCDL),;
+        cvaltochar((cAlias)->NNT_EMISSAO),;
+        cvaltochar((cAlias)->NNT_EMISSOR),;
+        cvaltochar((cAlias)->NNT_OBS),;
+        cvaltochar((cAlias)->BLOCAL),;
+        cvaltochar((cAlias)->DESTINO),;
+        cvaltochar((cAlias)->EMPRESA),;
+        cvaltochar((cAlias)->EMPDIR),;
+        cvaltochar((cAlias)->EMPCIUD)
+    })
+    (cAlias)->(dbCloseArea())
+    aRet := aDatos[1]
 Return aRet
 
-Static function consdet()  //CONSULTA DATOS DEL DETALLE DE LA TRANSFERENCIA
-    Local aRet := {}
+Static function consdet()
     Local cSql := ""
     Local cAlias := GetNextAlias()
+    Local aRet := {}
+    Local aDatos := {}
 
-    X31UpdTable("NNT")
+    cSql := " SELECT  NNT.*,NNRD.NNR_DESCRI DESTINO, NNRL.NNR_DESCRI BLOCAL,SB1.B1_LOCPAD LOCPAD,SB1.B1_DESC PROD,SB1.B1_UM UM   "
+    cSql += " FROM "+RetSqlName("NNT")+" NNT "
+    cSql += " LEFT JOIN "+RetSqlName("NNR")+" NNRL ON NNRL.NNR_FILIAL = NNT.NNT_FILIAL AND NNRL.NNR_COD = NNT.NNT_LOCAL AND NNRL.D_E_L_E_T_ = ' ' "
+    cSql += " LEFT JOIN "+RetSqlName("NNR")+" NNRD ON NNRD.NNR_FILIAL = NNT.NNT_FILIAL AND NNRD.NNR_COD = NNT.NNT_LOCDL AND NNRD.D_E_L_E_T_ = ' ' "
+    cSql += " LEFT JOIN "+RetSqlName("SB1")+" SB1 ON SB1.B1_FILIAL = NNT.NNT_FILIAL AND SB1.B1_COD = NNT.NNT_PROD AND SB1.D_E_L_E_T_ = ' ' "
+    cSql += " WHERE NNT.NNT_FILIAL = '"+xFilial("NNT")+"' "
+    cSql += " AND NNT.NNT_NUM = '"+cNroTran+"' "
+    cSql += " AND NNT.D_E_L_E_T_ = ' ' "
 
-    cSql := " SELECT  NNT.*,NNRD.NNR_DESCRI DESTINO, NNRL.NNR_DESCRI BLOCAL,SB1.B1_LOCPAD LOCPAD,SB1.B1_XUBICA1 UBICA1,SB1.B1_XUBICA2 UBICA2   "
-    cSql += " FROM " + RetSqlName("NNT") + " NNT "
-    cSql += " INNER JOIN " + RetSqlName("NNR") + " NNRL "
-    cSql += " ON NNRL.NNR_FILIAL = NNT.NNT_FILIAL "
-    cSql += " AND NNT.NNT_LOCAL = NNRL.NNR_CODIGO "
-    cSql += " AND NNRL.D_E_L_E_T_ <>'*' "
-    cSql += " INNER JOIN " + RetSqlName("NNR") + " NNRD "
-    cSql += " ON NNRD.NNR_FILIAL = NNT.NNT_FILIAL "
-    cSql += " AND NNT.NNT_LOCLD = NNRD.NNR_CODIGO "
-    cSql += " AND NNRD.D_E_L_E_T_ <>'*' "
-    cSql += " INNER JOIN " + RetSqlName("SB1") + " SB1  "
-    cSql += " ON NNT.NNT_PROD=SB1.B1_COD "
-    cSql += " AND SB1.D_E_L_E_T_ <>'*' "
-    cSql += " WHERE NNT.D_E_L_E_T_='' "
-    cSql += " AND NNT_COD = '" + cvaltochar(cNroTran) + "' "
-
-
-
-
-
-    TCQUERY cSql NEW ALIAS &cAlias
-    DbSelectArea((cAlias))
-    (cAlias)->(DbGoTop())
-    While 	(cAlias)->( ! Eof() )
-        //1 PRODUCTO, 2 CANTIDAD, 3 SERIE, 4 LOTE, ( 5 OBSERVACION, 6 VENCIMIENTO - Se retiro)
-        aadd(aRet,{alltrim(Posicione("SB1",1,xFilial("SB1")+(cAlias)->NNT_PROD,"B1_DESC")) , ;
-            cvaltochar((cAlias)->NNT_QUANT), ;
-            (cAlias)->NNT_NSERIE, ;
-            (cAlias)->NNT_LOTECT, ;
-            (cAlias)->NNT_OBS, ;
-            (cAlias)->NNT_PROD, ;
-            cvaltochar((cAlias)->NNT_QUANT), ;
-            cvaltochar((cAlias)->NNT_DTVALI),;
-            cvaltochar((cAlias)->NNT_LOCLD),;
-            cvaltochar((cAlias)->DESTINO),;
-            cvaltochar((cAlias)->UBICA1),;
-            cvaltochar((cAlias)->UBICA2),;
+    TcQuery cSql New Alias (cAlias)
+    While (cAlias)->(!Eof())
+        aadd(aDatos,{;
+            cvaltochar((cAlias)->NNT_PROD),;
+            cvaltochar((cAlias)->PROD),;
+            cvaltochar((cAlias)->NNT_UM),;
+            cvaltochar((cAlias)->NNT_QUANT),;
             cvaltochar((cAlias)->NNT_LOCAL),;
+            cvaltochar((cAlias)->NNT_LOCDL),;
+            cvaltochar((cAlias)->NNT_LOTE),;
+            cvaltochar((cAlias)->NNT_OBS),;
             cvaltochar((cAlias)->BLOCAL),;
-            cvaltochar((cAlias)->LOCPAD)})
-
-
-        (cAlias)->(DbSkip())
-    End
-
-    DbSelectArea((cAlias))
-    (cAlias)->(DbCloseArea())
+            cvaltochar((cAlias)->DESTINO),;
+            cvaltochar((cAlias)->LOCPAD)
+        })
+        (cAlias)->(dbSkip())
+    EndDo
+    (cAlias)->(dbCloseArea())
+    aRet := aDatos
 Return aRet

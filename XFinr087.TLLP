@@ -1,0 +1,171 @@
+#INCLUDE "SIGAWIN.CH"
+#INCLUDE "FINR087.CH"
+
+User Function xFinr087()
+Local aArea    := GetArea()
+Local aAreaSEL := SEL->(GetArea())
+Local nTamValor := TamSX3("EL_VALOR")[2]
+Local aDados    := {}
+Local aRecibos  := {}
+Local cSerie    := ""
+Local cVerDe    := ""
+Local cVerAte   := ""
+Local lVersao   := .F.
+
+// ------------------------------------------------------------------------------
+// Dados Protegidos- Acesso Restrito
+If RetGlbLGPD('A1_NOME')
+    Help(" ",1,"DADO_PROTEGIDO")
+    Return 
+EndIf
+// ------------------------------------------------------------------------------
+
+// Configuración de parámetros
+If cPaisLoc == "ARG"    
+    lVersao := .T.
+    cSerie  := MV_PAR05
+    cVerDe  := MV_PAR03
+    cVerAte := MV_PAR04
+Else
+    cSerie  := MV_PAR03
+EndIf
+
+// Selección de registros
+DbSelectArea("SEL")
+If lVersao
+    cCondicao := ' EL_RECIBO >= "' +  mv_par01 + '" .AND. EL_RECIBO <= "' + mv_par02 + '" .AND. EL_FILIAL == "' + xFilial("SEL") + '"'
+    cCondicao += ' .AND. EL_SERIE == "' + cSerie +'"'
+    cCondicao += ' .AND. EL_VERSAO >= "' + cVerDe +'" .AND. EL_VERSAO <= "' + cVerAte +'"'
+    cChaveSEL := "EL_FILIAL+EL_SERIE+EL_RECIBO+EL_VERSAO"
+    IndRegua("SEL",cIndexSEL,cChaveSEL,,cCondicao,OemToAnsi(STR0007))
+    nIndexSEL := RetIndex("SEL")
+    dbSetOrder(nIndexSEL+1)
+    DbGoTop()
+Else
+    DbSetOrder(8)
+    DbSeek(xFilial("SEL")+cSerie+mv_par01,.T.)
+EndIf
+
+// Recolección de datos
+While !Eof() .And. (xFilial("SEL")==SEL->EL_FILIAL) .And. SEL->EL_RECIBO <= mv_par02 .And. SEL->EL_SERIE == cSerie;
+      .And. Iif(lVersao,(SEL->EL_VERSAO >= cVerDe .AND. SEL->EL_VERSAO <= cVerAte),.T.)
+
+    // Datos del recibo
+    aRecibo := {}
+    aRecibo["RECIBO"]    := SEL->EL_RECIBO
+    aRecibo["SERIE"]     := SEL->EL_SERIE
+    aRecibo["VERSAO"]    := SEL->EL_VERSAO
+    aRecibo["CLIENTE"]   := SEL->EL_CLIORIG
+    aRecibo["LOJA"]      := SEL->EL_LOJORIG
+    aRecibo["DTEMIS"]    := SEL->EL_DTDIGIT
+    aRecibo["CANCELADO"] := SEL->EL_CANCEL
+
+    // Datos del cliente
+    DbSelectArea("SA1")
+    DbSeek(xFilial("SA1") + aRecibo["CLIENTE"] + aRecibo["LOJA"])
+    aRecibo["NOME"]      := SA1->A1_NOME
+    aRecibo["ENDERECO"]  := SA1->A1_END
+    aRecibo["MUNICIPIO"] := SA1->A1_MUN
+    aRecibo["CGC"]       := SA1->A1_CGC
+    aRecibo["ESTADO"]    := SA1->A1_EST
+
+    // Datos de la empresa
+    aRecibo["EMPRESA"]   := SM0->M0_NOMECOM
+    aRecibo["ENDEMP"]    := SM0->M0_ENDENT
+    aRecibo["CGCEMP"]    := SM0->M0_CGC
+    aRecibo["CIDEMP"]    := SM0->M0_CIDENT
+    aRecibo["ESTEMP"]    := SM0->M0_ESTENT
+    aRecibo["TELEMP"]    := SM0->M0_TEL
+    aRecibo["FAXEMP"]    := SM0->M0_FAX
+
+    // Arrays para documentos
+    aRecibo["CHEQUES"]   := {}
+    aRecibo["NOTAS"]     := {}
+    aRecibo["ANTECIP"]   := {}
+    aRecibo["TOTAL"]     := 0
+
+    // Recolección de documentos
+    Do while xFilial("SEL")==SEL->EL_FILIAL .And. aRecibo["RECIBO"]==SEL->EL_RECIBO .And. aRecibo["SERIE"]==SEL->EL_SERIE;
+          .and.!SEL->(eof()) .AND. Iif(lVersao,(SEL->EL_VERSAO == aRecibo["VERSAO"]),.T.)
+
+        If !(Alltrim(SEL->EL_TIPODOC)$"TB|RA")
+            // Cheques y otros documentos
+            Aadd(aRecibo["CHEQUES"], {;
+                SEL->EL_TIPODOC,;
+                SEL->EL_NUMERO,;
+                SEL->EL_VALOR,;
+                Left(GetMV("MV_SIMB"+STR(VAL(SEL->EL_MOEDA),1)),4),;
+                SEL->EL_VLMOED1,;
+                SEL->EL_BCOCHQ,;
+                SEL->EL_AGECHQ,;
+                SEL->EL_CTACHQ,;
+                SEL->EL_DTVCTO,;
+                SEL->EL_MOEDA;
+            })
+            aRecibo["TOTAL"] += SEL->EL_VALOR
+
+        ElseIf Substr(SEL->EL_TIPODOC,1,2) == "TB"
+            // Notas fiscales
+            nValMulta := 0 
+            nValJuros := 0
+            nDesconto := 0
+            SE5->(DbSetOrder(8))
+            SE5->(DbSeek(xFilial("SE5")+ aRecibo["RECIBO"]))
+            While !EOF() .and. aRecibo["RECIBO"] == SE5->E5_ORDREC
+                If SE5->E5_PREFIXO == SEL->EL_PREFIXO .And.;
+                   SE5->E5_NUMERO == SEL->EL_NUMERO .And.;
+                   SE5->E5_PARCELA == SEL->EL_PARCELA .And.;
+                   SE5->E5_TIPO == SEL->EL_TIPO .And.;
+                   SE5->E5_CLIFOR == SEL->EL_CLIORIG .And.;
+                   SE5->E5_LOJA == SEL->EL_LOJORIG
+                    If SE5->E5_TIPODOC == "MT"
+                        nValMulta := SE5->E5_VALOR
+                    ElseIf SE5->E5_TIPODOC == "JR"            
+                        nValJuros := SE5->E5_VALOR
+                    ElseIf SE5->E5_TIPODOC == "DC"            
+                        nDesconto := SE5->E5_VALOR
+                    EndIf
+                EndIf    
+                SE5->(Dbskip())
+            EndDo
+
+            Aadd(aRecibo["NOTAS"], {;
+                SEL->EL_PREFIXO,;
+                StrZero(Val(SEL->EL_NUMERO),TamSX3("EL_NUMERO")[1]),;
+                SEL->EL_VALOR,;
+                Left(GetMV("MV_SIMB"+Str(Val(SEL->EL_MOEDA),1)),4),;
+                SEL->EL_DTVCTO,;
+                SEL->EL_VLMOED1,;
+                SEL->EL_MOEDA,;
+                SEL->EL_TIPO,;
+                nValMulta,;
+                nValJuros,;
+                nDesconto;
+            })
+            aRecibo["TOTAL"] += SEL->EL_VALOR
+
+        ElseIf Substr(SEL->EL_TIPODOC,1,2) == "RA"
+            // Recibos anticipados
+            Aadd(aRecibo["ANTECIP"], {;
+                SEL->EL_NUMERO,;
+                SEL->EL_VALOR,;
+                Left(GetMV("MV_SIMB"+STR(VAL(SEL->EL_MOEDA),1)),4),;
+                SEL->EL_MOEDA;
+            })
+            aRecibo["TOTAL"] += SEL->EL_VALOR
+        EndIf
+        
+        SEL->(DbSkip())
+    EndDo
+
+    // Agregar recibo al array principal
+    Aadd(aRecibos, aRecibo)
+    SEL->(DbSkip())
+EndDo
+
+// Restaurar áreas
+SEL->(RestArea(aAreaSEL))
+RestArea(aArea)
+
+// Retornar array con datos
+Return aRecibos 

@@ -4,8 +4,8 @@
 #include 'rptdef.ch'
 #include 'FWPrintSetup.ch'
 #include 'FWMVCDEF.CH'
-#include 'AcmeDef.ch'
 #include 'TOPCONN.CH'
+#include 'AcmeDef.ch'
 
 /*/
 ‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹
@@ -252,21 +252,29 @@ Static Function AcmHeadPR()
 		nLinebox2 = 2
 	IF "01" $ cEmpAnt
 
-		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"PROGEN S.A"								,	oArial12,,,,2)
-		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Carrera 3 No.56-07"						,	oArial12,,,,2)
-		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Zona Industrial Cazuca Entrada No.2"		,	oArial12,,,,2)
-		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Soacha Cundinamarca - Colombia"			,	oArial12,,,,2)
-		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"PBX:730 6100 DIRECTO VENTAS:7306111"		,	oArial12,,,,2)
-		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"FAX:730 6110 - 730 6090"					,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,SUPERGETMV("PG_TXTIMP1",.F.,"PROGEN S.A"							)	,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,SUPERGETMV("PG_TXTIMP2",.F.,"Carrera 3 No.56-07"					)	,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,SUPERGETMV("PG_TXTIMP3",.F.,"Zona Industrial Cazuca Entrada No.2"	)	,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,SUPERGETMV("PG_TXTIMP4",.F.,"Soacha Cundinamarca - Colombia"		)	,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,SUPERGETMV("PG_TXTIMP5",.F.,"PBX:730 6100 DIRECTO VENTAS:7306111"	)	,	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,SUPERGETMV("PG_TXTIMP6",.F.,"FAX:730 6110 - 730 6090"				)	,	oArial12,,,,2)
 	else
 			
-		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Domicilio Fiscal"						,	oArial12N,,,,2)
-		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Empoala 251-piso 10, col, Narvarte CD. Ciudad de MÈxico"						,	oArial12,,,,2)
-		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"C.P. 03020, Benito juarez, Ciudad de MÈxico, MÈxico"		,	oArial12,,,,2)
-		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Bodega:"			,	oArial12N,,,,2)
-		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Calle Carretera Federal Puebla  Tlaxcala no. 242 NAVE 5,"		,	oArial12,,,,2)
-		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Colonia San Pablo XOCHIMEHUACAN C.P. 72014 Puebla"					,	oArial12,,,,2)
-		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"MÈxico"					,	oArial12,,,,2)
+		//nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Domicilio Fiscal"						,	oArial12N,,,,2)
+		//nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Empoala 251-piso 10, col, Narvarte CD. Ciudad de MÈxico"						,	oArial12,,,,2)
+		//nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"C.P. 03020, Benito juarez, Ciudad de MÈxico, MÈxico"		,	oArial12,,,,2)
+		//nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Bodega:"			,	oArial12N,,,,2)
+		//nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Calle Carretera Federal Puebla  Tlaxcala no. 242 NAVE 5,"		,	oArial12,,,,2)
+		//nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"Colonia San Pablo XOCHIMEHUACAN C.P. 72014 Puebla"					,	oArial12,,,,2)
+		//nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,"MÈxico"					,	oArial12,,,,2)
+
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,SUPERGETMV("TA_TXTIMP1",.F.,"Domicilio Fiscal"						                        ),	oArial12N,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,SUPERGETMV("TA_TXTIMP2",.F.,"Calle Aldama No.35 Bodega 5 Col. Rincon de San Lorenzo,"		),	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,SUPERGETMV("TA_TXTIMP3",.F.,"San Lorenzo Almecatla, Cuautlancingo, Puebla CP.71710"		),	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,SUPERGETMV("TA_TXTIMP4",.F.,"Bodega:"														),	oArial12N,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,SUPERGETMV("TA_TXTIMP5",.F.,"Calle Aldama No.35 Bodega 5 Col. Rincon de San Lorenzo,"		),	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,SUPERGETMV("TA_TXTIMP6",.F.,"San Lorenzo Almecatla, Cuautlancingo, Puebla CP.71710"		),	oArial12,,,,2)
+		nLinebox1 ++;	Oprinter:Say(nFontAlto*nLinebox1,nMargIqz+700,SUPERGETMV("TA_TXTIMP7",.F.,"MÈxico"					                                    ),	oArial12,,,,2)
 
 
 	EndIf
