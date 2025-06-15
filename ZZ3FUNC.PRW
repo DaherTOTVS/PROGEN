@@ -1,7 +1,7 @@
 #Include 'Protheus.ch'
 #Include 'FWMVCDEF.ch'
 
-User Function ZZ3FUNC()
+User Function ZZ3FUNCI()
   Private cCadastro   := "Relacion De Categorias"
   Private aRotina   := MenuDef()
   dbSelectArea("ZZ3")

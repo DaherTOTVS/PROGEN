@@ -80,6 +80,10 @@ User function MA265TDOK()
 					While !_aQRY->(EOF())
 					
 						cDoc := ALLTRIM(_aQRY->DB_DOC)
+						IF(ALLTRIM(cDoc) == ALLTRIM(cDaDoc))
+							_aQRY->(dbSkip())
+							Exit
+						EndIf
 						If !(ALLTRIM(_aQRY->DB_NUMSEQ)==ALLTRIM(cSequen) .AND. ALLTRIM(cDoc) == ALLTRIM(cDaDoc))
 							txt := "el movimiento interno"
 							IF SD3->(DBSEEK(xfilial("SD3")+cDoc+cProducto))

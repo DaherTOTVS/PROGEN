@@ -1011,7 +1011,7 @@ cQry += " SC5.C5_EMISSAO EMI_PEDIDO, "             + CRLF
 cQry += " SC6.C6_ITEM IT_PEDIDO, "             + CRLF
 cQry += " SC6.C6_QTDVEN QTD_PEDIDO"             + CRLF
 cQry += " FROM " + RetSQLName('SD1') + " SD1"             + CRLF
-cQry += " INNER JOIN " + RetSQLName('SD1') + " D1R"             + CRLF
+cQry += " LEFT JOIN " + RetSQLName('SD1') + " D1R"             + CRLF
 cQry += " ON D1R.D1_DOC=SD1.D1_REMITO"             + CRLF
 cQry += " AND D1R.D1_SERIE=SD1.D1_SERIREM"             + CRLF
 cQry += " AND D1R.D1_ITEM=SD1.D1_ITEMREM"             + CRLF
@@ -1019,7 +1019,7 @@ cQry += " AND D1R.D1_FORNECE=SD1.D1_FORNECE"             + CRLF
 cQry += " AND D1R.D1_LOJA=SD1.D1_LOJA"             + CRLF
 cQry += " AND D1R.D1_ESPECIE='RFD'"             + CRLF
 cQry += " AND D1R.D_E_L_E_T_!='*' "             + CRLF
-cQry += " INNER JOIN " + RetSQLName('SD2') + " D2R"             + CRLF
+cQry += " LEFT JOIN " + RetSQLName('SD2') + " D2R"             + CRLF
 cQry += " ON D2R.D2_DOC=D1R.D1_NFORI"             + CRLF
 cQry += " AND D2R.D2_SERIE=D1R.D1_SERIORI"             + CRLF
 cQry += " AND D2R.D2_ITEM=D1R.D1_ITEMORI"             + CRLF
@@ -1027,7 +1027,7 @@ cQry += " AND D2R.D2_CLIENTE=D1R.D1_FORNECE"             + CRLF
 cQry += " AND D2R.D2_LOJA=D1R.D1_LOJA"             + CRLF
 cQry += " AND D2R.D2_ESPECIE='RFN'"             + CRLF
 cQry += " AND D2R.D_E_L_E_T_!='*'"             + CRLF
-cQry += " INNER JOIN " + RetSQLName('SD2') + " D2F"             + CRLF
+cQry += " LEFT JOIN " + RetSQLName('SD2') + " D2F"             + CRLF
 cQry += " ON D2F.D2_REMITO=D2R.D2_DOC"             + CRLF
 cQry += " AND D2F.D2_SERIREM=D2R.D2_SERIE"             + CRLF
 cQry += " AND D2F.D2_ITEMREM=D2R.D2_ITEM"             + CRLF
@@ -1035,10 +1035,10 @@ cQry += " AND D2F.D2_CLIENTE=D2R.D2_CLIENTE"             + CRLF
 cQry += " AND D2F.D2_LOJA=D2R.D2_LOJA"             + CRLF
 cQry += " AND D2F.D2_ESPECIE='NF'"             + CRLF
 cQry += " AND D2F.D_E_L_E_T_!='*'"             + CRLF
-cQry += " INNER JOIN " + RetSQLName('SC5') + " SC5"             + CRLF
+cQry += " LEFT JOIN " + RetSQLName('SC5') + " SC5"             + CRLF
 cQry += " ON SC5.C5_NUM=D2F.D2_PEDIDO"             + CRLF
 cQry += " AND SC5.D_E_L_E_T_!='*' "             + CRLF
-cQry += " INNER JOIN " + RetSQLName('SC6') + " SC6"             + CRLF
+cQry += " LEFT JOIN " + RetSQLName('SC6') + " SC6"             + CRLF
 cQry += " ON SC6.C6_NUM=SC5.C5_NUM"             + CRLF
 cQry += " AND SC6.C6_ITEM=D2F.D2_ITEMPV"             + CRLF
 cQry += " AND SC6.D_E_L_E_T_!='*'"             + CRLF

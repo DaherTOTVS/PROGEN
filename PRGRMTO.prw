@@ -491,7 +491,7 @@ Static Function AcmHeadPR()
 				oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , "DIR. ENTREGA" 		 						,	oArial12N,,,,2)
 	//nLinea ++	//oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , Alltrim(qryclientre->A1_NOME) 		 		,	oArial12,,,,2) 
 	//nLinea+=0.5
-	nLinea+=ImpMemo(oPrinter,zMemoToA(Alltrim(qryclientre->A1_NOME), 55)	,n1Linea+(nFontAlto*nLinea) , nMargIqz+50, 1450 	, nFontAlto	, oArial12	, 0			,0)
+	nLinea+=ImpMemo(oPrinter,zMemoToA(Alltrim(qryclientre->A1_NREDUZ), 55)	,n1Linea+(nFontAlto*nLinea) , nMargIqz+50, 1450 	, nFontAlto	, oArial12	, 0			,0)
 	nLinea+=ImpMemo(oPrinter,zMemoToA(cDir_entreg, 65)	,n1Linea+(nFontAlto*nLinea) , nMargIqz+50, 1100  	, nFontAlto	, oArial12	, 0			,0)
 	nLinea-=0.5
 	//nLinea ++;	oPrinter:Say(n1Linea+(nFontAlto*nLinea)	,nMargIqz+50	    , cDir_entreg				 		 			,	oArial12,,,,2)
@@ -1381,7 +1381,7 @@ Static Function RQuery(cDoc,cSerie,cCliente,cLoja)
 
 	cQry:=" SELECT  " + CRLF
 	cQry+=" NNR_DESCRI, " + CRLF
-	cQry+=" A1_NOME, A1_CGC, A1_PFISICA,  " + CRLF
+	cQry+=" A1_NOME,A1_NREDUZ, A1_CGC, A1_PFISICA,  " + CRLF
 	cQry+=" B1_DESC,  " + CRLF
 	cQry+=" D2_ITEM, D2_COD, D2_UM, D2_SEGUM, D2_QUANT, D2_QTSEGUM, D2_NUMSEQ, D2_PEDIDO, " + CRLF
 	cQry+=" F2_DOC, F2_SERIE, F2_EMISSAO, F2_TIPOREM, F2_SERIE2, F2_SDOCMAN, F2_DTDIGIT " + CRLF
@@ -1427,7 +1427,7 @@ Static Function QueryclienteN(cCliente)
 	Endif
 
 	cQrycliente:=" SELECT  " + CRLF
-	cQrycliente+=" A1_END, A1_ESTADO, A1_MUN, A1_BAIRRO, A1_NOME, A1_OBS  " + CRLF
+	cQrycliente+=" A1_END, A1_ESTADO, A1_MUN, A1_BAIRRO, A1_NOME, A1_NREDUZ, A1_OBS  " + CRLF
 	cQrycliente+=" FROM "+ InitSqlName("SA1") +" SA1  " + CRLF
 	cQrycliente+=" WHERE" + CRLF
 	cQrycliente+=" SA1.D_E_L_E_T_<>'*' AND A1_COD='" +cCliente+ "' "+ CRLF
@@ -1447,10 +1447,10 @@ Static Function Qclie(cCliente,zpedido)
 	Endif
 	cQryclient:=" SELECT  " + CRLF
 	cQryclient+=" C5_CLIENT, C5_NUM, C5_MENNOTA, C5_INCOTER, " + CRLF
-	cQryclient+=" A1_END, A1_ESTADO, A1_MUN, A1_BAIRRO, A1_NOME  " + CRLF
+	cQryclient+=" A1_END, A1_ESTADO, A1_MUN, A1_BAIRRO, A1_NOME, A1_NREDUZ  " + CRLF
 	cQryclient+=" FROM "+ InitSqlName("SC5") +" SC5  " + CRLF
 	cQryclient+=" INNER JOIN "+ InitSqlName("SA1") +" SA1 ON  " + CRLF
-	cQryclient+=" SA1.D_E_L_E_T_=' ' AND C5_CLIENT = A1_COD" + CRLF
+	cQryclient+=" SA1.D_E_L_E_T_=' ' AND C5_CLIENT = A1_COD AND C5_LOJAENT = A1_LOJA" + CRLF
 	cQryclient+=" WHERE" + CRLF
 	cQryclient+=" SC5.D_E_L_E_T_= ' ' AND C5_CLIENTE='" +cCliente+ "' AND C5_NUM='"+zpedido+"' "+ CRLF   
 
@@ -1737,7 +1737,7 @@ Static function TipoQuery(cDocQuery,cDocumento,cSerie, cCliente,cLoja )
 		cQueryRem	+= " D2_VALIMP1, D2_VALIMP2, D2_VALIMP3, D2_VALIMP4, D2_VALIMP5, D2_VALIMP6, D2_VALIMP7, D2_VALIMP8, D2_VALIMP9, " + CRLF
 		cQueryRem	+= " B1_DESC, B1_CODBAR,  " + CRLF
 		cQueryRem	+= " D2_QTSEGUM,  " + CRLF
-		cQueryRem	+= " A1_END, A1_COD_MUN, A1_BAIRRO, A1_ESTADO, A1_PAIS, A1_NOME, A1_CGC, A1_PFISICA, " + CRLF
+		cQueryRem	+= " A1_END, A1_COD_MUN, A1_BAIRRO, A1_ESTADO, A1_PAIS, A1_NOME, A1_NREDUZ,A1_CGC, A1_PFISICA, " + CRLF
 		cQueryRem	+= " J1_BAIRRO, J1_COD_MUN, J1_END, J1_ESTADO,  J1_NOME,  J1_PAIS, " + CRLF
 		cQueryRem	+= " CC2_MUN, D2_QUANT, D2_NUMSEQ, "  + CRLF
 		cQueryRem	+= " C5_NUM, C5_EMISSAO, C5_CLIENT, C5_LOJAENT, C5_CLIENTE, C5_LOJACLI, C6_DESCRI, C5_XENDENT, C5_XEST, C5_XMUN, C5_XORCOMP, " + CRLF
@@ -1770,7 +1770,7 @@ Static function TipoQuery(cDocQuery,cDocumento,cSerie, cCliente,cLoja )
 		cQueryRem	+= " D2_VALIMP1, D2_VALIMP2, D2_VALIMP3, D2_VALIMP4, D2_VALIMP5, D2_VALIMP6, D2_VALIMP7, D2_VALIMP8, D2_VALIMP9, " + CRLF
 		cQueryRem	+= " B1_DESC, B1_CODBAR,  " + CRLF
 		cQueryRem	+= " D2_QTSEGUM,  " + CRLF
-		cQueryRem	+= " A1_END, A1_COD_MUN, A1_BAIRRO, A1_ESTADO, A1_PAIS, A1_NOME, A1_CGC, A1_PFISICA, " + CRLF
+		cQueryRem	+= " A1_END, A1_COD_MUN, A1_BAIRRO, A1_ESTADO, A1_PAIS, A1_NOME, A1_NREDUZ, A1_CGC, A1_PFISICA, " + CRLF
 		cQueryRem	+= " J1_BAIRRO, J1_COD_MUN, J1_END, J1_ESTADO,  J1_NOME,  J1_PAIS, " + CRLF
 		cQueryRem	+= " CC2_MUN, D2_QUANT, D2_NUMSEQ, "  + CRLF
 		cQueryRem	+= " C5_NUM, C5_EMISSAO, C5_CLIENT, C5_LOJAENT, C5_CLIENTE, C5_LOJACLI, C6_DESCRI, C5_XENDENT, C5_XEST, C5_XMUN, C5_XORCOMP, " + CRLF

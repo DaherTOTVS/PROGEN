@@ -363,74 +363,170 @@ Return lRet
 User Function ModFeEnt(cPedido)
 
 Local aArea := GetArea()
-Local aPergs := {}
-Local aObs   := {}
-Local dDataAtu := CtoD("  /  /  ")
-Local lRet     := .T.
-Local lHayPend := .F.
+Local cUserActua := upper(cusername)
+Private aHeadSBM := {}
+Private aColsSBM := {}
+Private oDlgPvt
+Private oMsGetSBM
+Private oBtnFech
+Private oBtnLege
+Private nJanLarg   := 1100
+Private nJanAltu   := 600
+Private cFontUti   := "Tahoma"
+Private oFontAno   := TFont():New(cFontUti,,-38)
+Private oFontSub   := TFont():New(cFontUti,,-20)
+Private oFontSubN  := TFont():New(cFontUti,,-20,,.T.)
+Private oFontBtn   := TFont():New(cFontUti,,-14)
+Private ldatos     := .F. 
 
-    DbSelectArea("SC5")
-    DbSetorder(1)                                                                                                                                                                                                      
-    IF DbSeek(xFilial('SC5') + cPedido , .T.)
-        // Verifica si hay items pendientes
-        DbSelectArea("SC6")
-        DbSetorder(1)
-        IF DbSeek(xFilial('SC6') + cPedido)
-            While !Eof() .And. SC6->C6_NUM == cPedido
-                If SC6->C6_QTDVEN > SC6->C6_QTDENT
-                    lHayPend := .T.
-                    Exit
-                EndIf
-                DbSkip()
-            EndDo
-        EndIf
 
-        If !lHayPend
-            MsgInfo("No se encontraron líneas disponibles para actualizar fecha de entrega", "Aviso")
-            RestArea(aArea)
-            Return
-        EndIf
+ //              Título               Campo        Máscara                        Tamanho                   Decimal                   Valid               Usado  Tipo F3     Combo
+aAdd(aHeadSBM, {"Pedido",          	 "C5_NUM",     "",                              TamSX3("C5_NUM")[01],      	0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Cliente",          "C5_CLIENT",      "",                          TamSX3("C5_CLIENT")[01],    0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Tienda",         "C5_LOJAENT",     "",                          TamSX3("C5_LOJAENT")[01],   0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Nombre",          "C5_XNCLIEN",    "",                           TamSX3("C5_XNCLIEN")[01],   0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Fec. Pedido",            "C5_EMISSAO",   "@D",                            TamSX3("C5_EMISSAO")[01],   0,                        ".T.",              ".T.", "D", "",    ""} )
+aAdd(aHeadSBM, {"Item",        	 "C6_ITEM",    "",                              TamSX3("C6_ITEM")[01],     0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Producto",         "C6_PRODUTO",   "",                            TamSX3("C6_PRODUTO")[01],    0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Local",            "C6_LOCAL",     "",                            TamSX3("C6_LOCAL")[01],      0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"QTD venta",      "C6_QTDVEN",   "@E 999,999.99",                TamSX3("C6_QTDVEN")[01],    0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"QTD Entreg",         "C6_QTDENT",    "@E 999,999.99",               TamSX3("C6_QTDENT")[01],       0,                        ".T.",              ".T.", "C", "",    ""} )
+aAdd(aHeadSBM, {"Fecha Entrega",            "C6_ENTREG",     "@!",                           TamSX3("C6_ENTREG")[01],    0,                        ".T.",          	  ".T.", "D", "",    ""} )
 
-        aAdd(aPergs, {9, "Pedido: " + cPedido, 200, 40, .T.})
-        aAdd(aPergs, {1, "Fecha de Entrega:", dDataAtu, "@D", "", "", '.T.', 80, .F.})
 
-        If ParamBox(aPergs, "Modificar Fecha de Entrega", @aObs,,,,,,,,.f.)
-            If !Empty(aObs[2])
-                DbSelectArea("SC6")
-                DbSetorder(1)
-                IF DbSeek(xFilial('SC6') + cPedido)
-                    While !Eof() .And. SC6->C6_NUM == cPedido
-                        If SC6->C6_QTDVEN > SC6->C6_QTDENT
-                            If RecLock("SC6", .F.)
-                                If Empty(SC6->C6_ENTREOR)
-                                    SC6->C6_ENTREOR := SC6->C6_ENTREG
-                                EndIf
-                                SC6->C6_ENTREG := aObs[2]
-                                SC6->C6_USREDIT := cUserName
-                                SC6->(MsUnlock())
-                            EndIf
-                        EndIf
-                        DbSkip()
-                    EndDo
-                EndIf
-                MsgInfo("Fecha de entrega actualizada con éxito!", "Aviso")
-            EndIf
-        Else
-            MsgAlert("Proceso cancelado por el usuario")    
-        EndIf
-    EndIf
+Processa({|| fCarSc6(cPedido,@ldatos)}, "Processando ... Por favor espere ...")
+if ldatos=.F.
+    Return
+else   
+
+DEFINE MSDIALOG oDlgPvt TITLE "Proceso para Modificarla fecha de entrega" FROM 000, 000  TO nJanAltu, nJanLarg COLORS 0, 16777215 PIXEL
+@ 004, 003 SAY "REPROCESO"                SIZE 200, 030 FONT oFontAno  OF oDlgPvt COLORS RGB(149,179,215) PIXEL
+@ 004, 150 SAY "Ajuste Fecha de Entrega"          SIZE 200, 030 FONT oFontSub  OF oDlgPvt COLORS RGB(031,073,125) PIXEL
+@ 006, (nJanLarg/2-001)-(0052*01) BUTTON oBtnFech  PROMPT "Salir"        SIZE 050, 018 OF oDlgPvt ACTION (oDlgPvt:End())                               FONT oFontBtn PIXEL
+@ 006, (nJanLarg/2-001)-(0052*03) BUTTON oBtnSalv  PROMPT "Guardar"        SIZE 050, 018 OF oDlgPvt ACTION (fSalvar(cPedido)) FONT oFontBtn PIXEL
+    //Grid dos grupos
+    oMsGetSBM := MsNewGetDados():New(    029,;                //nTop      - Linha Inicial
+        003,;                //nLeft     - Coluna Inicial
+        (nJanAltu/2)-3,;     //nBottom   - Linha Final
+        (nJanLarg/2)-3,;     //nRight    - Coluna Final
+        GD_UPDATE,;          //nStyle    - Estilos para edição da Grid (GD_INSERT = Inclusão de Linha; GD_UPDATE = Alteração de Linhas; GD_DELETE = Exclusão de Linhas)
+        "AllwaysTrue()",;    //cLinhaOk  - Validação da linha
+        ,;                   //cTudoOk   - Validação de todas as linhas
+        "",;                 //cIniCpos  - Função para inicialização de campos
+        {'C6_ENTREG'} ,;     //aAlter    - Colunas que podem ser alteradas
+        ,;                   //nFreeze   - Número da coluna que será congelada
+        9999,;               //nMax      - Máximo de Linhas
+        ,;                   //cFieldOK  - Validação da coluna
+        ,;                   //cSuperDel - Validação ao apertar '+'
+        ,;                   //cDelOk    - Validação na exclusão da linha
+        oDlgPvt,;            //oWnd      - Janela que é a dona da grid
+        aHeadSBM,;           //aHeader   - Cabeçalho da Grid
+        aColsSBM)            //aCols     - Dados da Grid
+    //oMsGetSBM:lActive := .F.
+    ACTIVATE MSDIALOG oDlgPvt CENTERED
+EndIf
     RestArea(aArea)
 Return
 
-User function ENTRORI()   
-Local aArea := GetArea() 
-lInclui := Inclui
+Static Function fSalvar(cPedido,ldatos)
+    
+	Local aColsAux      := oMsGetSBM:aCols
+    Local nPosItem        := aScan(aHeadSBM, {|x| Alltrim(x[2]) == "C6_ITEM"})
+    Local nPosProd      := aScan(aHeadSBM, {|x| Alltrim(x[2]) == "C6_PRODUTO"})
+    Local dFeEntr     := aScan(aHeadSBM, {|x| Alltrim(x[2]) == "C6_ENTREG"})
+	Local nLinha  		:= 0
 
-If lInclui 
-   M->C6_ENTREOR := M->C6_ENTREG
-EndIf
-RestArea(aArea)
-Return .T.
+    If MsgYesNo("Desea proceder con la actualizacion de los registros", "Confirma?")
+	    
+		For nLinha := 1 To Len(aColsAux)
+			DbSelectArea("SC6")
+            DbSetorder(1) // C6_FILIAL+C6_NUM+C6_ITEM+C6_PRODUTO                                                                                                  
+            IF  DbSeek(xFilial('SC6') + cPedido +aColsAux[nLinha][nPosItem]+aColsAux[nLinha][nPosProd], .T.)
 
+                If  RecLock ("SC6", .f.)
+                    SC6->C6_ENTREG    := aColsAux[nLinha][dFeEntr]                 
+                    SC6->C6_USREDIT    := cusername
+                    SC6->(MsUnlock())
+                EndIf
+               
+            Endif
+        Next nLinha
+		MsgInfo("Modificaciones realizadas con exito!", "Aviso")
+        oDlgPvt:End()
+    Else
+        Return
+    EndIf
 
-  
+Return
+
+Static Function fCarSc6(cPedido,ldatos)
+    
+	Local aArea  := GetArea()
+    Local cQry   := ""
+    Local nAtual := 0
+    Local nTotal := 0
+    
+    cQry := " SELECT        "             + CRLF
+    cQry += "  C5_NUM,       "              + CRLF
+    cQry += "  C5_CLIENT,    "              + CRLF
+    cQry += "  C5_LOJAENT,	    "              + CRLF
+    cQry += "  C5_XNCLIEN,	    "              + CRLF
+    cQry += "  C5_EMISSAO,      "                + CRLF
+    cQry += "  C6_ITEM,	  "	               + CRLF
+    cQry += "  C6_PRODUTO,	      "	               + CRLF
+    cQry += "  C6_LOCAL,	  "	               + CRLF
+    cQry += "  C6_QTDVEN,	     "	               + CRLF
+    cQry += "  C6_QTDENT,	  "                + CRLF
+    cQry += "  C6_ENTREG		  "            + CRLF    
+    cQry += "  FROM   " + RetSQLName('SC5') + " SC5 "      + CRLF
+    cQry += "  INNER JOIN    " + RetSQLName('SC6') + " SC6 "      + CRLF
+    cQry += "  ON  C5_NUM = C6_NUM "      + CRLF
+    cQry += "  AND  SC6.D_E_L_E_T_ <> '*' "      + CRLF
+    cQry += "  AND  C6_QTDVEN > C6_QTDENT "      + CRLF
+    cQry += "  WHERE SC5.D_E_L_E_T_ <> '*'              "      + CRLF
+    cQry += "  AND C5_NUM = '"+cPedido+"' 		"      + CRLF
+	
+    TCQuery cQry New Alias "QRY_SBM"
+
+    //Setando o tamanho da régua
+    Count To nTotal
+    ProcRegua(nTotal)
+
+    //Enquanto houver dados
+    QRY_SBM->(DbGoTop())
+
+    If QRY_SBM->(EoF())
+        MsgInfo("No se encontraron líneas disponibles para actualizar fecha de entrega", "Aviso")
+        ldatos:=.F.
+        //oDlgPvt:End()
+        QRY_SBM->(DbSkip())
+        QRY_SBM->(DbCloseArea())
+        Return ldatos
+    Else
+        ldatos:=.T.
+        While !QRY_SBM->(EoF())
+            //  Atualizar régua de processamento
+            nAtual++
+            IncProc("Adicionando " + Alltrim(QRY_SBM->C6_PRODUTO) + " (" + cValToChar(nAtual) + " de " + cValToChar(nTotal) + ")...")
+            //Definindo a legenda padrão como preto
+            
+            //Adiciona o item no aCols
+            aAdd(aColsSBM, { ;
+                QRY_SBM->C5_NUM,;
+                QRY_SBM->C5_CLIENT,;
+                QRY_SBM->C5_LOJAENT,;
+				QRY_SBM->C5_XNCLIEN,;
+				StoD(QRY_SBM->C5_EMISSAO),;
+                QRY_SBM->C6_ITEM,;
+                QRY_SBM->C6_PRODUTO,;
+                QRY_SBM->C6_LOCAL,;
+                QRY_SBM->C6_QTDVEN,;
+                QRY_SBM->C6_QTDENT,;
+                StoD(QRY_SBM->C6_ENTREG),;
+				})
+            QRY_SBM->(DbSkip())
+        EndDo
+        QRY_SBM->(DbCloseArea())
+    EndIF
+    RestArea(aArea)
+Return

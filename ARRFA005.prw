@@ -36,6 +36,7 @@ Pergunte(cPerg,.F.)
 				DEFINE CELL NAME "SERIE" OF oSection SIZE 5
 				DEFINE CELL NAME "COMPROBANTE" OF oSection SIZE 13
 				DEFINE CELL NAME "PEDIDO" OF oSection SIZE 6
+				DEFINE CELL NAME "USER_PEDIDO" OF oSection  block {|| usrPedido(ESPECIE,PEDIDO) } 
 				DEFINE CELL NAME "PRODUCTO" OF oSection SIZE 15//ALIAS "SD2"
 				DEFINE CELL NAME "DESCRIPCION" OF oSection //ALIAS "SD2"
 				DEFINE CELL NAME "UM" OF oSection //ALIAS "SD2"
@@ -253,6 +254,19 @@ Elseif Alltrim(cEsp)=='NCC'
 EndIf
 	 
 Return DescDirec
+
+Static Function usrPedido(cEsp,cPed)
+Local cUser:= ""
+
+if !empty(cPed)
+	cUser:=Posicione("SC5",1,xFilial("SC5")+cPed,"C5_XUSERPT")
+	If empty(cUser)
+		cUser:=u_XUSRNAME(Posicione("SC5",1,xFilial("SC5")+cPed,"C5_ZUSERIN"))
+	EndIF
+
+EndIf
+	 
+Return cUser
 
 /*/
 ‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹‹

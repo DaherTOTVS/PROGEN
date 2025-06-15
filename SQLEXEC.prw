@@ -36,6 +36,9 @@ Private oDlCargEX
 DEFINE MSDIALOG oDlCargEX TITLE "EXEC Sentencias SQl " FROM 000, 000  TO 400, 1200 PIXEL
 @ 005, 007 SAY "Seleccione el archivo .CSV para la carga " SIZE 200, 030 FONT oFontSub  OF oDlCargEX COLORS RGB(031,073,125) PIXEL
 
+DEFINE MSDIALOG oDlg TITLE "Actualizacion Masiva de Datos" FROM 000, 000  TO 400, 1200 PIXEL
+@ 005, 007 SAY "Seleccione el archivo .CSV para la carga " SIZE 200, 030 FONT oFontSub OF oDlg COLORS RGB(031,073,125) PIXEL
+
 oApunte := TCBrowse():New(050, 005,560, 120,,,,oDlCargEX,,,,,,,,,,,,.F.,,.T.,,.F.,,,)
 oApunte:AddColumn(TCColumn():New(" "       	, {|| If(aApunte[oApunte:nAt,01],oSim,oNao) },,,,,,.T.,.F.,,,,.F., ) )
 oApunte:AddColumn(TCColumn():New("TIPO "  	        , {|| aApunte[oApunte:nAt,02]},"@!",,,"CENTER", 002,.F.,.F.,,{|| .F. },,.F., ) )
